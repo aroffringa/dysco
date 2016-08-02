@@ -1,0 +1,72 @@
+cmake_minimum_required(VERSION 2.8)
+
+project(dysco)
+
+# Casacore has a separate CMake file in this directory
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
+
+SET(CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL TRUE)
+find_package(Casacore REQUIRED COMPONENTS casa ms tables measures)
+
+find_library(GSL_LIB NAMES gsl)
+find_path(GSL_INCLUDE_DIR NAMES gsl/gsl_version.h)
+find_library(GSL_CBLAS_LIB NAMES gslcblas)
+
+find_package(Boost COMPONENTS system REQUIRED)
+
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-pedantic -Wno-long-long -Werror=vla" COMPILER_SUPPORTS_PEDANTIC)
+if(COMPILER_SUPPORTS_PEDANTIC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wno-long-long -Werror=vla")
+endif(COMPILER_SUPPORTS_PEDANTIC)
+
+include_directories(${CASACORE_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIR})
+include_directories(${GSL_INCLUDE_DIR})
+
+set(CMAKE_CXX_FLAGS "-O3 -ggdb -Wall -DNDEBUG -march=native --std=c++11")
+
+# Note: casapy fails if Casa is linked in the storage manager, so we have to trust that
+# casapy's version of casacore is binary compatible with this storage manager's casacore.
+add_library(dyscostman SHARED dyscostman.cpp dyscodatacolumn.cpp dyscoweightcolumn.cpp gausencoder.cpp threadeddyscocolumn.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp)
+target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${Boost_SYSTEM_LIBRARY} ${CASACORE_LIBRARIES})
+
+add_executable(testgausencoder testgausencoder.cpp stopwatch.cpp gausencoder.cpp)
+target_link_libraries(testgausencoder ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+
+add_executable(compress compress.cpp)
+target_link_libraries(compress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+
+add_executable(dscompress dscompress.cpp)
+target_link_libraries(dscompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+
+add_executable(decompress decompress.cpp)
+target_link_libraries(decompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+
+add_executable(rmsdiff rmsdiff.cpp rmscollector.cpp)
+target_link_libraries(rmsdiff dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+
+add_executable(testtimeblockencoder testtimeblockencoder.cpp gausencoder.cpp stopwatch.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp)
+target_link_libraries(testtimeblockencoder ${GSL_LIB} ${GSL_CBLAS_LIB})
+
+add_executable(encodeexample encodeexample.cpp gausencoder.cpp)
+target_link_libraries(encodeexample ${GSL_LIB} ${GSL_CBLAS_LIB})
+
+add_executable(testminsigma testminsigma.cpp gausencoder.cpp)
+target_link_libraries(testminsigma ${GSL_LIB} ${GSL_CBLAS_LIB})
+
+add_executable(getmsencdistr getmsencdistr.cpp gausencoder.cpp aftimeblockencoder.cpp)
+target_link_libraries(getmsencdistr ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+
+add_executable(aipscompress aipscompress.cpp gausencoder.cpp)
+target_link_libraries(aipscompress ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+
+# add target to generate API documentation with Doxygen
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+add_custom_target(doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen" VERBATIM)
+endif(DOXYGEN_FOUND)
