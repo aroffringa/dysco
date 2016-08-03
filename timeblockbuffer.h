@@ -66,6 +66,20 @@ public:
 	const std::vector<DataRow>& GetVector() const { return _data; }
 	std::vector<DataRow>& GetVector() { return _data; }
 	
+	template<typename other_t>
+	void ConvertVector(std::vector<typename TimeBlockBuffer<other_t>::DataRow>& vector) const
+	{
+		vector.resize(_data.size());
+		for(size_t i=0; i!=_data.size(); ++i)
+		{
+			const DataRow& rowIn = _data[i];
+			typename TimeBlockBuffer<other_t>::DataRow& rowOut = vector[i];
+			rowOut.antenna1 = rowIn.antenna1;
+			rowOut.antenna2 = rowIn.antenna2;
+			rowOut.visibilities.assign(rowIn.visibilities.begin(), rowIn.visibilities.end());
+		}
+	}
+	
 private:
 	size_t _nPol, _nChannels;
 	std::vector<DataRow> _data;

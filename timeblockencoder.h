@@ -39,9 +39,9 @@ class TimeBlockEncoder
 public:
 	typedef TimeBlockBuffer<std::complex<float>> FBuffer;
 	typedef typename TimeBlockBuffer<std::complex<float>>::DataRow FBufferRow;
-	typedef TimeBlockBuffer<std::complex<float>> DBuffer;
-	typedef typename TimeBlockBuffer<std::complex<float>>::DataRow DBufferRow;
-	
+	typedef TimeBlockBuffer<std::complex<double>> DBuffer;
+	typedef typename TimeBlockBuffer<std::complex<double>>::DataRow DBufferRow;
+		
 	typedef unsigned symbol_t;
 	
 	virtual ~TimeBlockEncoder() { }

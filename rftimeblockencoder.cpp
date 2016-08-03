@@ -17,7 +17,8 @@ template<bool UseDithering>
 void RFTimeBlockEncoder::encode(const dyscostman::GausEncoder<float>& gausEncoder, const TimeBlockEncoder::FBuffer& buffer, float* metaBuffer, TimeBlockEncoder::symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd)
 {
 	// Note that encoding is performed with doubles
-	std::vector<DBufferRow> data(buffer.GetVector());
+	std::vector<DBufferRow> data;
+	buffer.ConvertVector<std::complex<double>>(data);
 	const size_t visPerRow = _nPol * _nChannels;
 	
 	// Normalize the channels
@@ -86,7 +87,7 @@ void RFTimeBlockEncoder::encode(const dyscostman::GausEncoder<float>& gausEncode
 	}
 	
 	symbol_t* symbolBufferPtr = symbolBuffer;
-	for(const TimeBlockBuffer<std::complex<float>>::DataRow& row : data)
+	for(const DBufferRow& row : data)
 	{
 		for(size_t i=0; i!=visPerRow; ++i)
 		{
