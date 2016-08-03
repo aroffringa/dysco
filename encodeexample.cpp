@@ -13,7 +13,7 @@ const bool useUniform = false;
 void make(const std::string& filenamePrefix, ao::uvector<double> values)
 {
 	std::mt19937 mt;
-	std::uniform_int_distribution<unsigned> dist(0, 65535);
+	std::uniform_int_distribution<unsigned> dist = GausEncoder<double>::GetDitherDistribution();
 	
 	double sqSum = 0.0;
 	size_t count = 0;

@@ -9,9 +9,9 @@ std::mt19937 mt;
 
 double testSigma(double sigmaFactor)
 {
-	std::uniform_int_distribution<unsigned> dither(0, 65535);
-	std::normal_distribution<double> norm(0.0, 1.0);
 	GausEncoder<float> enc(256, sigmaFactor);
+	std::uniform_int_distribution<unsigned> dither = enc.GetDitherDistribution();
+	std::normal_distribution<double> norm(0.0, 1.0);
 	
 	double squaredErr = 0.0, absError = 0.0, biasError = 0.0;
 	for(size_t i=0; i!=5000000; ++i)

@@ -1,10 +1,13 @@
 #include "rftimeblockencoder.h"
+#include "gausencoder.h"
+
+#include <random>
 
 RFTimeBlockEncoder::RFTimeBlockEncoder(size_t nPol, size_t nChannels) :
 	_nPol(nPol), _nChannels(nChannels),
 	_channelFactors(_nChannels * nPol),
 	_rowFactors(),
-	_ditherDist(0, 65535)
+	_ditherDist(dyscostman::GausEncoder<double>::GetDitherDistribution())
 { }
 
 RFTimeBlockEncoder::~RFTimeBlockEncoder()

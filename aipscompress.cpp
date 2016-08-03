@@ -10,7 +10,7 @@ using namespace dyscostman;
 #include <tables/Tables/ArrayColumn.h>
 
 std::mt19937 mt;
-std::uniform_int_distribution<int> dither(0, 65535);
+std::uniform_int_distribution<unsigned> dither = GausEncoder<double>::GetDitherDistribution();
 
 float compress(float val, float maxVal, int roundValue)
 {

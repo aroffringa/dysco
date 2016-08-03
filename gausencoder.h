@@ -87,6 +87,11 @@ class GausEncoder
 				return QuantizationCount()-1;
 		}
 		
+		static std::uniform_int_distribution<unsigned> GetDitherDistribution()
+		{
+			return std::uniform_int_distribution<unsigned>(0, ((1u<<31)-1));
+		}
+		
 		/**
 		 * Get the quantized symbol for the given floating point value.
 		 * Dithering is applied, which will cause the average error to
@@ -97,7 +102,7 @@ class GausEncoder
 		 * the decoded value.
 		 * @param value Floating point value to be encoded.
 		 */
-		symbol_t EncodeWithDithering(ValueType value, unsigned ditherValue_16bit) const
+		symbol_t EncodeWithDithering(ValueType value, unsigned ditherValue) const
 		{
 			if(std::isfinite(value))
 			{
@@ -109,8 +114,8 @@ class GausEncoder
 				const ValueType rightValue = _decDictionary.value(lowerBound);
 				const ValueType leftValue = _decDictionary.value(lowerBound-1);
 				
-				ValueType ditherMark = ValueType(65536) * (value - leftValue) / (rightValue - leftValue);
-				if(ditherMark > ditherValue_16bit)
+				ValueType ditherMark = ValueType(1u<<31) * (value - leftValue) / (rightValue - leftValue);
+				if(ditherMark > ditherValue)
 					return _decDictionary.symbol(lowerBound);
 				else
 					return _decDictionary.symbol(lowerBound-1);

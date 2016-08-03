@@ -2,13 +2,11 @@
 
 #include <random>
 
-//#include <iostream> //tmp
-
 AFTimeBlockEncoder::AFTimeBlockEncoder(size_t nPol, size_t nChannels, bool fitToMaximum) :
 	_nPol(nPol), _nChannels(nChannels),
 	_fitToMaximum(fitToMaximum),
 	_rmsPerChannel(_nChannels * nPol),
-	_ditherDist(0, 65535)
+	_ditherDist(dyscostman::GausEncoder<double>::GetDitherDistribution())
 { }
 
 AFTimeBlockEncoder::~AFTimeBlockEncoder()
