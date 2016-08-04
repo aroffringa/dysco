@@ -37,10 +37,7 @@ target_link_libraries(testgausencoder ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIB
 add_executable(testdithering testdithering.cpp stopwatch.cpp gausencoder.cpp)
 target_link_libraries(testdithering ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
 
-add_executable(compress compress.cpp)
-target_link_libraries(compress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
-
-add_executable(dscompress dscompress.cpp)
+add_executable(dscompress dscompress.cpp stopwatch.cpp)
 target_link_libraries(dscompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
 
 add_executable(decompress decompress.cpp)

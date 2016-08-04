@@ -4,6 +4,7 @@
 #include "dyscostman.h"
 #include "dyscodistribution.h"
 #include "dysconormalization.h"
+#include "stopwatch.h"
 
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 
@@ -145,6 +146,7 @@ int main(int argc, char *argv[])
 	std::cout << "Opening ms...\n";
 	std::unique_ptr<casacore::MeasurementSet> ms(new casacore::MeasurementSet(msPath, casacore::Table::Update));
 	
+	Stopwatch watch(true);
 	std::cout << "Replacing flagged values by NaNs...\n";
 	for(std::string columnName : columnNames)
 	{
@@ -173,6 +175,9 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	std::cout << "Time taken: " << watch.ToString() << '\n';
+	watch.Reset();
+	watch.Start();
 	
 	StManModifier modifier(*ms);
 	
@@ -209,7 +214,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	
-	std::cout << "Finished.\n";
+	std::cout << "Finished. Compression time: " << watch.ToString() << "\n";
 	
 	return 0;
 }
