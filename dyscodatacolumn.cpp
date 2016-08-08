@@ -1,6 +1,7 @@
 #include "dyscodatacolumn.h"
 #include "aftimeblockencoder.h"
 #include "rftimeblockencoder.h"
+#include "rowtimeblockencoder.h"
 
 namespace dyscostman {
 
@@ -19,6 +20,9 @@ void DyscoDataColumn::Prepare(bool fitToMaximum, DyscoDistribution distribution,
 			break;
 		case RFNormalization:
 			_decoder.reset(new RFTimeBlockEncoder(nPolarizations, nChannels));
+			break;
+		case RowNormalization:
+			_decoder.reset(new RowTimeBlockEncoder(nPolarizations, nChannels));
 			break;
 	}
 	
@@ -58,6 +62,9 @@ void DyscoDataColumn::initializeEncodeThread(void** threadData)
 			break;
 		case RFNormalization:
 			encoder = new RFTimeBlockEncoder(nPolarizations, nChannels);
+			break;
+		case RowNormalization:
+			encoder = new RowTimeBlockEncoder(nPolarizations, nChannels);
 			break;
 	}
 	*reinterpret_cast<ThreadData**>(threadData) = new ThreadData(encoder);

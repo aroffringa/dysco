@@ -38,7 +38,7 @@ void RFTimeBlockEncoder::encode(const dyscostman::GausEncoder<float>& gausEncode
 	}
 	
 	// Scale every maximum per row to the max level
-	const float maxLevel = gausEncoder.MaxQuantity();
+	const double maxLevel = gausEncoder.MaxQuantity();
 	for(size_t rowIndex = 0; rowIndex!=data.size(); ++rowIndex)
 	{
 		DBufferRow& row = data[rowIndex];

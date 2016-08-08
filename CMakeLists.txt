@@ -28,7 +28,7 @@ set(CMAKE_CXX_FLAGS "-O3 -ggdb -Wall -DNDEBUG -march=native --std=c++11")
 
 # Note: casapy fails if Casa is linked in the storage manager, so we have to trust that
 # casapy's version of casacore is binary compatible with this storage manager's casacore.
-add_library(dyscostman SHARED dyscostman.cpp dyscodatacolumn.cpp dyscoweightcolumn.cpp gausencoder.cpp threadeddyscocolumn.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp)
+add_library(dyscostman SHARED dyscostman.cpp dyscodatacolumn.cpp dyscoweightcolumn.cpp gausencoder.cpp threadeddyscocolumn.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp rowtimeblockencoder.cpp)
 target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${Boost_SYSTEM_LIBRARY} ${CASACORE_LIBRARIES})
 
 add_executable(testgausencoder testgausencoder.cpp stopwatch.cpp gausencoder.cpp)
@@ -46,7 +46,7 @@ target_link_libraries(decompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACO
 add_executable(rmsdiff rmsdiff.cpp rmscollector.cpp)
 target_link_libraries(rmsdiff dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
 
-add_executable(testtimeblockencoder testtimeblockencoder.cpp gausencoder.cpp stopwatch.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp)
+add_executable(testtimeblockencoder testtimeblockencoder.cpp gausencoder.cpp stopwatch.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp rowtimeblockencoder.cpp)
 target_link_libraries(testtimeblockencoder ${GSL_LIB} ${GSL_CBLAS_LIB})
 
 add_executable(encodeexample encodeexample.cpp gausencoder.cpp)

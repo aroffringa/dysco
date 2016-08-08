@@ -1,21 +1,30 @@
 #include "aftimeblockencoder.h"
 #include "rftimeblockencoder.h"
+#include "rowtimeblockencoder.h"
 #include "stopwatch.h"
 #include "gausencoder.h"
+
+#include "dysconormalization.h"
 
 #include <iostream>
 #include <random>
 
 using namespace dyscostman;
 
-bool useRF = false;
+DyscoNormalization blockNormalization = AFNormalization;
 
 std::unique_ptr<TimeBlockEncoder> CreateEncoder(size_t nPol, size_t nChan)
 {
-	if(useRF)
-		return std::unique_ptr<TimeBlockEncoder>(new RFTimeBlockEncoder(nPol, nChan));
-	else
-		return std::unique_ptr<TimeBlockEncoder>(new AFTimeBlockEncoder(nPol, nChan, true));
+	switch(blockNormalization)
+	{
+		default:
+		case RFNormalization:
+			return std::unique_ptr<TimeBlockEncoder>(new RFTimeBlockEncoder(nPol, nChan));
+		case AFNormalization:
+			return std::unique_ptr<TimeBlockEncoder>(new AFTimeBlockEncoder(nPol, nChan, true));
+		case RowNormalization:
+			return std::unique_ptr<TimeBlockEncoder>(new RowTimeBlockEncoder(nPol, nChan));
+	}
 }
 
 void TestSimpleExample()
@@ -24,7 +33,7 @@ void TestSimpleExample()
 	
 	TimeBlockBuffer<std::complex<float>> buffer(nPol, nChan);
 	
-	std::complex<float> data[nChan];
+	std::complex<float> data[nChan*nPol];
 	data[0] = 10.0; data[1] = std::complex<double>(9.0, 1.0);
 	buffer.SetData(0, 0, 1, data);
 	data[0] = 8.0; data[1] = std::complex<double>(7.0, 2.0);
@@ -45,7 +54,7 @@ void TestSimpleExample()
 	std::cout << "Meta data size: " << metaDataCount << '\n';
 	size_t symbolCount = encoder->SymbolCount(nRow);
 	ao::uvector<float> metaBuffer(metaDataCount);
-	ao::uvector<AFTimeBlockEncoder::symbol_t> symbolBuffer(symbolCount);
+	ao::uvector<TimeBlockEncoder::symbol_t> symbolBuffer(symbolCount);
 	
 	encoder->EncodeWithoutDithering(gausEncoder, buffer, metaBuffer.data(), symbolBuffer.data(), nAnt);
 	TimeBlockBuffer<std::complex<float>> out(nPol, nChan);
@@ -182,16 +191,23 @@ void TestTimeBlockEncoder()
 	std::cout << "Gaussian encoding error for unscaled values: " << unscaledRMS.RMS() << '\n';
 	std::cout << "Average factor: " << factorSum / factorCount << '\n';
 	std::cout << "Effective RMS of error: " << mEncoded.RMS() / (factorSum / factorCount) << " ( " << (mEncoded.RMS() / (factorSum / factorCount)) / unscaledRMS.RMS() << " x theoretical)\n";
-	
-	
+	std::cout.flush();
 }
 
 int main(int argc, char* argv[])
 {
-	useRF = false;
+	std::cout << " === Row normalization ===\n";
+	blockNormalization = RowNormalization;
 	TestSimpleExample();
 	TestTimeBlockEncoder();
-	useRF = true;
+	
+	std::cout << " === AF normalization ===\n";
+	blockNormalization = AFNormalization;
+	TestSimpleExample();
+	TestTimeBlockEncoder();
+	
+	std::cout << " === RF normalization ===\n";
+	blockNormalization = RFNormalization;
 	TestSimpleExample();
 	TestTimeBlockEncoder();
 }

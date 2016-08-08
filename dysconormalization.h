@@ -3,7 +3,7 @@
 
 namespace dyscostman {
 	enum DyscoNormalization {
-		AFNormalization, RFNormalization
+		AFNormalization, RFNormalization, RowNormalization
 	};
 }
 
