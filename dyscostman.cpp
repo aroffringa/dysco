@@ -36,7 +36,6 @@ DyscoStMan::DyscoStMan(unsigned floatBitCount, unsigned weightBitCount, const ca
 	_distributionTruncation(0.0),
 	_spec()
 {
-	std::cout << "DyscoStMan(floatBitCount,weightBitCount,...,name)\n";
 	initializeSpec();
 }
 
@@ -53,12 +52,11 @@ DyscoStMan::DyscoStMan(const casacore::String& name, const casacore::Record& spe
 	_weightBitCount(0),
 	_fitToMaximum(false),
 	_distribution(GaussianDistribution),
-	_normalization(RFNormalization),
+	_normalization(AFNormalization),
 	_studentTNu(0.0),
 	_distributionTruncation(0.0),
 	_spec(spec)
 {
-	std::cout << "DyscoStMan(name,spec)\n";
 	setFromSpec();
 }
 
@@ -80,7 +78,6 @@ DyscoStMan::DyscoStMan(const DyscoStMan& source) :
 	_distributionTruncation(source._distributionTruncation),
 	_spec(source._spec)
 {
-	std::cout << "DyscoStMan(source)\n";
 	initializeSpec();
 }
 
@@ -108,6 +105,8 @@ void DyscoStMan::setFromSpec()
 			_normalization = RFNormalization;
 		else if(str == "AF")
 			_normalization = AFNormalization;
+		else if(str == "Row")
+			_normalization = RowNormalization;
 		else throw std::runtime_error("Unsupported normalization specified");
 		_studentTNu = _spec.asDouble("studentTNu");
 		_distributionTruncation = _spec.asDouble("distributionTruncation");
@@ -131,6 +130,7 @@ void DyscoStMan::initializeSpec()
 	switch(_normalization) {
 		case AFNormalization: normStr = "AF"; break;
 		case RFNormalization: normStr = "RF"; break;
+		case RowNormalization: normStr = "Row"; break;
 	}
 	_spec.define("normalization", normStr);
 	_spec.define("studentTNu", _studentTNu);
@@ -146,7 +146,6 @@ void DyscoStMan::makeEmpty()
 
 DyscoStMan::~DyscoStMan()
 {
-	std::cout << "~DyscoStMan()\n";
 	makeEmpty();
 }
 
@@ -167,7 +166,6 @@ casacore::Bool DyscoStMan::flush(casacore::AipsIO&, casacore::Bool doFsync)
 
 void DyscoStMan::create(casacore::uInt nRow)
 {
-	std::cout << "create(" << fileName() << ")\n";
 	_nRow = nRow;
 	_fStream.reset(new std::fstream(fileName().c_str(), std::ios_base::in | std::ios_base::out | std::ios_base::trunc));
 	if(_fStream->fail())
@@ -268,27 +266,19 @@ void DyscoStMan::initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount
 		col->SetOffsetInBlock(_blockSize);
 		_blockSize += columnBlockSize;
 		
-		//DyscoWeightColumn *wghtCol = dynamic_cast<DyscoWeightColumn*>(*col);
-		//if(wghtCol != 0)
-		//	wghtCol->SetBitsPerSymbol(_weightBitCount);
-		
 		col->InitializeAfterNRowsPerBlockIsKnown();
 	}
-	std::cout << "Total block size: " << _blockSize << '\n';
-	
 	writeHeader();
 }
 
 void DyscoStMan::open(casacore::uInt nRow, casacore::AipsIO&)
 {
-	std::cout << "open() " << fileName() << '\n';
 	_nRow = nRow;
 	_fStream.reset(new std::fstream(fileName().c_str()));
 	if(_fStream->fail())
 		throw DyscoStManError("I/O error: could not open file '" + fileName() + "', which should be an existing file");
 	
 	readHeader();
-	std::cout << "_headerSize=" << _headerSize << "\n";
 	
 	_fStream->seekg(0, std::ios_base::end);
 	if(_fStream->fail())
@@ -309,7 +299,6 @@ casacore::DataManagerColumn* DyscoStMan::makeScalarColumn(const casacore::String
 
 casacore::DataManagerColumn* DyscoStMan::makeDirArrColumn(const casacore::String& name, int dataType, const casacore::String& dataTypeID)
 {
-	std::cout << "make column\n";
 	DyscoStManColumn *col = 0;
 	
 	if(name == "DATA" || name == "CORRECTED_DATA" || name == "MODEL_DATA")
@@ -339,7 +328,6 @@ casacore::DataManagerColumn* DyscoStMan::makeIndArrColumn(const casacore::String
 
 void DyscoStMan::resync(casacore::uInt nRow)
 {
-	std::cout << "resync()\n";
 }
 
 void DyscoStMan::deleteManager()
@@ -349,8 +337,6 @@ void DyscoStMan::deleteManager()
 
 void DyscoStMan::prepare()
 {
-	std::cout << "prepare\n";
-	
 	mutex::scoped_lock lock(_mutex);
 	
 	if(_floatBitCount == 0 || _weightBitCount == 0)
@@ -394,7 +380,6 @@ void DyscoStMan::removeRow(casacore::uInt rowNr)
 
 void DyscoStMan::addColumn(casacore::DataManagerColumn* column)
 {
-	std::cout << "addColumn()\n";
 	if(_nBlocksInFile != 0)
 		throw DyscoStManError("Can't add columns while data has been committed to table");
 	

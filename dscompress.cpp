@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 	}
 	
 	DyscoDistribution distribution = GaussianDistribution;
-	DyscoNormalization normalization = RFNormalization;
+	DyscoNormalization normalization = AFNormalization;
 	bool reorder = false;
 	unsigned bitsPerFloat=8, bitsPerWeight=12;
 	bool fitToMaximum = false;
@@ -134,6 +134,10 @@ int main(int argc, char *argv[])
 		else if(p == "afnormalization")
 		{
 			normalization = AFNormalization;
+		}
+		else if(p == "rownormalization")
+		{
+			normalization = RowNormalization;
 		}
 		else throw std::runtime_error(std::string("Invalid parameter: ") + argv[argi]);
 		++argi;
