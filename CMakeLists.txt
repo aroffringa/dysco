@@ -58,9 +58,6 @@ target_link_libraries(testminsigma ${GSL_LIB} ${GSL_CBLAS_LIB})
 add_executable(getmsencdistr getmsencdistr.cpp gausencoder.cpp aftimeblockencoder.cpp)
 target_link_libraries(getmsencdistr ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
 
-add_executable(aipscompress aipscompress.cpp gausencoder.cpp)
-target_link_libraries(aipscompress ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
-
 # add target to generate API documentation with Doxygen
 find_package(Doxygen)
 if(DOXYGEN_FOUND)

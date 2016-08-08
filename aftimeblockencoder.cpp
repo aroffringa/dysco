@@ -76,7 +76,6 @@ void AFTimeBlockEncoder::Normalize(const dyscostman::GausEncoder<float>& gausEnc
 					}
 				}
 			}
-			//std::cout << "Channel " << visIndex/4 << ", p" << visIndex%4 << ", Factor=" << factor << '\n';
 			for(DBufferRow& row : data)
 				row.visibilities[visIndex] *= factor;
 		}
@@ -86,7 +85,6 @@ void AFTimeBlockEncoder::Normalize(const dyscostman::GausEncoder<float>& gausEnc
 
 void AFTimeBlockEncoder::changeAntennaFactor(std::vector<DBufferRow>& data, float* metaBuffer, size_t antennaIndex, size_t antennaCount, size_t polIndex, double factor)
 {
-	//std::cout << "Antenna " << antennaIndex << " -> *" << factor << '\n';
 	const size_t visPerRow = _nPol * _nChannels;
 	size_t metaIndex = visPerRow + antennaCount * polIndex;
 	metaBuffer[metaIndex + antennaIndex] /= factor;
@@ -107,7 +105,6 @@ void AFTimeBlockEncoder::changeAntennaFactor(std::vector<DBufferRow>& data, floa
 
 void AFTimeBlockEncoder::changeChannelFactor(std::vector<DBufferRow>& data, float* metaBuffer, size_t visIndex, double factor)
 {
-	//std::cout << "Channel " << visIndex << " -> *" << factor << '\n';
 	metaBuffer[visIndex] /= factor;
 	for(DBufferRow& row : data)
 		row.visibilities[visIndex] *= factor;
@@ -152,11 +149,7 @@ void AFTimeBlockEncoder::fitToMaximum(std::vector<DBufferRow>& data, float* meta
 			}
 		}
 		double factor = (largestComp==0.0) ? 0.0 : gausEncoder.MaxQuantity() / largestComp;
-		//std::cout << "Channel " << visIndex/4 << ", p" << visIndex%4 << ", Factor=" << factor << '\n';
-		//if(factor < 1.0)
-		//{
-			changeChannelFactor(data, metaBuffer, visIndex, factor);
-		//}
+		changeChannelFactor(data, metaBuffer, visIndex, factor);
 	}
 	
 	for(size_t polIndex=0; polIndex!=_nPol; ++polIndex)
@@ -181,7 +174,6 @@ void AFTimeBlockEncoder::fitToMaximum(std::vector<DBufferRow>& data, float* meta
 					}
 				}
 				double factor = (largestComp==0.0) ? 0.0 : (gausEncoder.MaxQuantity() / largestComp - 1.0);
-				//std::cout << "Channel " << channel << ": " << factor << '\n';
 				// how much does this increase the total?
 				double thisIncrease = 0.0;
 				for(DBufferRow& row : data)
@@ -245,15 +237,12 @@ void AFTimeBlockEncoder::fitToMaximum(std::vector<DBufferRow>& data, float* meta
 			double bestAntennaIncrease = 0.0;
 			for(size_t a=0; a!=antennaCount; ++a)
 			{
-				//std::cout << "Antenna " << a << ": max=" << maxCompPerAntenna[a] << "/" << gausEncoder.MaxQuantity() << " (" << increasePerAntenna[a] << ")\n";
 				if(increasePerAntenna[a] > bestAntennaIncrease)
 				{
 					bestAntennaIncrease = increasePerAntenna[a];
 					bestAntenna = a;
 				}
 			}
-			//std::cout << "Best antenna " << bestAntenna << ", increase: " << bestAntennaIncrease << '\n';
-			//std::cout << "Best channel " << bestChannel << ", increase: " << bestChannelIncrease << '\n';
 			if(bestAntennaIncrease > bestChannelIncrease)
 			{
 				double factor = (maxCompPerAntenna[bestAntenna]==0.0) ? 0.0 : (gausEncoder.MaxQuantity() / maxCompPerAntenna[bestAntenna]);
@@ -412,11 +401,6 @@ void AFTimeBlockEncoder::calculateAntennaeRMS(const std::vector<DBufferRow>& dat
 			precision = std::max(precision, std::fabs(_rmsPerAntenna[i] - nextRMS[i]) / maxVal);
 		}
 	}
-	
-	/*std::cout << precision << " -- ";
-	for(size_t i=0; i!=antennaCount; ++i)
-		std::cout << _rmsPerAntenna[i] << ' ';
-	std::cout << "\n\n";*/
 }
 
 void AFTimeBlockEncoder::InitializeDecode(const float* metaBuffer, size_t nRow, size_t nAntennae)

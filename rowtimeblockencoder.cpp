@@ -48,7 +48,6 @@ void RowTimeBlockEncoder::encode(const GausEncoder<float>& gausEncoder, const FB
 	const double maxLevel = gausEncoder.MaxQuantity();
 	for(size_t rowIndex = 0; rowIndex!=data.size(); ++rowIndex)
 	{
-		//std::cout << "row=" << rowIndex << ", visPerRow=" << visPerRow << '\n';
 		DBufferRow& row = data[rowIndex];
 		double maxVal = 0.0;
 		for(size_t i=0; i!=visPerRow; ++i)

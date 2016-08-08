@@ -4,7 +4,6 @@ namespace dyscostman {
 
 void DyscoWeightColumn::Prepare(bool fitToMaximum, DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
 {
-	std::cout << "DyscoWeightColumn::Prepare()\n";
 	ThreadedDyscoColumn::Prepare(fitToMaximum, distribution, normalization, studentsTNu, distributionTruncation);
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
 	_encoder.reset(new WeightBlockEncoder(nPolarizations, nChannels, 1 << getBitsPerSymbol()));

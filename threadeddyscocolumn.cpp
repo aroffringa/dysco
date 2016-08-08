@@ -49,7 +49,6 @@ template<typename DataType>
 ThreadedDyscoColumn<DataType>::~ThreadedDyscoColumn()
 {
 	destructDerived();
-	std::cout << "~ThreadedDyscoColumn()\n";
 }
 
 template<typename DataType>
@@ -81,7 +80,6 @@ void ThreadedDyscoColumn<DataType>::loadBlock(size_t blockIndex)
 {
 	if(blockIndex < nBlocksInFile())
 	{
-		//std::cout << "Loading block " << blockIndex << "/" << nBlocksInFile() << " of size " << _blockSize << ", antennaCount=" << _antennaCount << '\n';
 		readCompressedData(blockIndex, _packedBlockReadBuffer.data(), _blockSize);
 		const size_t nPolarizations = _shape[0], nChannels = _shape[1],
 			nRows = nRowsInBlock(),
@@ -141,7 +139,6 @@ void ThreadedDyscoColumn<DataType>::getValues(casacore::uInt rowNr, casacore::Ar
 template<typename DataType>
 void ThreadedDyscoColumn<DataType>::storeBlock()
 {
-	//std::cout << "Writing block " << _currentBlock << ", encoder->NRows()=" << _timeBlockBuffer->NRows() << "\n";
 	// Put the data of the current block into the cache so that the parallell threads can write them
 	mutex::scoped_lock lock(_mutex);
 	CacheItem *item = new CacheItem(std::move(_timeBlockBuffer));
@@ -187,12 +184,9 @@ void ThreadedDyscoColumn<DataType>::putValues(casacore::uInt rowNr, const casaco
 			_lastWrittenTime = time;
 			_lastWrittenField = fieldId;
 			_lastWrittenDataDescId = dataDescId;
-			std::cout << "First row (" << rowNr << ") written.\n";
 		}
 		else if(time != _lastWrittenTime || fieldId != _lastWrittenField || dataDescId != _lastWrittenDataDescId)
 		{
-			std::cout << "First block is finished (row " << rowNr << ").\n";
-			std::cout << "Antenna count: " << _timeBlockBuffer->MaxAntennaIndex() + 1 << '\n';
 			initializeRowsPerBlock(rowNr, _timeBlockBuffer->MaxAntennaIndex() + 1);
 		}
 	}
@@ -250,7 +244,6 @@ size_t ThreadedDyscoColumn<DataType>::cpuCount() const
 template<typename DataType>
 void ThreadedDyscoColumn<DataType>::InitializeAfterNRowsPerBlockIsKnown()
 {
-	std::cout << "column " << columnName() << ": InitializeAfterNRowsPerBlockIsKnown(), nRowsInBlock=" << nRowsInBlock() << ", nAnt=" << nAntennae() << "\n";
 	stopThreads();
 	if(_bitsPerSymbol == 0)
 		throw DyscoStManError("bitsPerSymbol not initialized in ThreadedDyscoColumn");
@@ -277,7 +270,6 @@ void ThreadedDyscoColumn<DataType>::encodeAndWrite(size_t blockIndex, const Cach
 	const size_t nPolarizations = _shape[0], nChannels = _shape[1];
 	const size_t metaDataSize = sizeof(float) * metaDataFloatCount(nRowsInBlock(), nPolarizations, nChannels, _antennaCount);
 	const size_t nSymbols = symbolCount(nRowsInBlock(), nPolarizations, nChannels);
-	//std::cout << "Writing block " << blockIndex << ", mSize=" << metaDataSize << ", nSymbol=" << nSymbols << '\n';
 	
 	float* metaBuffer = reinterpret_cast<float*>(packedSymbolBuffer);
 	unsigned char* binaryBuffer = packedSymbolBuffer + metaDataSize;
@@ -299,7 +291,6 @@ void ThreadedDyscoColumn<DataType>::EncodingThreadFunctor::operator()()
 	const size_t nSymbols = parent->symbolCount(parent->nRowsInBlock(), nPolarizations, nChannels);
 	
 	mutex::scoped_lock lock(parent->_mutex);
-	//std::cout << "column " << parent->columnName() << ": Starting thread with blocksize=" << parent->_blockSize << '\n';
 	ao::uvector<unsigned char> packedSymbolBuffer(parent->_blockSize);
 	ao::uvector<unsigned> unpackedSymbolBuffer(nSymbols);
 	cache_t &cache = parent->_cache;
@@ -330,7 +321,6 @@ void ThreadedDyscoColumn<DataType>::EncodingThreadFunctor::operator()()
 			delete &item;
 			cache.erase(i);
 			parent->_cacheChangedCondition.notify_all();
-			//std::cout << "Wrote block " << blockIndex << '\n';
 		}
 	}
 	parent->destructEncodeThread(threadUserData);
@@ -350,11 +340,9 @@ template<typename DataType>
 size_t ThreadedDyscoColumn<DataType>::CalculateBlockSize(size_t nRowsInBlock, size_t nAntennae) const
 {
 	size_t nPolarizations = _shape[0], nChannels = _shape[1];
-	std::cout << "Calculating block size for nAnt=" << nAntennae << ", nRowsInBlock=" << nRowsInBlock << " p=" << nPolarizations << ", ch=" << nChannels << ", bits=" << _bitsPerSymbol << '\n';
 	const size_t metaDataSize = sizeof(float) * metaDataFloatCount(nRowsInBlock, nPolarizations, nChannels, nAntennae);
 	const size_t nSymbols = symbolCount(nRowsInBlock, nPolarizations, nChannels);
 	const size_t binarySize = BytePacker::bufferSize(nSymbols, _bitsPerSymbol);
-	std::cout << metaDataSize << ',' << binarySize << '\n';
 	return metaDataSize + binarySize;
 }
 
@@ -372,9 +360,6 @@ void ThreadedDyscoColumn<DataType>::SetFromExtraHeader(const unsigned char* buff
 	const Header* header = reinterpret_cast<const Header*>(buffer);
 	_antennaCount = header->antennaCount;
 	_blockSize = header->blockSize;
-	//if(_timeBlockBuffer != nullptr)
-	//	_timeBlockBuffer->SetNAntennae(_antennaCount);
-	std::cout << "ThreadedDyscoColumn loaded from header: antennaCount=" << _antennaCount << ", blockSize=" << _blockSize << '\n';
 }
 
 template class ThreadedDyscoColumn<std::complex<float>>;
