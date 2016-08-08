@@ -29,23 +29,31 @@ std::unique_ptr<TimeBlockEncoder> CreateEncoder(size_t nPol, size_t nChan)
 
 void TestSimpleExample()
 {
-	const size_t nAnt = 4, nChan = 1, nPol = 2, nRow = (nAnt*(nAnt-1)/2);
+	const size_t nAnt = 4, nChan = 1, nPol = 2, nRow = (nAnt*(nAnt+1)/2);
 	
 	TimeBlockBuffer<std::complex<float>> buffer(nPol, nChan);
 	
 	std::complex<float> data[nChan*nPol];
+	data[0] = 99.0; data[1] = 99.0;
+	buffer.SetData(0, 0, 0, data);
 	data[0] = 10.0; data[1] = std::complex<double>(9.0, 1.0);
-	buffer.SetData(0, 0, 1, data);
+	buffer.SetData(1, 0, 1, data);
 	data[0] = 8.0; data[1] = std::complex<double>(7.0, 2.0);
-	buffer.SetData(1, 0, 2, data);
+	buffer.SetData(2, 0, 2, data);
 	data[0] = 6.0; data[1] = std::complex<double>(5.0, 3.0);
-	buffer.SetData(2, 0, 3, data);
+	buffer.SetData(3, 0, 3, data);
+	data[0] = 99.0; data[1] = 99.0;
+	buffer.SetData(4, 1, 1, data);
 	data[0] = 4.0; data[1] = std::complex<double>(3.0, 4.0);
-	buffer.SetData(3, 1, 2, data);
+	buffer.SetData(5, 1, 2, data);
 	data[0] = 2.0; data[1] = std::complex<double>(1.0, 5.0);
-	buffer.SetData(4, 1, 3, data);
+	buffer.SetData(6, 1, 3, data);
+	data[0] = 99.0; data[1] = 99.0;
+	buffer.SetData(7, 2, 2, data);
 	data[0] = 0.0; data[1] = std::numeric_limits<float>::quiet_NaN();
-	buffer.SetData(5, 2, 3, data);
+	buffer.SetData(8, 2, 3, data);
+	data[0] = 99.0; data[1] = 99.0;
+	buffer.SetData(9, 3, 3, data);
 	
 	GausEncoder<float> gausEncoder(256, 1.0, true);
 	std::unique_ptr<TimeBlockEncoder> encoder = CreateEncoder(nPol, nChan);
@@ -61,16 +69,20 @@ void TestSimpleExample()
 	out.resize(nRow);
 	std::unique_ptr<TimeBlockEncoder> decoder = CreateEncoder(nPol, nChan);
 	decoder->InitializeDecode(metaBuffer.data(), nRow, nAnt);
-	decoder->Decode(gausEncoder, out, symbolBuffer.data(), 0, 0, 1);
-	decoder->Decode(gausEncoder, out, symbolBuffer.data(), 1, 0, 2);
-	decoder->Decode(gausEncoder, out, symbolBuffer.data(), 2, 0, 3);
-	decoder->Decode(gausEncoder, out, symbolBuffer.data(), 3, 1, 2);
-	decoder->Decode(gausEncoder, out, symbolBuffer.data(), 4, 1, 3);
-	decoder->Decode(gausEncoder, out, symbolBuffer.data(), 5, 2, 3);
+	size_t rIndex = 0;
+	for(size_t ant1=0; ant1!=nAnt; ++ant1) {
+		for(size_t ant2=ant1; ant2!=nAnt; ++ant2) {
+			decoder->Decode(gausEncoder, out, symbolBuffer.data(), rIndex, ant1, ant2);
+			++rIndex;
+		}
+	}
 	std::complex<float> dataOut[nChan];
+	std::cout << "Output (XX\tYY)\tInput (XX\tYY)\n";
 	for(size_t row=0; row!=nRow; row++)
 	{
 		out.GetData(row, dataOut);
+		std::cout << dataOut[0] << '\t' << dataOut[1] << '\t';
+		buffer.GetData(row, dataOut);
 		std::cout << dataOut[0] << '\t' << dataOut[1] << '\n';
 	}
 }
