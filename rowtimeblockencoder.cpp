@@ -6,8 +6,8 @@ using namespace dyscostman;
 RowTimeBlockEncoder::RowTimeBlockEncoder(size_t nPol, size_t nChannels) :
 	_nPol(nPol),
 	_nChannels(nChannels),
-	_rowFactors(),
-	_ditherDist(GausEncoder<float>::GetDitherDistribution())
+	_ditherDist(GausEncoder<float>::GetDitherDistribution()),
+	_rowFactors()
 {
 }
 
