@@ -18,7 +18,7 @@ const unsigned short
 	DyscoStMan::VERSION_MAJOR = 1,
 	DyscoStMan::VERSION_MINOR = 0;
 
-DyscoStMan::DyscoStMan(unsigned floatBitCount, unsigned weightBitCount, const casacore::String& name) :
+DyscoStMan::DyscoStMan(unsigned dataBitCount, unsigned weightBitCount, const casacore::String& name) :
 	DataManager(),
 	_nRow(0),
 	_nBlocksInFile(0),
@@ -27,7 +27,7 @@ DyscoStMan::DyscoStMan(unsigned floatBitCount, unsigned weightBitCount, const ca
 	_blockSize(0),
 	_headerSize(0),
 	_name(name),
-	_floatBitCount(floatBitCount),
+	_dataBitCount(dataBitCount),
 	_weightBitCount(weightBitCount),
 	_fitToMaximum(false),
 	_distribution(GaussianDistribution),
@@ -48,7 +48,7 @@ DyscoStMan::DyscoStMan(const casacore::String& name, const casacore::Record& spe
 	_blockSize(0),
 	_headerSize(0),
 	_name(name),
-	_floatBitCount(0),
+	_dataBitCount(0),
 	_weightBitCount(0),
 	_fitToMaximum(false),
 	_distribution(GaussianDistribution),
@@ -69,7 +69,7 @@ DyscoStMan::DyscoStMan(const DyscoStMan& source) :
 	_blockSize(0),
 	_headerSize(0),
 	_name(source._name),
-	_floatBitCount(source._floatBitCount),
+	_dataBitCount(source._dataBitCount),
 	_weightBitCount(source._weightBitCount),
 	_fitToMaximum(source._fitToMaximum),
 	_distribution(source._distribution),
@@ -84,12 +84,15 @@ DyscoStMan::DyscoStMan(const DyscoStMan& source) :
 void DyscoStMan::setFromSpec()
 {
 	// Here we need to load from _spec
-	int i = _spec.description().fieldNumber("floatBitCount");
+	int i = _spec.description().fieldNumber("dataBitCount");
 	if(i >= 0)
 	{
-		_floatBitCount = _spec.asInt("floatBitCount");
+		_dataBitCount = _spec.asInt("dataBitCount");
 		_weightBitCount = _spec.asInt("weightBitCount");
-		_fitToMaximum = _spec.asBool("fitToMaximum");
+		if(_spec.description().fieldNumber("fitToMaximum") >= 0)
+			_fitToMaximum = _spec.asBool("fitToMaximum");
+		else
+			_fitToMaximum = true;
 		std::string str = _spec.asString("distribution");
 		if(str == "Uniform")
 			_distribution = UniformDistribution;
@@ -108,14 +111,17 @@ void DyscoStMan::setFromSpec()
 		else if(str == "Row")
 			_normalization = RowNormalization;
 		else throw std::runtime_error("Unsupported normalization specified");
-		_studentTNu = _spec.asDouble("studentTNu");
+		if(_spec.description().fieldNumber("studentTNu") >= 0)
+			_studentTNu = _spec.asDouble("studentTNu");
+		else
+			_studentTNu = 0.0;
 		_distributionTruncation = _spec.asDouble("distributionTruncation");
 	}
 }
 
 void DyscoStMan::initializeSpec()
 {
-	_spec.define("floatBitCount", _floatBitCount);
+	_spec.define("dataBitCount", _dataBitCount);
 	_spec.define("weightBitCount", _weightBitCount);
 	_spec.define("fitToMaximum", _fitToMaximum);
 	std::string distStr;
@@ -188,7 +194,7 @@ void DyscoStMan::writeHeader()
 	header.columnCount = _columns.size();
 	header.versionMajor = VERSION_MAJOR;
 	header.versionMinor = VERSION_MINOR;
-	header.floatBitCount = _floatBitCount;
+	header.dataBitCount = _dataBitCount;
 	header.weightBitCount = _weightBitCount;
 	header.fitToMaximum = _fitToMaximum;
 	header.distribution = _distribution;
@@ -221,7 +227,7 @@ void DyscoStMan::readHeader()
 	size_t curColumnHeaderOffset = header.columnHeaderOffset;
 	size_t columnCount = header.columnCount;
 	
-	_floatBitCount = header.floatBitCount;
+	_dataBitCount = header.dataBitCount;
 	_weightBitCount = header.weightBitCount;
 	_fitToMaximum = header.fitToMaximum;
 	_distribution = (enum DyscoDistribution) header.distribution;
@@ -339,14 +345,14 @@ void DyscoStMan::prepare()
 {
 	mutex::scoped_lock lock(_mutex);
 	
-	if(_floatBitCount == 0 || _weightBitCount == 0)
+	if(_dataBitCount == 0 || _weightBitCount == 0)
 		throw DyscoStManError("One of the required parameters of the DyscoStMan was not set!\nDyscoStMan was not correctly initialized by your program.");
 	
 	for(DyscoStManColumn* col : _columns)
 	{
 		DyscoDataColumn* dataCol = dynamic_cast<DyscoDataColumn*>(col);
 		if(dataCol != 0)
-			dataCol->SetBitsPerSymbol(_floatBitCount);
+			dataCol->SetBitsPerSymbol(_dataBitCount);
 		else {
 			DyscoWeightColumn* wghtCol = dynamic_cast<DyscoWeightColumn*>(col);
 			if(wghtCol != 0)
@@ -385,7 +391,7 @@ void DyscoStMan::addColumn(casacore::DataManagerColumn* column)
 	
 	//DyscoDataColumn *dataCol = dynamic_cast<DyscoDataColumn*>(column);
 	//if(dataCol != 0)
-	//	dataCol->SetBitsPerSymbol(_floatBitCount);
+	//	dataCol->SetBitsPerSymbol(_dataBitCount);
 	//OffringaWeightColumn *wghtCol = dynamic_cast<OffringaWeightColumn*>(column);
 	//if(wghtCol != 0)
 	//	wghtCol->SetBitsPerSymbol(_weightBitCount);

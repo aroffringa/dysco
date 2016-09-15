@@ -55,6 +55,8 @@ target_link_libraries(encodeexample ${GSL_LIB} ${GSL_CBLAS_LIB})
 add_executable(testminsigma testminsigma.cpp gausencoder.cpp)
 target_link_libraries(testminsigma ${GSL_LIB} ${GSL_CBLAS_LIB})
 
+add_executable(testbytepacker testbytepacker.cpp)
+
 add_executable(getmsencdistr getmsencdistr.cpp gausencoder.cpp aftimeblockencoder.cpp)
 target_link_libraries(getmsencdistr ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
 

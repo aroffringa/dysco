@@ -221,7 +221,7 @@ private:
 		/** File version number */
 		uint16_t versionMajor, versionMinor;
 		
-		uint8_t floatBitCount;
+		uint8_t dataBitCount;
 		uint8_t weightBitCount;
 		bool fitToMaximum;
 		uint8_t distribution;
@@ -318,7 +318,7 @@ private:
 	std::unique_ptr<std::fstream> _fStream;
 	
 	std::string _name;
-	unsigned _floatBitCount;
+	unsigned _dataBitCount;
 	unsigned _weightBitCount;
 	bool _fitToMaximum;
 	DyscoDistribution _distribution;

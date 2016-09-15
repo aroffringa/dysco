@@ -93,6 +93,15 @@ class BytePacker
 		static void unpack8(unsigned* symbolBuffer, unsigned char* packedBuffer, size_t symbolCount);
 	
 		/**
+		 * Pack the symbols from symbolBuffer into the destination array using bitCount=10. 
+		 */
+		static void pack10(unsigned char* dest, const unsigned* symbolBuffer, size_t symbolCount);
+		/**
+		 * Reverse of pack10(). Will write symbolCount items into the symbolBuffer.
+		 */
+		static void unpack10(unsigned* symbolBuffer, unsigned char* packedBuffer, size_t symbolCount);
+		
+		/**
 		 * Pack the symbols from symbolBuffer into the destination array using bitCount=12. 
 		 */
 		static void pack12(unsigned char* dest, const unsigned* symbolBuffer, size_t symbolCount);
@@ -125,6 +134,7 @@ inline void BytePacker::pack(unsigned int bitCount, unsigned char* dest, const u
 		case 4: pack4(dest, symbolBuffer, symbolCount); break;
 		case 6: pack6(dest, symbolBuffer, symbolCount); break;
 		case 8: pack8(dest, symbolBuffer, symbolCount); break;
+		case 10: pack10(dest, symbolBuffer, symbolCount); break;
 		case 12: pack12(dest, symbolBuffer, symbolCount); break;
 		case 16: pack16(dest, symbolBuffer, symbolCount); break;
 		default: throw std::runtime_error("Unsupported packing size");
@@ -140,6 +150,7 @@ inline void BytePacker::unpack(unsigned int bitCount, unsigned int* symbolBuffer
 		case 4: unpack4(symbolBuffer, packedBuffer, symbolCount); break;
 		case 6: unpack6(symbolBuffer, packedBuffer, symbolCount); break;
 		case 8: unpack8(symbolBuffer, packedBuffer, symbolCount); break;
+		case 10: unpack10(symbolBuffer, packedBuffer, symbolCount); break;
 		case 12: unpack12(symbolBuffer, packedBuffer, symbolCount); break;
 		case 16: unpack16(symbolBuffer, packedBuffer, symbolCount); break;
 		default: throw std::runtime_error("Unsupported unpacking size");
@@ -518,6 +529,115 @@ inline void BytePacker::unpack8(unsigned *symbolBuffer, unsigned char *packedBuf
 {
 	for(size_t i=0; i!=symbolCount; ++i)
 		symbolBuffer[i] = packedBuffer[i];
+}
+
+inline void BytePacker::pack10(unsigned char* dest, const unsigned int* symbolBuffer, size_t symbolCount)
+{
+	const size_t limit = symbolCount/4;
+	for(size_t i=0; i!=limit; i ++)
+	{
+		*dest = (*symbolBuffer&0x0FF); // Bit 1-8 into 1-8
+		++dest;
+		*dest = (*symbolBuffer&0x300) >> 8;  // Bits 9-10 into 1-2
+		++symbolBuffer;
+		*dest |= (*symbolBuffer&0x03F) << 2; // Bits 1-6 into 3-8
+		++dest;
+		*dest = (*symbolBuffer&0x3C0) >> 6; // Bits 7-10 into 1-4
+		++symbolBuffer;
+		
+		*dest |= (*symbolBuffer&0x00F) << 4; // Bits 1-4 into 5-8
+		++dest;
+		*dest = (*symbolBuffer&0x3F0) >> 4; // Bits 5-10 into bits 1-6
+		++symbolBuffer;
+		*dest |= (*symbolBuffer&0x003) << 6; // Bits 1-2 into 7-8
+		++dest;
+		*dest = (*symbolBuffer&0x3FC) >> 2; // Bits 3-10 into bits 1-8
+		++symbolBuffer;
+		++dest;
+	}
+	
+	size_t pos = limit*4;
+	if(pos != symbolCount)
+	{
+		*dest = (*symbolBuffer&0x0FF); // Bit 1-8 into 1-8
+		++dest;
+		*dest = (*symbolBuffer&0x300) >> 8;  // Bits 9-10 into 1-2
+		++pos;
+		
+		if(pos != symbolCount)
+		{
+			++symbolBuffer;
+		
+			*dest |= (*symbolBuffer&0x03F) << 2; // Bits 1-6 into 3-8
+			++dest;
+			*dest = (*symbolBuffer&0x3C0) >> 6; // Bits 7-10 into 1-4
+			++pos;
+			
+			if(pos != symbolCount)
+			{
+				++symbolBuffer;
+			
+				*dest |= (*symbolBuffer&0x00F) << 4; // Bits 1-4 into 5-8
+				++dest;
+				*dest = (*symbolBuffer&0x3F0) >> 4; // Bits 5-10 into bits 1-6
+				//++symbolBuffer; ++pos;
+			}
+		}
+	}
+}
+
+inline void BytePacker::unpack10(unsigned int* symbolBuffer, unsigned char* packedBuffer, size_t symbolCount)
+{
+	const size_t limit = symbolCount/4;
+	for(size_t i=0; i!=limit; i ++)
+	{
+		*symbolBuffer = *packedBuffer; // Bits 1-8 into 1-8
+		++packedBuffer;
+		*symbolBuffer |= ((*packedBuffer) & 0x03) << 8; // Bits 1-2 into 9-10
+		++symbolBuffer;
+		
+		*symbolBuffer = ((*packedBuffer) & 0xFC) >> 2; // Bits 3-8 into 1-6
+		++packedBuffer;
+		*symbolBuffer |= ((*packedBuffer) & 0x0F) << 6; // Bits 1-4 into 7-10
+		++symbolBuffer;
+		
+		*symbolBuffer = ((*packedBuffer) & 0xF0) >> 4; // Bits 5-8 into 1-4
+		++packedBuffer;
+		*symbolBuffer |= ((*packedBuffer) & 0x3F) << 4; // Bits 1-6 into 5-10
+		++symbolBuffer;
+		
+		*symbolBuffer = ((*packedBuffer) & 0xC0) >> 6; // Bits 7-8 into 1-2
+		++packedBuffer;
+		*symbolBuffer |= (*packedBuffer) << 2; // Bits 1-8 into 3-10
+		++packedBuffer;
+		++symbolBuffer;
+	}
+	size_t pos = limit*4;
+	if(pos != symbolCount)
+	{
+		*symbolBuffer = *packedBuffer; // Bits 1-8 into 1-8
+		++packedBuffer;
+		*symbolBuffer |= ((*packedBuffer) & 0x03) << 8; // Bits 1-2 into 9-10
+		++pos;
+		
+		if(pos != symbolCount)
+		{
+			++symbolBuffer;
+			
+			*symbolBuffer = ((*packedBuffer) & 0xFC) >> 2; // Bits 3-8 into 1-6
+			++packedBuffer;
+			*symbolBuffer |= ((*packedBuffer) & 0x0F) << 6; // Bits 1-4 into 7-10
+			++pos;
+			
+			if(pos != symbolCount)
+			{
+				++symbolBuffer;
+				*symbolBuffer = ((*packedBuffer) & 0xF0) >> 4; // Bits 5-8 into 1-4
+				++packedBuffer;
+				*symbolBuffer |= ((*packedBuffer) & 0x3F) << 4; // Bits 1-6 into 5-10
+			}
+		}
+	}
 }
 
 inline void BytePacker::pack12(unsigned char* dest, const unsigned int* symbolBuffer, size_t symbolCount)

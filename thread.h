@@ -133,9 +133,10 @@ class mutex
 		/** Destruct the mutex. */
 		~mutex()
 		{
-			int status = pthread_mutex_destroy(&_mutex);
-			if(status != 0)
-				throw std::runtime_error("Could not destroy mutex");
+			//int status = 
+			pthread_mutex_destroy(&_mutex);
+			//if(status != 0)
+			//	throw std::runtime_error("Could not destroy mutex");
 		}
 		
 		/** Lock the mutex. Preferably done by a scoped_lock .*/
@@ -208,9 +209,10 @@ class condition
 		/** Destruct the condition. */
 		~condition()
 		{
-			int status = pthread_cond_destroy(&_condition);
-			if(status != 0)
-				throw std::runtime_error("Could not destroy condition");
+			//int status = 
+			pthread_cond_destroy(&_condition);
+			//if(status != 0)
+			//	throw std::runtime_error("Could not destroy condition");
 		}
 		/**
 		 * Notify all waiting threads that the condition might have changed.
