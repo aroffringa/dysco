@@ -23,6 +23,7 @@ public:
 	 */
   DyscoDataColumn(DyscoStMan* parent, int dtype) :
 		ThreadedDyscoColumn(parent, dtype),
+		_rnd(std::random_device{}()),
 		_gausEncoder(),
 		_fitToMaximum(false),
 		_distribution(GaussianDistribution),

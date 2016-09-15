@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 	{
 		testArray.push_back(i);
 		testArray.push_back(i*37);
-		testArray.push_back(i*2);
+		testArray.push_back(i*20000);
 	}
 	testAllBitRates(testArray);
 }
