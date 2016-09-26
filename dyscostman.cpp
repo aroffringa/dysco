@@ -33,10 +33,8 @@ DyscoStMan::DyscoStMan(unsigned dataBitCount, unsigned weightBitCount, const cas
 	_distribution(GaussianDistribution),
 	_normalization(RFNormalization),
 	_studentTNu(0.0),
-	_distributionTruncation(0.0),
-	_spec()
+	_distributionTruncation(0.0)
 {
-	initializeSpec();
 }
 
 DyscoStMan::DyscoStMan(const casacore::String& name, const casacore::Record& spec) :
@@ -54,10 +52,9 @@ DyscoStMan::DyscoStMan(const casacore::String& name, const casacore::Record& spe
 	_distribution(GaussianDistribution),
 	_normalization(AFNormalization),
 	_studentTNu(0.0),
-	_distributionTruncation(0.0),
-	_spec(spec)
+	_distributionTruncation(0.0)
 {
-	setFromSpec();
+	setFromSpec(spec);
 }
 
 DyscoStMan::DyscoStMan(const DyscoStMan& source) :
@@ -75,25 +72,23 @@ DyscoStMan::DyscoStMan(const DyscoStMan& source) :
 	_distribution(source._distribution),
 	_normalization(source._normalization),
 	_studentTNu(source._studentTNu),
-	_distributionTruncation(source._distributionTruncation),
-	_spec(source._spec)
+	_distributionTruncation(source._distributionTruncation)
 {
-	initializeSpec();
 }
 
-void DyscoStMan::setFromSpec()
+void DyscoStMan::setFromSpec(const casacore::Record& spec)
 {
 	// Here we need to load from _spec
-	int i = _spec.description().fieldNumber("dataBitCount");
+	int i = spec.description().fieldNumber("dataBitCount");
 	if(i >= 0)
 	{
-		_dataBitCount = _spec.asInt("dataBitCount");
-		_weightBitCount = _spec.asInt("weightBitCount");
-		if(_spec.description().fieldNumber("fitToMaximum") >= 0)
-			_fitToMaximum = _spec.asBool("fitToMaximum");
+		_dataBitCount = spec.asInt("dataBitCount");
+		_weightBitCount = spec.asInt("weightBitCount");
+		if(spec.description().fieldNumber("fitToMaximum") >= 0)
+			_fitToMaximum = spec.asBool("fitToMaximum");
 		else
 			_fitToMaximum = true;
-		std::string str = _spec.asString("distribution");
+		std::string str = spec.asString("distribution");
 		if(str == "Uniform")
 			_distribution = UniformDistribution;
 		else if(str == "Gaussian")
@@ -103,7 +98,7 @@ void DyscoStMan::setFromSpec()
 		else if(str == "TruncatedGaussian")
 			_distribution = TruncatedGaussianDistribution;
 		else throw std::runtime_error("Unsupported distribution specified");
-		str = _spec.asString("normalization");
+		str = spec.asString("normalization");
 		if(str == "RF")
 			_normalization = RFNormalization;
 		else if(str == "AF")
@@ -111,36 +106,12 @@ void DyscoStMan::setFromSpec()
 		else if(str == "Row")
 			_normalization = RowNormalization;
 		else throw std::runtime_error("Unsupported normalization specified");
-		if(_spec.description().fieldNumber("studentTNu") >= 0)
-			_studentTNu = _spec.asDouble("studentTNu");
+		if(spec.description().fieldNumber("studentTNu") >= 0)
+			_studentTNu = spec.asDouble("studentTNu");
 		else
 			_studentTNu = 0.0;
-		_distributionTruncation = _spec.asDouble("distributionTruncation");
+		_distributionTruncation = spec.asDouble("distributionTruncation");
 	}
-}
-
-void DyscoStMan::initializeSpec()
-{
-	_spec.define("dataBitCount", _dataBitCount);
-	_spec.define("weightBitCount", _weightBitCount);
-	_spec.define("fitToMaximum", _fitToMaximum);
-	std::string distStr;
-	switch(_distribution) {
-		case GaussianDistribution: distStr = "Gaussian"; break;
-		case UniformDistribution: distStr = "Uniform"; break;
-		case StudentsTDistribution: distStr = "StudentsT"; break;
-		case TruncatedGaussianDistribution: distStr = "TruncatedGaussian"; break;
-	}
-	_spec.define("distribution", distStr);
-	std::string normStr;
-	switch(_normalization) {
-		case AFNormalization: normStr = "AF"; break;
-		case RFNormalization: normStr = "RF"; break;
-		case RowNormalization: normStr = "Row"; break;
-	}
-	_spec.define("normalization", normStr);
-	_spec.define("studentTNu", _studentTNu);
-	_spec.define("distributionTruncation", _distributionTruncation);
 }
 
 void DyscoStMan::makeEmpty()
@@ -157,7 +128,28 @@ DyscoStMan::~DyscoStMan()
 
 casacore::Record DyscoStMan::dataManagerSpec() const 
 {
-	return _spec;
+  casacore::Record spec;
+  spec.define("dataBitCount", _dataBitCount);
+  spec.define("weightBitCount", _weightBitCount);
+  spec.define("fitToMaximum", _fitToMaximum);
+  std::string distStr;
+  switch(_distribution) {
+    case GaussianDistribution: distStr = "Gaussian"; break;
+    case UniformDistribution: distStr = "Uniform"; break;
+    case StudentsTDistribution: distStr = "StudentsT"; break;
+    case TruncatedGaussianDistribution: distStr = "TruncatedGaussian"; break;
+  }
+  spec.define("distribution", distStr);
+  std::string normStr;
+  switch(_normalization) {
+    case AFNormalization: normStr = "AF"; break;
+    case RFNormalization: normStr = "RF"; break;
+    case RowNormalization: normStr = "Row"; break;
+  }
+  spec.define("normalization", normStr);
+  spec.define("studentTNu", _studentTNu);
+  spec.define("distributionTruncation", _distributionTruncation);
+	return spec;
 }
 
 void DyscoStMan::registerClass()

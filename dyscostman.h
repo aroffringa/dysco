@@ -48,14 +48,12 @@ public:
 	{
 		_distribution = GaussianDistribution;
 		_fitToMaximum = fitToMaximum;
-		initializeSpec();
 	}
 	
 	void SetUniformDistribution()
 	{
 		_distribution = UniformDistribution;
 		_fitToMaximum = true;
-		initializeSpec();
 	}
 	
 	void SetStudentsTDistribution(bool fitToMaximum, double nu)
@@ -63,7 +61,6 @@ public:
 		_distribution = StudentsTDistribution;
 		_fitToMaximum = fitToMaximum;
 		_studentTNu = nu;
-		initializeSpec();
 	}
 
 	void SetTruncatedGaussianDistribution(bool fitToMaximum, double truncationSigma)
@@ -71,7 +68,6 @@ public:
 		_distribution = TruncatedGaussianDistribution;
 		_fitToMaximum = fitToMaximum;
 		_distributionTruncation = truncationSigma;
-		initializeSpec();
 	}
 	
 	void SetNormalization(DyscoNormalization normalization)
@@ -249,9 +245,7 @@ private:
 
 	void makeEmpty();
 	
-	void setFromSpec();
-	
-	void initializeSpec();
+	void setFromSpec(const casacore::Record& spec);
 	
 	size_t getFileOffset(size_t blockIndex) const { return _blockSize * blockIndex + _headerSize; }
 	
@@ -326,7 +320,6 @@ private:
 	double _studentTNu, _distributionTruncation;
 
 	std::vector<DyscoStManColumn*> _columns;
-	casacore::Record _spec;
 };
 
 } // end of namespace

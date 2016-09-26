@@ -69,3 +69,17 @@ add_custom_target(doc
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif(DOXYGEN_FOUND)
+
+find_package(Boost COMPONENTS date_time thread system filesystem unit_test_framework)
+if(Boost_FOUND)
+  add_executable(runtests EXCLUDE_FROM_ALL
+    tests/runtests.cpp 
+    dyscostman.cpp dyscodatacolumn.cpp dyscoweightcolumn.cpp gausencoder.cpp threadeddyscocolumn.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp rowtimeblockencoder.cpp
+    tests/testdyscostman.cpp
+    )
+  target_link_libraries(runtests ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+  add_test(runtests runtests)
+  add_custom_target(check COMMAND runtests -l unit_scope DEPENDS runtests)
+else()
+  message("Boost testing framework not found.")
+endif()
