@@ -154,7 +154,7 @@ public:
 	* This methods gets registered in the DataManager "constructor" map.
 	* The caller has to delete the object. New class will be
 	* initialized via @ref DyscoStMan(const casacore::String& name, const casacore::Record& spec).
-	* @returns An DyscoStMan with given specs.
+	* @returns A DyscoStMan with given specs.
 	*/
 	static casacore::DataManager* makeObject(const casacore::String& name,
 																				const casacore::Record& spec)
