@@ -127,13 +127,11 @@ void encodeMBs(const GausEncoder<float> &encoder, size_t mb, unsigned bitCount)
 		for(size_t xi2=0;xi2!=100;++xi2)
 			encodeBuffer[xi2] = encoder.Encode(input[xi2]);
 		BytePacker::pack(bitCount, packed, encodeBuffer, 100);
-		volatile unsigned char x = packed[47];
 	}
 }
 
 void decodeMBs(const GausEncoder<float> &encoder, size_t mb, unsigned bitCount)
 {
-	float output[100];
 	unsigned symbolBuffer[100];
 	unsigned char packed[400];
 	unsigned modulo = (1<<bitCount);
@@ -145,8 +143,7 @@ void decodeMBs(const GausEncoder<float> &encoder, size_t mb, unsigned bitCount)
 	{
 		BytePacker::unpack(bitCount, symbolBuffer, packed, 100);
 		for(size_t xi2=0;xi2!=100;++xi2)
-			output[xi2] = encoder.Decode(symbolBuffer[xi2]%modulo);
-		volatile float x = output[47];
+			encoder.Decode(symbolBuffer[xi2]%modulo);
 	}
 }
 
@@ -270,7 +267,6 @@ void testWeightEncoder()
 			encoder.Encode(val, encBuffer, uniInp);
 			if(i == 6)
 				BytePacker::pack6(packed, &encBuffer[0], 100);
-			volatile unsigned char x = packed[47];
 		}
 		watchA.Pause();
 		
@@ -280,7 +276,7 @@ void testWeightEncoder()
 			if(i == 6)
 				BytePacker::unpack6(&encBuffer[0], packed, 100);
 			encoder.Decode(uniBuffer, (xi/40000.0), encBuffer);
-			volatile float x = uniBuffer[49];
+			uniBuffer[49];
 		}
 		watchB.Pause();
 		

@@ -24,7 +24,7 @@ include_directories(${CASACORE_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${GSL_INCLUDE_DIR})
 
-set(CMAKE_CXX_FLAGS "-O3 -ggdb -Wall -DNDEBUG -march=native --std=c++11")
+set(CMAKE_CXX_FLAGS "-O3 -ggdb -Wall -DNDEBUG -march=native --std=c++14")
 
 # Note: casapy fails if Casa is linked in the storage manager, so we have to trust that
 # casapy's version of casacore is binary compatible with this storage manager's casacore.

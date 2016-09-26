@@ -299,22 +299,17 @@ casacore::DataManagerColumn* DyscoStMan::makeDirArrColumn(const casacore::String
 {
 	DyscoStManColumn *col = 0;
 	
-	if(name == "DATA" || name == "CORRECTED_DATA" || name == "MODEL_DATA")
-	{
-		if(dataType == casacore::TpComplex)
-			col = new DyscoDataColumn(this, dataType);
-		else
-			throw std::runtime_error("Trying to create a Dysco data column with wrong type");
-	}
-	else if(name == "WEIGHT_SPECTRUM")
+	if(name == "WEIGHT_SPECTRUM")
 	{
 		if(dataType == casacore::TpFloat)
 			col = new DyscoWeightColumn(this, dataType);
 		else
 			throw std::runtime_error("Trying to create a Dysco weight column with wrong type");
 	}
+	else if(dataType == casacore::TpComplex)
+		col = new DyscoDataColumn(this, dataType);
 	else
-		throw std::runtime_error("Trying to create a Dysco column, but type is unknown");
+		throw std::runtime_error("Trying to create a Dysco data column with wrong type");
 	_columns.push_back(col);
 	return col;
 }
