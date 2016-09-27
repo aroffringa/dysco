@@ -230,6 +230,13 @@ void DyscoStMan::readHeader()
 	_antennaCount = header.antennaCount;
 	_blockSize = header.blockSize;
 	
+	if(header.versionMajor != 1 || header.versionMinor != 0)
+	{
+		std::stringstream s;
+		s << "The compressed file has file format version " << header.versionMajor << "." << header.versionMinor << ", but this version of Dysco can only open file format version 1.0. Upgrade Dysco.\n";
+		throw DyscoStManError(s.str());
+	}
+	
 	if(columnCount != _columns.size())
 	{
 		std::stringstream s;
