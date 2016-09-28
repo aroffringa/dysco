@@ -83,7 +83,13 @@ void DyscoStMan::setFromSpec(const casacore::Record& spec)
 	if(i >= 0)
 	{
 		_dataBitCount = spec.asInt("dataBitCount");
+		if(_dataBitCount == 0)
+			throw DyscoStManError("Invalid error for data bit rate");
+		
 		_weightBitCount = spec.asInt("weightBitCount");
+		if(_weightBitCount == 0)
+			throw DyscoStManError("Invalid error for weight bit rate");
+		
 		if(spec.description().fieldNumber("fitToMaximum") >= 0)
 			_fitToMaximum = spec.asBool("fitToMaximum");
 		else

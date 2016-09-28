@@ -29,7 +29,7 @@ set(CMAKE_CXX_FLAGS "-O3 -ggdb -Wall -DNDEBUG -march=native --std=c++14")
 # Note: casapy fails if Casa is linked in the storage manager, so we have to trust that
 # casapy's version of casacore is binary compatible with this storage manager's casacore.
 add_library(dyscostman SHARED dyscostman.cpp dyscodatacolumn.cpp dyscoweightcolumn.cpp gausencoder.cpp threadeddyscocolumn.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp rowtimeblockencoder.cpp)
-target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${Boost_SYSTEM_LIBRARY} ${CASACORE_LIBRARIES})
+target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
 
 add_executable(testgausencoder testgausencoder.cpp stopwatch.cpp gausencoder.cpp)
 target_link_libraries(testgausencoder ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
@@ -77,7 +77,7 @@ if(Boost_FOUND)
     dyscostman.cpp dyscodatacolumn.cpp dyscoweightcolumn.cpp gausencoder.cpp threadeddyscocolumn.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp rowtimeblockencoder.cpp
     tests/testdyscostman.cpp
     )
-  target_link_libraries(runtests ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+  target_link_libraries(runtests ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
   add_test(runtests runtests)
   add_custom_target(check COMMAND runtests -l unit_scope DEPENDS runtests)
 else()

@@ -7,7 +7,7 @@
 #include "bytepacker.h"
 
 #include <casacore/tables/Tables/ScalarColumn.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
 
 #include <limits>
 

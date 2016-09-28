@@ -1,5 +1,5 @@
-#ifndef DYNSTACOM_STORAGE_MAN_COLUMN_H
-#define DYNSTACOM_STORAGE_MAN_COLUMN_H
+#ifndef DYSCO_STORAGE_MAN_COLUMN_H
+#define DYSCO_STORAGE_MAN_COLUMN_H
 
 #include "dyscodistribution.h"
 #include "dysconormalization.h"
@@ -7,10 +7,6 @@
 #include <casacore/tables/DataMan/StManColumn.h>
 
 #include <casa/Arrays/IPosition.h>
-
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
-#include <boost/thread/condition.hpp>
 
 #include <map>
 

@@ -1,6 +1,7 @@
 #ifndef AO_UVECTOR_H
 #define AO_UVECTOR_H
 
+#include <algorithm>
 #include <cstring>
 #include <iterator>
 #include <memory>

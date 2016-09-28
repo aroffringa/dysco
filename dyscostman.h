@@ -1,5 +1,5 @@
-#ifndef DYNSTACOM_STORAGE_MANAGER_H
-#define DYNSTACOM_STORAGE_MANAGER_H
+#ifndef DYSCO_STORAGE_MANAGER_H
+#define DYSCO_STORAGE_MANAGER_H
 
 #include <casacore/tables/DataMan/DataManager.h>
 
