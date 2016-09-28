@@ -88,7 +88,7 @@ protected:
 	/**
 	 * Get the actual number of blocks in the file.
 	 */
-	size_t nBlocksInFile() const;
+	uint64_t nBlocksInFile() const;
 	
 	size_t getBlockIndex(uint64_t row) const;
 	

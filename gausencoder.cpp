@@ -6,6 +6,10 @@
 #include <limits>
 #include <cmath>
 
+#ifndef M_SQRT2l
+#define M_SQRT2l 1.4142135623730950488016887242096981L
+#endif
+
 namespace dyscostman
 {
 
