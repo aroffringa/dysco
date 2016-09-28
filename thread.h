@@ -110,6 +110,12 @@ class threadgroup
 			_threads.clear();
 		}
 		
+		/**
+		 * @returns true when there are unjoined threads in the group. Not synchronized --
+		 * caller has to make sure that thread is safe.
+		 */
+		bool empty() const { return _threads.empty(); }
+		
 	private:
 		std::vector<thread*> _threads;
 };

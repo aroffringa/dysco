@@ -1,9 +1,11 @@
 #include <boost/test/unit_test.hpp>
 
+#include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/Table.h>
 #include <casacore/tables/Tables/TableDesc.h>
 #include <casacore/tables/Tables/SetupNewTab.h>
 #include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
 
 #include "../dyscostman.h"
 
@@ -12,7 +14,7 @@ using namespace dyscostman;
 
 BOOST_AUTO_TEST_SUITE(dyscostman)
 
-casa::Record GetDyscoSpec() const
+casa::Record GetDyscoSpec()
 {
 	casa::Record dyscoSpec;
 	dyscoSpec.define ("distribution", "TruncatedGaussian");
@@ -66,9 +68,48 @@ BOOST_AUTO_TEST_CASE( maketable )
 	IPosition shape(2, 1, 1);
 	casacore::ArrayColumnDesc<casacore::Complex> columnDesc("DATA", "", "DyscoStMan", "", shape);
 	columnDesc.setOptions(casacore::ColumnDesc::Direct | casacore::ColumnDesc::FixedShape);
+	casacore::ScalarColumnDesc<int>
+		ant1Desc("ANTENNA1"),
+		ant2Desc("ANTENNA2"),
+		fieldDesc("FIELD_ID"),
+		dataDescIdDesc("DATA_DESC_ID");
+	casacore::ScalarColumnDesc<double>
+		timeDesc("TIME");
 	tableDesc.addColumn(columnDesc);
+	tableDesc.addColumn(ant1Desc);
+	tableDesc.addColumn(ant2Desc);
+  tableDesc.addColumn(fieldDesc);
+  tableDesc.addColumn(dataDescIdDesc);
+  tableDesc.addColumn(timeDesc);
 	casacore::SetupNewTable setupNewTable("TestTable", tableDesc, casacore::Table::New);
+  
+	DataManagerCtor dyscoConstructor = DataManager::getCtor("DyscoStMan");
+	std::unique_ptr<DataManager> dysco(dyscoConstructor("DATA_dm", GetDyscoSpec()));
+  setupNewTable.bindColumn("DATA", *dysco);
 	casacore::Table newTable(setupNewTable);
+	
+	const size_t nRow = 10;
+	newTable.addRow(nRow);
+	casacore::ScalarColumn<int>
+		a1Col(newTable, "ANTENNA1"),
+		a2Col(newTable, "ANTENNA2"),
+		fieldCol(newTable, "FIELD_ID"),
+		dataDescIdCol(newTable, "DATA_DESC_ID");
+	for(size_t i=0; i!=nRow; ++i)
+	{
+		a1Col.put(i, i/2);
+		a2Col.put(i, i%2);
+		fieldCol.put(i, 0);
+		dataDescIdCol.put(i, 0);
+	}
+	
+	casacore::ArrayColumn<casacore::Complex> dataCol(newTable, "DATA");
+	for(size_t i=0; i!=nRow; ++i)
+	{
+		casacore::Array<casacore::Complex> arr(shape);
+		*arr.cbegin() = i;
+		dataCol.put(i, arr);
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

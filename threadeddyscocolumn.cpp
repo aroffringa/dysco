@@ -56,17 +56,24 @@ void ThreadedDyscoColumn<DataType>::stopThreads()
 {
 	mutex::scoped_lock lock(_mutex);
 	
-	// Don't stop threads before cache is empty
-	while(!_cache.empty())
-		_cacheChangedCondition.wait(lock);
-	
-	// Signal threads to stop
-	_stopThreads = true;
-	_cacheChangedCondition.notify_all();
-	
-	// Wait for threads to end
-	lock.unlock();
-	_threadGroup.join_all();
+	if(_threadGroup.empty())
+	{
+		if(!_cache.empty())
+			throw DyscoStManError("DyscoStMan is flushed before at least two timeblocks were stored. DyscoStMan can not handle this situation.");
+	}
+	else {
+		// Don't stop threads before cache is empty
+		while(!_cache.empty())
+			_cacheChangedCondition.wait(lock);
+		
+		// Signal threads to stop
+		_stopThreads = true;
+		_cacheChangedCondition.notify_all();
+		
+		// Wait for threads to end
+		lock.unlock();
+		_threadGroup.join_all();
+	}
 }
 
 template<typename DataType>
