@@ -39,6 +39,7 @@ ThreadedDyscoColumn<DataType>::ThreadedDyscoColumn(DyscoStMan* parent, int dtype
 template<typename DataType>
 void ThreadedDyscoColumn<DataType>::destructDerived()
 {
+	mutex::scoped_lock lock(_mutex);
 	if(_isCurrentBlockChanged)
 		storeBlock();
 	

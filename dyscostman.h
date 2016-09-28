@@ -179,7 +179,11 @@ protected:
 	/**
 	* The number of rows that are actually stored in the file.
 	*/
-	uint64_t nBlocksInFile() const { return _nBlocksInFile; }
+	uint64_t nBlocksInFile() const
+	{
+		altthread::mutex::scoped_lock lock(_mutex);
+		return _nBlocksInFile;
+	}
 	
 	size_t nRowsInBlock() const { return _rowsPerBlock; }
 	
@@ -308,7 +312,7 @@ private:
 	uint32_t _blockSize;
 	
 	unsigned _headerSize;
-	altthread::mutex _mutex;
+	mutable altthread::mutex _mutex;
 	std::unique_ptr<std::fstream> _fStream;
 	
 	std::string _name;

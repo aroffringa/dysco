@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE( makecolumn )
 	BOOST_CHECK(true);
 }
 
-BOOST_AUTO_TEST_CASE( maketable )
+void writeTable(size_t nAnt)
 {
 	casacore::TableDesc tableDesc;
 	IPosition shape(2, 1, 1);
@@ -88,19 +88,35 @@ BOOST_AUTO_TEST_CASE( maketable )
   setupNewTable.bindColumn("DATA", *dysco);
 	casacore::Table newTable(setupNewTable);
 	
-	const size_t nRow = 10;
+	size_t a1 = 0, a2 = 1;
+	double time = 10.0;
+	const size_t nRow = 2*nAnt*(nAnt-1)/2;
 	newTable.addRow(nRow);
 	casacore::ScalarColumn<int>
 		a1Col(newTable, "ANTENNA1"),
 		a2Col(newTable, "ANTENNA2"),
 		fieldCol(newTable, "FIELD_ID"),
 		dataDescIdCol(newTable, "DATA_DESC_ID");
+	casacore::ScalarColumn<double> timeCol(newTable, "TIME");
 	for(size_t i=0; i!=nRow; ++i)
 	{
-		a1Col.put(i, i/2);
-		a2Col.put(i, i%2);
+		a1Col.put(i, a1);
+		a2Col.put(i, a2);
 		fieldCol.put(i, 0);
 		dataDescIdCol.put(i, 0);
+		timeCol.put(i, time);
+		a2++;
+		if(a2 == nAnt)
+		{
+			++a1;
+			a2=a1+1;
+			if(a2 == nAnt)
+			{
+				a1 = 0;
+				a2 = 1;
+				++time;
+			}
+		}
 	}
 	
 	casacore::ArrayColumn<casacore::Complex> dataCol(newTable, "DATA");
@@ -109,6 +125,19 @@ BOOST_AUTO_TEST_CASE( maketable )
 		casacore::Array<casacore::Complex> arr(shape);
 		*arr.cbegin() = i;
 		dataCol.put(i, arr);
+	}
+}	
+
+BOOST_AUTO_TEST_CASE( maketable )
+{
+	size_t nAnt = 3;
+	writeTable(nAnt);
+	
+	casacore::Table table("TestTable");
+	casacore::ArrayColumn<casacore::Complex> dataCol(table, "DATA");
+	for(size_t i=0; i!=table.nrow(); ++i)
+	{
+		BOOST_CHECK_CLOSE_FRACTION((*dataCol(i).cbegin()).real(), float(i), 1e-4);
 	}
 }
 
