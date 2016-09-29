@@ -125,7 +125,7 @@ protected:
 	
 	size_t getBitsPerSymbol() const { return _bitsPerSymbol; }
 	
-	void destructDerived();
+	virtual void shutdown() override final;
 	
 	const casacore::IPosition& shape() const { return _shape; }
 	

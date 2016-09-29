@@ -38,6 +38,8 @@ public:
   /** Destructor */
   virtual ~DyscoStManColumn() { }
 	
+	virtual void shutdown() = 0;
+
 	/**
 	 * Whether this column is writable
 	 * @returns @c true

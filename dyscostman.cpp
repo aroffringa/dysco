@@ -123,7 +123,10 @@ void DyscoStMan::setFromSpec(const casacore::Record& spec)
 void DyscoStMan::makeEmpty()
 {
 	for(std::vector<DyscoStManColumn*>::iterator i = _columns.begin(); i!=_columns.end(); ++i)
+	{
+		(*i)->shutdown();
 		delete *i;
+	}
 	_columns.clear();
 }
 

@@ -35,7 +35,7 @@ public:
 	void operator=(const DyscoDataColumn &source) = delete;
 	
   /** Destructor. */
-  virtual ~DyscoDataColumn() { destructDerived(); }
+  virtual ~DyscoDataColumn() { shutdown(); }
 	
 	virtual void Prepare(bool fitToMaximum, DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) override;
 	

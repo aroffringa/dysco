@@ -29,7 +29,7 @@ public:
 	void operator=(const DyscoWeightColumn &source) = delete;
 	
   /** Destructor. */
-  virtual ~DyscoWeightColumn() { destructDerived(); }
+  virtual ~DyscoWeightColumn() { shutdown(); }
 	
 	virtual void Prepare(bool fitToMaximum, DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) override;
 	

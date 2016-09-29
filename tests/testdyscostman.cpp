@@ -141,6 +141,8 @@ BOOST_AUTO_TEST_CASE( maketable )
 	{
 		BOOST_CHECK_CLOSE_FRACTION((*dataCol(i).cbegin()).real(), float(i), 1e-4);
 	}
+	//table.dataManagerInfo();
+	//BOOST_CHECK_EQUAL(table. "DATA_dm");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

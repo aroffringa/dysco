@@ -96,7 +96,7 @@ public:
 	
 	/** Destructor. */
 	~DyscoStMan();
-
+	
 	DyscoStMan &operator=(const DyscoStMan& source) = delete;
 	
 	/** Polymorphical copy constructor, equal to DyscoStMan(const DyscoStMan&).

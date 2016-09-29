@@ -37,12 +37,9 @@ ThreadedDyscoColumn<DataType>::ThreadedDyscoColumn(DyscoStMan* parent, int dtype
 // this is necessary because the virtual function of the derived class might get
 // called to empty the cache.
 template<typename DataType>
-void ThreadedDyscoColumn<DataType>::destructDerived()
+void ThreadedDyscoColumn<DataType>::shutdown()
 {
-	mutex::scoped_lock lock(_mutex);
-	bool isChanged = _isCurrentBlockChanged;
-	lock.unlock();
-	if(isChanged)
+	if(_isCurrentBlockChanged)
 		storeBlock();
 	
 	stopThreads();
@@ -51,7 +48,7 @@ void ThreadedDyscoColumn<DataType>::destructDerived()
 template<typename DataType>
 ThreadedDyscoColumn<DataType>::~ThreadedDyscoColumn()
 {
-	destructDerived();
+	shutdown();
 }
 
 template<typename DataType>
@@ -122,32 +119,24 @@ void ThreadedDyscoColumn<DataType>::getValues(casacore::uInt rowNr, casacore::Ar
 	else {
 		size_t blockIndex = getBlockIndex(rowNr);
 		mutex::scoped_lock lock(_mutex);
-		if(blockIndex >= nBlocksInFile())
+		// Wait until the block to be read is not in the write cache
+		typename cache_t::const_iterator cacheItemPtr = _cache.find(blockIndex);
+		while(cacheItemPtr != _cache.end())
 		{
-			lock.unlock();
-			for(typename casacore::Array<DataType>::contiter i=dataPtr->cbegin(); i!=dataPtr->cend(); ++i)
-				*i = DataType();
+			_cacheChangedCondition.wait(lock);
+			cacheItemPtr = _cache.find(blockIndex);
 		}
-		else {
-			// Wait until the block to be read is not in the write cache
-			typename cache_t::const_iterator cacheItemPtr = _cache.find(blockIndex);
-			while(cacheItemPtr != _cache.end())
-			{
-				_cacheChangedCondition.wait(lock);
-				cacheItemPtr = _cache.find(blockIndex);
-			}
-			lock.unlock();
-			
-			if(_currentBlock != blockIndex)
-			{
-				if(_isCurrentBlockChanged)
-					storeBlock();
-				loadBlock(blockIndex);
-			}
-			
-			// The time block encoder is now initialized and contains the unpacked block.
-			_timeBlockBuffer->GetData(getRowWithinBlock(rowNr), dataPtr->data());
+		lock.unlock();
+		
+		if(_currentBlock != blockIndex)
+		{
+			if(_isCurrentBlockChanged)
+				storeBlock();
+			loadBlock(blockIndex);
 		}
+		
+		// The time block encoder is now initialized and contains the unpacked block.
+		_timeBlockBuffer->GetData(getRowWithinBlock(rowNr), dataPtr->data());
 	}
 }
 
