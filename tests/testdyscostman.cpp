@@ -47,6 +47,7 @@ BOOST_AUTO_TEST_CASE( name )
 	BOOST_CHECK_EQUAL(dysco3->dataManagerType(), "DyscoStMan");
 	BOOST_CHECK_EQUAL(dysco3->dataManagerName(), "testname");
 	
+	register_dyscostman();
 	DataManagerCtor dyscoConstructor = DataManager::getCtor("DyscoStMan");
 	std::unique_ptr<DataManager> dysco4(dyscoConstructor("Constructed", GetDyscoSpec()));
 	BOOST_CHECK_EQUAL(dysco4->dataManagerName(), "Constructed");
@@ -83,6 +84,7 @@ void writeTable(size_t nAnt)
   tableDesc.addColumn(timeDesc);
 	casacore::SetupNewTable setupNewTable("TestTable", tableDesc, casacore::Table::New);
   
+	register_dyscostman();
 	DataManagerCtor dyscoConstructor = DataManager::getCtor("DyscoStMan");
 	std::unique_ptr<DataManager> dysco(dyscoConstructor("DATA_dm", GetDyscoSpec()));
   setupNewTable.bindColumn("DATA", *dysco);
