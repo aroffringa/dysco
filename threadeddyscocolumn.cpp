@@ -40,7 +40,9 @@ template<typename DataType>
 void ThreadedDyscoColumn<DataType>::destructDerived()
 {
 	mutex::scoped_lock lock(_mutex);
-	if(_isCurrentBlockChanged)
+	bool isChanged = _isCurrentBlockChanged;
+	lock.unlock();
+	if(isChanged)
 		storeBlock();
 	
 	stopThreads();
