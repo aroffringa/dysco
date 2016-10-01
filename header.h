@@ -39,7 +39,7 @@ struct Header : public Serializable
 			7 * 4 + // 6 x uint32 + string length
 			storageManagerName.size() +
 			2 * 2 + // 2 x uint16
-			5 * 1 + // 4 x uint8 + bool8
+			4 * 1 + // 4 x uint8
 			2 * 8; // 2 x double
 	}
 	
