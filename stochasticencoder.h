@@ -11,7 +11,7 @@ namespace dyscostman
 {
 	
 /**
- * Lossy encoder for Gaussian values.
+ * Lossy encoder for stochastic values.
  * 
  * This encoder can encode a numeric value represented by a floating point
  * number (float, double, ...) into an integer value with a given limit.

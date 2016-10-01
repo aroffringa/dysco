@@ -1,7 +1,7 @@
 #ifndef TIME_BLOCK_ENCODER_H
 #define TIME_BLOCK_ENCODER_H
 
-#include "gausencoder.h"
+#include "stochasticencoder.h"
 #include "timeblockbuffer.h"
 #include "uvector.h"
 

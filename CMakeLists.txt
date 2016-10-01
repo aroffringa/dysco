@@ -31,7 +31,7 @@ add_library(dyscostman-object OBJECT
 	dyscostman.cpp
 	dyscodatacolumn.cpp
 	dyscoweightcolumn.cpp
-	gausencoder.cpp
+	stochasticencoder.cpp
 	threadeddyscocolumn.cpp
 	rftimeblockencoder.cpp
 	rowtimeblockencoder.cpp)

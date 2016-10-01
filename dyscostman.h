@@ -37,6 +37,9 @@ namespace dyscostman {
 
 class DyscoStManColumn;
 
+/**
+ * The main class for the Dysco storage manager.
+ */
 class DyscoStMan : public casacore::DataManager
 {
 public:

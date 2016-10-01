@@ -1,10 +1,10 @@
-#include "gausencoder.h"
-#include "weightencoder.h"
-#include "stmanmodifier.h"
 #include "dyscostman.h"
 #include "dyscodistribution.h"
 #include "dysconormalization.h"
+#include "stmanmodifier.h"
+#include "stochasticencoder.h"
 #include "stopwatch.h"
+#include "weightencoder.h"
 
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 

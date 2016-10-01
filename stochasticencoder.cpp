@@ -1,4 +1,4 @@
-#include "gausencoder.h"
+#include "stochasticencoder.h"
 
 #include <gsl/gsl_sf_erf.h>
 #include <gsl/gsl_cdf.h>

@@ -1,5 +1,5 @@
 #include "rftimeblockencoder.h"
-#include "gausencoder.h"
+#include "stochasticencoder.h"
 
 #include <random>
 

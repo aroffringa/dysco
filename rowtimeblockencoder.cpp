@@ -1,5 +1,5 @@
 #include "rowtimeblockencoder.h"
-#include "gausencoder.h"
+#include "stochasticencoder.h"
 
 using namespace dyscostman;
 

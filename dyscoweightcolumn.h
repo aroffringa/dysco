@@ -1,8 +1,8 @@
 #ifndef DYSCO_WEIGHT_COLUMN_H
 #define DYSCO_WEIGHT_COLUMN_H
 
-#include "gausencoder.h"
 #include "threadeddyscocolumn.h"
+#include "stochasticencoder.h"
 #include "weightblockencoder.h"
 
 namespace dyscostman {

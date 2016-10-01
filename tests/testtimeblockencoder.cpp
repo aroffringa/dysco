@@ -2,7 +2,7 @@
 #include "../dysconormalization.h"
 #include "../rftimeblockencoder.h"
 #include "../rowtimeblockencoder.h"
-#include "../gausencoder.h"
+#include "../stochasticencoder.h"
 
 #include <random>
 

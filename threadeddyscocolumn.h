@@ -12,8 +12,8 @@
 #include <stdint.h>
 
 #include "dyscostmancol.h"
-#include "gausencoder.h"
 #include "serializable.h"
+#include "stochasticencoder.h"
 #include "thread.h"
 #include "timeblockbuffer.h"
 

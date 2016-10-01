@@ -3,7 +3,7 @@
 
 #include "threadeddyscocolumn.h"
 
-#include "gausencoder.h"
+#include "stochasticencoder.h"
 #include "timeblockencoder.h"
 
 namespace dyscostman {

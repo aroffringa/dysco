@@ -111,6 +111,7 @@ class threadgroup
 		}
 		
 		/**
+		 * Get state of thread group.
 		 * @returns true when there are unjoined threads in the group. Not synchronized --
 		 * caller has to make sure that thread is safe.
 		 */

@@ -3,7 +3,7 @@
 #include <fstream>
 #include <random>
 
-#include "../gausencoder.h"
+#include "../stochasticencoder.h"
 
 #include <boost/test/unit_test.hpp>
 
