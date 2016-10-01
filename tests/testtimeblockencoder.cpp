@@ -1,19 +1,19 @@
-#include "aftimeblockencoder.h"
-#include "rftimeblockencoder.h"
-#include "rowtimeblockencoder.h"
-#include "stopwatch.h"
-#include "gausencoder.h"
-
-#include "dysconormalization.h"
+#include "../aftimeblockencoder.h"
+#include "../dysconormalization.h"
+#include "../rftimeblockencoder.h"
+#include "../rowtimeblockencoder.h"
+#include "../gausencoder.h"
 
 #include <iostream>
 #include <random>
 
+#include <boost/test/unit_test.hpp>
+
 using namespace dyscostman;
 
-DyscoNormalization blockNormalization = AFNormalization;
+BOOST_AUTO_TEST_SUITE(timeblock_encoder)
 
-std::unique_ptr<TimeBlockEncoder> CreateEncoder(size_t nPol, size_t nChan)
+std::unique_ptr<TimeBlockEncoder> CreateEncoder(DyscoNormalization blockNormalization, size_t nPol, size_t nChan)
 {
 	switch(blockNormalization)
 	{
@@ -27,7 +27,7 @@ std::unique_ptr<TimeBlockEncoder> CreateEncoder(size_t nPol, size_t nChan)
 	}
 }
 
-void TestSimpleExample()
+void TestSimpleExample(DyscoNormalization blockNormalization)
 {
 	const size_t nAnt = 4, nChan = 1, nPol = 2, nRow = (nAnt*(nAnt+1)/2);
 	
@@ -54,12 +54,12 @@ void TestSimpleExample()
 	buffer.SetData(8, 2, 3, data);
 	data[0] = 99.0; data[1] = 99.0;
 	buffer.SetData(9, 3, 3, data);
+	const TimeBlockBuffer<std::complex<float>> input(buffer);
 	
-	GausEncoder<float> gausEncoder(256, 1.0, true);
-	std::unique_ptr<TimeBlockEncoder> encoder = CreateEncoder(nPol, nChan);
+	GausEncoder<float> gausEncoder(256, 1.0, false);
+	std::unique_ptr<TimeBlockEncoder> encoder = CreateEncoder(blockNormalization, nPol, nChan);
 	
 	size_t metaDataCount = encoder->MetaDataCount(nRow, nPol, nChan, nAnt);
-	std::cout << "Meta data size: " << metaDataCount << '\n';
 	size_t symbolCount = encoder->SymbolCount(nRow);
 	ao::uvector<float> metaBuffer(metaDataCount);
 	ao::uvector<TimeBlockEncoder::symbol_t> symbolBuffer(symbolCount);
@@ -67,7 +67,7 @@ void TestSimpleExample()
 	encoder->EncodeWithoutDithering(gausEncoder, buffer, metaBuffer.data(), symbolBuffer.data(), nAnt);
 	TimeBlockBuffer<std::complex<float>> out(nPol, nChan);
 	out.resize(nRow);
-	std::unique_ptr<TimeBlockEncoder> decoder = CreateEncoder(nPol, nChan);
+	std::unique_ptr<TimeBlockEncoder> decoder = CreateEncoder(blockNormalization, nPol, nChan);
 	decoder->InitializeDecode(metaBuffer.data(), nRow, nAnt);
 	size_t rIndex = 0;
 	for(size_t ant1=0; ant1!=nAnt; ++ant1) {
@@ -76,18 +76,23 @@ void TestSimpleExample()
 			++rIndex;
 		}
 	}
-	std::complex<float> dataOut[nChan];
-	std::cout << "Output (XX\tYY)\tInput (XX\tYY)\n";
+	std::complex<float> dataFromOut[nChan*nPol], dataFromIn[nChan*nPol];
 	for(size_t row=0; row!=nRow; row++)
 	{
-		out.GetData(row, dataOut);
-		std::cout << dataOut[0] << '\t' << dataOut[1] << '\t';
-		buffer.GetData(row, dataOut);
-		std::cout << dataOut[0] << '\t' << dataOut[1] << '\n';
+		// skip auto-correlations of AF, since these are not saved.
+		out.GetData(row, dataFromOut);
+		input.GetData(row, dataFromIn);
+		if(blockNormalization!=AFNormalization || (row != 0 && row != 4 && row != 7 && row != 9))
+		{
+			for(size_t ch=0; ch!=nChan; ++ch)
+			{
+				BOOST_CHECK_MESSAGE(std::norm(dataFromOut[ch]-dataFromIn[ch]) < 0.1, "Output{" << dataFromOut[ch] << "} is close to input{" << dataFromIn[ch] << "} of row " << row << " with normalization " << blockNormalization);
+			}
+		}
 	}
 }
 
-void TestTimeBlockEncoder()
+void TestTimeBlockEncoder(DyscoNormalization blockNormalization)
 {
 	const size_t nAnt = 50, nChan = 64, nPol = 4, nRow = (nAnt*(nAnt+1)/2);
 	
@@ -135,25 +140,15 @@ void TestTimeBlockEncoder()
 		}
 	}
 	
-	std::unique_ptr<TimeBlockEncoder> encoder = CreateEncoder(nPol, nChan);
+	std::unique_ptr<TimeBlockEncoder> encoder = CreateEncoder(blockNormalization, nPol, nChan);
 
 	const size_t nIter = 25;
-	Stopwatch watch(true);
 	ao::uvector<float> metaBuffer(encoder->MetaDataCount(nRow, nPol, nChan, nAnt));
 	ao::uvector<unsigned> symbolBuffer(encoder->SymbolCount(nAnt*(nAnt+1)/2));
 	
-	std::cout << "Baselines: " << nAnt*(nAnt+1)/2 << ", rows in encoder: " << buffer.NRows() << '\n';
-	
-	std::cout << "Encoding... " << std::flush;
 	for(size_t i=0; i!=nIter; ++i)
 		encoder->EncodeWithDithering(gausEncoder, buffer, metaBuffer.data(), symbolBuffer.data(), nAnt, rnd);
-	
-	double dataSize = double(nIter) * nRow * nChan * nPol;
-	std::cout << "Speed: " << 1e-6*dataSize / watch.Seconds() << " Mvis/sec\n";
-	
-	std::cout << "Decoding... " << std::flush;
-	watch.Reset();
-	watch.Start();
+		
 	for(size_t i=0; i!=nIter; ++i)
 	{
 		encoder->InitializeDecode(metaBuffer.data(), nRow, nAnt);
@@ -169,9 +164,8 @@ void TestTimeBlockEncoder()
 			}
 		}
 	}
-	std::cout << "Speed: " << 1e-6*dataSize / watch.Seconds() << " Mvis/sec\n";
 	
-	RMSMeasurement mEncoded, mZero;
+	RMSMeasurement mEncodingError, mData;
 	size_t index = 0;
 	encoder->InitializeDecode(metaBuffer.data(), nRow, nAnt);
 	blockRow = 0;
@@ -182,44 +176,52 @@ void TestTimeBlockEncoder()
 			ao::uvector<std::complex<float>> dataOut(nChan * nPol);
 			encoder->Decode(gausEncoder, buffer, symbolBuffer.data(), blockRow, a1, a2);
 			buffer.GetData(blockRow, dataOut.data());
-			if(a1 < 5 && a2 < 5)
-				std::cout << dataOut[0].real() << ' ';
 			
 			ao::uvector<std::complex<float>>& dataIn = allData[index];
 			for(size_t i=0; i!=nPol*nChan; ++i)
 			{
-				mEncoded.Include(dataOut[i] - dataIn[i]);
-				mZero.Include(dataIn[i]);
+				mEncodingError.Include(dataOut[i] - dataIn[i]);
+				mData.Include(dataIn[i]);
 			}
 			
 			++index;
 			++blockRow;
 		}
-		if(a1 < 5)
-			std::cout << '\n';
 	}
-	std::cout << "RMS of error: " << mEncoded.RMS() << '\n';
-	std::cout << "RMS of data: " << mZero.RMS() << '\n';
-	std::cout << "Gaussian encoding error for unscaled values: " << unscaledRMS.RMS() << '\n';
+	BOOST_CHECK_LT(mEncodingError.RMS(), mData.RMS()*0.1);
+	/*std::cout << "Gaussian encoding error for unscaled values: " << unscaledRMS.RMS() << '\n';
 	std::cout << "Average factor: " << factorSum / factorCount << '\n';
-	std::cout << "Effective RMS of error: " << mEncoded.RMS() / (factorSum / factorCount) << " ( " << (mEncoded.RMS() / (factorSum / factorCount)) / unscaledRMS.RMS() << " x theoretical)\n";
-	std::cout.flush();
+	std::cout << "Effective RMS of error: " << mEncoded.RMS() / (factorSum / factorCount) << " ( " << (mEncoded.RMS() / (factorSum / factorCount)) / unscaledRMS.RMS() << " x theoretical)\n";*/
 }
 
-int main(int argc, char* argv[])
+BOOST_AUTO_TEST_CASE( row_normalization_per_row_accuracy )
 {
-	std::cout << " === Row normalization ===\n";
-	blockNormalization = RowNormalization;
-	TestSimpleExample();
-	TestTimeBlockEncoder();
-	
-	std::cout << " === AF normalization ===\n";
-	blockNormalization = AFNormalization;
-	TestSimpleExample();
-	TestTimeBlockEncoder();
-	
-	std::cout << " === RF normalization ===\n";
-	blockNormalization = RFNormalization;
-	TestSimpleExample();
-	TestTimeBlockEncoder();
+	TestSimpleExample(RowNormalization);
 }
+
+BOOST_AUTO_TEST_CASE( row_normalization_global_rms_accuracy )
+{
+	TestTimeBlockEncoder(RowNormalization);
+}
+
+BOOST_AUTO_TEST_CASE( af_normalization_per_row_accuracy )
+{
+	TestSimpleExample(AFNormalization);
+}
+
+BOOST_AUTO_TEST_CASE( af_normalization_global_rms_accuracy )
+{
+	TestTimeBlockEncoder(AFNormalization);
+}
+
+BOOST_AUTO_TEST_CASE( rf_normalization_per_row_accuracy )
+{
+	TestSimpleExample(RFNormalization);
+}
+
+BOOST_AUTO_TEST_CASE( rf_normalization_global_rms_accuracy )
+{
+	TestTimeBlockEncoder(RFNormalization);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
