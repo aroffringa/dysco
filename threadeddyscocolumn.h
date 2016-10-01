@@ -13,6 +13,7 @@
 
 #include "dyscostmancol.h"
 #include "gausencoder.h"
+#include "serializable.h"
 #include "thread.h"
 #include "timeblockbuffer.h"
 
@@ -101,11 +102,11 @@ public:
 
 	virtual size_t CalculateBlockSize(size_t nRowsInBlock, size_t nAntennae) const final override;
 	
-	virtual size_t ExtraHeaderSize() const { return sizeof(Header); }
+	virtual size_t ExtraHeaderSize() const override { return Header::Size(); }
 	
-	virtual void GetExtraHeader(unsigned char* buffer) const final override;
+	virtual void SerializeExtraHeader(std::ostream& stream) const final override;
 	
-	virtual void SetFromExtraHeader(const unsigned char* buffer) final override;
+	virtual void UnserializeExtraHeader(std::istream& stream) final override;
 protected:
 	typedef typename TimeBlockBuffer<data_t>::symbol_t symbol_t;
 	
@@ -145,10 +146,24 @@ private:
 		void operator()();
 		ThreadedDyscoColumn *parent;
 	};
-	struct Header
+	struct Header : public Serializable
 	{
 		uint32_t blockSize;
 		uint32_t antennaCount;
+		
+		static uint32_t Size() { return 8; }
+		
+		virtual void Serialize(std::ostream &stream) const override
+		{
+			SerializeToUInt32(stream, blockSize);
+			SerializeToUInt32(stream, antennaCount);
+		}
+		
+		virtual void Unserialize(std::istream &stream) override
+		{
+			blockSize = UnserializeUInt32(stream);
+			antennaCount = UnserializeUInt32(stream);
+		}
 	};
 	
 	typedef std::map<size_t, CacheItem*> cache_t;

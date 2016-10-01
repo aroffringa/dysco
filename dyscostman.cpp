@@ -4,6 +4,8 @@
 #include "dyscodatacolumn.h"
 #include "dyscoweightcolumn.h"
 
+#include "header.h"
+
 using namespace altthread;
 
 void register_dyscostman()
@@ -183,16 +185,12 @@ void DyscoStMan::create(casacore::uInt nRow)
 void DyscoStMan::writeHeader()
 {
 	_fStream->seekp(0, std::ios_base::beg);
-
-	_headerSize = sizeof(Header);	
-	for(DyscoStManColumn* col : _columns)
-		_headerSize += sizeof(GenericColumnHeader) + col->ExtraHeaderSize();
-	
 	Header header;
-	memset(&header, 0, sizeof(Header));
-	header.headerSize = _headerSize;
-	header.columnHeaderOffset = sizeof(Header);
 	header.columnCount = _columns.size();
+	header.storageManagerName = _name;
+	header.rowsPerBlock = _rowsPerBlock;
+	header.antennaCount = _antennaCount;
+	header.blockSize = _blockSize;
 	header.versionMajor = VERSION_MAJOR;
 	header.versionMinor = VERSION_MINOR;
 	header.dataBitCount = _dataBitCount;
@@ -202,18 +200,21 @@ void DyscoStMan::writeHeader()
 	header.normalization = _normalization;
 	header.studentTNu = _studentTNu;
 	header.distributionTruncation = _distributionTruncation;
-	header.rowsPerBlock = _rowsPerBlock;
-	header.antennaCount = _antennaCount;
-	header.blockSize = _blockSize;
-	_fStream->write(reinterpret_cast<char*>(&header), sizeof(header));
+	
+	header.columnHeaderOffset = header.calculateColumnHeaderOffset();
+	_headerSize = header.columnHeaderOffset;
+	for(DyscoStManColumn* col : _columns)
+		_headerSize += sizeof(GenericColumnHeader) + col->ExtraHeaderSize();
+	header.headerSize = _headerSize;
+	
+	header.Serialize(*_fStream);
+	
 	for(DyscoStManColumn* col : _columns)
 	{
 		GenericColumnHeader cHeader;
-		cHeader.columnHeaderSize = sizeof(GenericColumnHeader) + col->ExtraHeaderSize();
-		_fStream->write(reinterpret_cast<char*>(&cHeader), sizeof(cHeader));
-		ao::uvector<unsigned char> extraHeader(col->ExtraHeaderSize());
-		col->GetExtraHeader(extraHeader.data());
-		_fStream->write(reinterpret_cast<char*>(extraHeader.data()), col->ExtraHeaderSize());
+		cHeader.columnHeaderSize = cHeader.calculateSize() + col->ExtraHeaderSize();
+		cHeader.Serialize(*_fStream);
+		col->SerializeExtraHeader(*_fStream);
 	}
 	if(_fStream->fail())
 		throw DyscoStManError("I/O error: could not write to file");
@@ -223,11 +224,11 @@ void DyscoStMan::readHeader()
 {
 	Header header;
 	_fStream->seekg(0, std::ios_base::beg);
-	_fStream->read(reinterpret_cast<char*>(&header), sizeof(header));
+	header.Unserialize(*_fStream);
 	_headerSize = header.headerSize;
 	size_t curColumnHeaderOffset = header.columnHeaderOffset;
 	size_t columnCount = header.columnCount;
-	
+	_name = header.storageManagerName;
 	_dataBitCount = header.dataBitCount;
 	_weightBitCount = header.weightBitCount;
 	_fitToMaximum = header.fitToMaximum;
@@ -258,10 +259,8 @@ void DyscoStMan::readHeader()
 		DyscoStManColumn& col = *_columns[i];
 		GenericColumnHeader cHeader;
 		_fStream->seekg(curColumnHeaderOffset, std::ios_base::beg);
-		_fStream->read(reinterpret_cast<char*>(&cHeader), sizeof(cHeader));
-		ao::uvector<unsigned char> extraHeader(col.ExtraHeaderSize());
-		_fStream->read(reinterpret_cast<char*>(extraHeader.data()), col.ExtraHeaderSize());
-		col.SetFromExtraHeader(extraHeader.data());
+		cHeader.Unserialize(*_fStream);
+		col.UnserializeExtraHeader(*_fStream);
 		curColumnHeaderOffset += cHeader.columnHeaderSize;
 	}
 }

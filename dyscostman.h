@@ -8,8 +8,6 @@
 #include <fstream>
 #include <vector>
 
-#include <stdint.h>
-
 #include "uvector.h"
 #include "dyscodistribution.h"
 #include "dysconormalization.h"
@@ -203,42 +201,7 @@ private:
 	friend class DyscoStManColumn;
 	
 	const static unsigned short VERSION_MAJOR, VERSION_MINOR;
-	
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-	struct Header
-	{
-		/** Size of the total header, including column subheaders */
-		uint32_t headerSize;
-		/** Start offset of the column headers */
-		uint32_t columnHeaderOffset;
-		/** Number of columns and column headers */
-		uint32_t columnCount;
 		
-		uint32_t rowsPerBlock;
-		uint32_t antennaCount;
-		uint32_t blockSize;
-		
-		/** File version number */
-		uint16_t versionMajor, versionMinor;
-		
-		uint8_t dataBitCount;
-		uint8_t weightBitCount;
-		bool fitToMaximum;
-		uint8_t distribution;
-		uint8_t normalization;
-		double studentTNu, distributionTruncation;
-		
-		// the column headers start here (first generic header, then column specific header)
-	};
-	
-	struct GenericColumnHeader
-	{
-		/** size of generic header + column specific header */
-		uint32_t columnHeaderSize;
-	};
-	
-#endif
-	
 	void readCompressedData(size_t blockIndex, const DyscoStManColumn *column, unsigned char *dest, size_t size);
 	
 	void writeCompressedData(size_t blockIndex, const DyscoStManColumn *column, const unsigned char *data, size_t size);

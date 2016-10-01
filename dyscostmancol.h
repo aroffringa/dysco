@@ -59,9 +59,9 @@ public:
 	 */
 	virtual size_t ExtraHeaderSize() const { return 0; }
 	
-	virtual void GetExtraHeader(unsigned char* buffer) const = 0;
+	virtual void SerializeExtraHeader(std::ostream& stream) const = 0;
 	
-	virtual void SetFromExtraHeader(const unsigned char* buffer) = 0;
+	virtual void UnserializeExtraHeader(std::istream& stream) = 0;
 	
 	size_t OffsetInBlock() const { return _offsetInBlock; }
 	

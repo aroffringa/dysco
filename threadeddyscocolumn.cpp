@@ -351,19 +351,21 @@ size_t ThreadedDyscoColumn<DataType>::CalculateBlockSize(size_t nRowsInBlock, si
 }
 
 template<typename DataType>
-void ThreadedDyscoColumn<DataType>::GetExtraHeader(unsigned char* buffer) const
+void ThreadedDyscoColumn<DataType>::SerializeExtraHeader(std::ostream& stream) const
 {
-	Header* header = reinterpret_cast<Header*>(buffer);
-	header->antennaCount = _antennaCount;
-	header->blockSize = _blockSize;
+	Header header;
+	header.antennaCount = _antennaCount;
+	header.blockSize = _blockSize;
+	header.Serialize(stream);
 }
 
 template<typename DataType>
-void ThreadedDyscoColumn<DataType>::SetFromExtraHeader(const unsigned char* buffer)
+void ThreadedDyscoColumn<DataType>::UnserializeExtraHeader(std::istream& stream)
 {
-	const Header* header = reinterpret_cast<const Header*>(buffer);
-	_antennaCount = header->antennaCount;
-	_blockSize = header->blockSize;
+	Header header;
+	header.Unserialize(stream);
+	_antennaCount = header.antennaCount;
+	_blockSize = header.blockSize;
 }
 
 template class ThreadedDyscoColumn<std::complex<float>>;

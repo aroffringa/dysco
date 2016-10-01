@@ -1,4 +1,5 @@
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/Table.h>
@@ -25,72 +26,79 @@ casa::Record GetDyscoSpec()
 	return dyscoSpec;
 }
 
-void writeTable(size_t nAnt)
+struct TestTableFixture
 {
-	casacore::TableDesc tableDesc;
-	IPosition shape(2, 1, 1);
-	casacore::ArrayColumnDesc<casacore::Complex> columnDesc("DATA", "", "DyscoStMan", "", shape);
-	columnDesc.setOptions(casacore::ColumnDesc::Direct | casacore::ColumnDesc::FixedShape);
-	casacore::ScalarColumnDesc<int>
-		ant1Desc("ANTENNA1"),
-		ant2Desc("ANTENNA2"),
-		fieldDesc("FIELD_ID"),
-		dataDescIdDesc("DATA_DESC_ID");
-	casacore::ScalarColumnDesc<double>
-		timeDesc("TIME");
-	tableDesc.addColumn(columnDesc);
-	tableDesc.addColumn(ant1Desc);
-	tableDesc.addColumn(ant2Desc);
-  tableDesc.addColumn(fieldDesc);
-  tableDesc.addColumn(dataDescIdDesc);
-  tableDesc.addColumn(timeDesc);
-	casacore::SetupNewTable setupNewTable("TestTable", tableDesc, casacore::Table::New);
-  
-	register_dyscostman();
-	DataManagerCtor dyscoConstructor = DataManager::getCtor("DyscoStMan");
-	std::unique_ptr<DataManager> dysco(dyscoConstructor("DATA_dm", GetDyscoSpec()));
-  setupNewTable.bindColumn("DATA", *dysco);
-	casacore::Table newTable(setupNewTable);
-	
-	size_t a1 = 0, a2 = 1;
-	double time = 10.0;
-	const size_t nRow = 2*nAnt*(nAnt-1)/2;
-	newTable.addRow(nRow);
-	casacore::ScalarColumn<int>
-		a1Col(newTable, "ANTENNA1"),
-		a2Col(newTable, "ANTENNA2"),
-		fieldCol(newTable, "FIELD_ID"),
-		dataDescIdCol(newTable, "DATA_DESC_ID");
-	casacore::ScalarColumn<double> timeCol(newTable, "TIME");
-	for(size_t i=0; i!=nRow; ++i)
+	TestTableFixture(size_t nAnt)
 	{
-		a1Col.put(i, a1);
-		a2Col.put(i, a2);
-		fieldCol.put(i, 0);
-		dataDescIdCol.put(i, 0);
-		timeCol.put(i, time);
-		a2++;
-		if(a2 == nAnt)
+		casacore::TableDesc tableDesc;
+		IPosition shape(2, 1, 1);
+		casacore::ArrayColumnDesc<casacore::Complex> columnDesc("DATA", "", "DyscoStMan", "", shape);
+		columnDesc.setOptions(casacore::ColumnDesc::Direct | casacore::ColumnDesc::FixedShape);
+		casacore::ScalarColumnDesc<int>
+			ant1Desc("ANTENNA1"),
+			ant2Desc("ANTENNA2"),
+			fieldDesc("FIELD_ID"),
+			dataDescIdDesc("DATA_DESC_ID");
+		casacore::ScalarColumnDesc<double>
+			timeDesc("TIME");
+		tableDesc.addColumn(columnDesc);
+		tableDesc.addColumn(ant1Desc);
+		tableDesc.addColumn(ant2Desc);
+		tableDesc.addColumn(fieldDesc);
+		tableDesc.addColumn(dataDescIdDesc);
+		tableDesc.addColumn(timeDesc);
+		casacore::SetupNewTable setupNewTable("TestTable", tableDesc, casacore::Table::New);
+		
+		register_dyscostman();
+		DataManagerCtor dyscoConstructor = DataManager::getCtor("DyscoStMan");
+		std::unique_ptr<DataManager> dysco(dyscoConstructor("DATA_dm", GetDyscoSpec()));
+		setupNewTable.bindColumn("DATA", *dysco);
+		casacore::Table newTable(setupNewTable);
+		
+		size_t a1 = 0, a2 = 1;
+		double time = 10.0;
+		const size_t nRow = 2*nAnt*(nAnt-1)/2;
+		newTable.addRow(nRow);
+		casacore::ScalarColumn<int>
+			a1Col(newTable, "ANTENNA1"),
+			a2Col(newTable, "ANTENNA2"),
+			fieldCol(newTable, "FIELD_ID"),
+			dataDescIdCol(newTable, "DATA_DESC_ID");
+		casacore::ScalarColumn<double> timeCol(newTable, "TIME");
+		for(size_t i=0; i!=nRow; ++i)
 		{
-			++a1;
-			a2=a1+1;
+			a1Col.put(i, a1);
+			a2Col.put(i, a2);
+			fieldCol.put(i, 0);
+			dataDescIdCol.put(i, 0);
+			timeCol.put(i, time);
+			a2++;
 			if(a2 == nAnt)
 			{
-				a1 = 0;
-				a2 = 1;
-				++time;
+				++a1;
+				a2=a1+1;
+				if(a2 == nAnt)
+				{
+					a1 = 0;
+					a2 = 1;
+					++time;
+				}
 			}
 		}
+		
+		casacore::ArrayColumn<casacore::Complex> dataCol(newTable, "DATA");
+		for(size_t i=0; i!=nRow; ++i)
+		{
+			casacore::Array<casacore::Complex> arr(shape);
+			*arr.cbegin() = i;
+			dataCol.put(i, arr);
+		}
 	}
-	
-	casacore::ArrayColumn<casacore::Complex> dataCol(newTable, "DATA");
-	for(size_t i=0; i!=nRow; ++i)
+	~TestTableFixture()
 	{
-		casacore::Array<casacore::Complex> arr(shape);
-		*arr.cbegin() = i;
-		dataCol.put(i, arr);
+		boost::filesystem::remove_all("TestTable");
 	}
-}
+};
 
 BOOST_AUTO_TEST_CASE( spec )
 {
@@ -119,7 +127,7 @@ BOOST_AUTO_TEST_CASE( name )
 	std::unique_ptr<DataManager> dysco4(dyscoConstructor("Constructed", GetDyscoSpec()));
 	BOOST_CHECK_EQUAL(dysco4->dataManagerName(), "Constructed");
 	
-	writeTable(3);
+	TestTableFixture fixture(3);
 	casacore::Table table("TestTable");
 	casacore::ArrayColumn<casacore::Complex> dataCol(table, "DATA");
 	DataManager* dm = table.findDataManager("DATA",true);
@@ -139,7 +147,7 @@ BOOST_AUTO_TEST_CASE( makecolumn )
 BOOST_AUTO_TEST_CASE( maketable )
 {
 	size_t nAnt = 3;
-	writeTable(nAnt);
+	TestTableFixture fixture(nAnt);
 	
 	casacore::Table table("TestTable");
 	casacore::ArrayColumn<casacore::Complex> dataCol(table, "DATA");

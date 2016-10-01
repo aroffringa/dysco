@@ -70,19 +70,52 @@ int main(int argc, char *argv[])
 	if(argc < 2)
 	{
 		std::cout <<
-			"Usage: compress [-rfnormalization / -afnormalization] [-bits-per-float <n>] [-reorder] [-column <name> [-column...]] <ms>\n"
+			"Usage: dscompress [options] [-column <name> [-column...]] <ms>\n"
+			"\n"
+			"This tool replaces one or multiple columns of a measurement set by compressed columns, using the\n"
+			"Dysco compression storage manager. This tools is mainly aimed at testing the technique.\n"
+			"Better efficiency can be achieved by integrating the Dysco storage manager directly into\n"
+			"a preprocessing pipeline or correlator output.\n"
+			"\n"
+			"The Dysco compression technique is explained in http://arxiv.org/abs/1609.02019.\n"
+			"\n"
+			"Options:\n"
+			"-rfnormalization / -afnormalization / -rownormalization\n"
+			"\tSelect normalization method. Default is AF normalization. For high bitrates, RF normalization\n"
+			"\tis recommended. The use of row normalization is discouraged because it can be unstable.\n"
+			"-data-bit-rate <n>\n"
+			"\tSets the number of bits per float for visibility data. Because a visibility is a complex number,\n"
+			"\tthe total nr bits per visibility will be twice this number. The compression rate is n/32.\n"
+			"-weight-bit-rate <n>\n"
+			"\tSets the number of bits per float for the data weights. The storage manager will use a single\n"
+			"\tweight for all polarizations, hence with four polarizations the compression of weight is\n"
+			"\t1/4 * n/32.\n"
+			"-no-fit-to-max\n"
+			"\tDisable rescaling the visibilities within the range of the quantization. This is not recommended,\n"
+			"\tas it can lead to bias in the case of high SNR.\n"
+			"-reorder\n"
+			"\tWill rewrite the measurement set after replacing the column. This makes sure that the space\n"
+			"\tof the old column is freed. It is for testing only, because the compression error is applied\n"
+			"\ttwice to the data.\n"
+			"-uniform / -gaussian / -truncgaus <sigma> / -studentt\n"
+			"\tSelect the distribution used for the quantization of the data. The truncated gaussian and\n"
+			"\tuniform distributions generally produce the most accurate results. The default is truncgaus\n"
+			"\twith sigma=2.5, which is approximately optimal for bitrates 4-8.\n" 
+			"\n"
 			"Defaults: \n"
 			"\tbits per data val = 8\n"
-			"\tbits per weight = 6\n";
+			"\tbits per weight = 12\n"
+			"\tdistribution = TruncGaus with sigma=2.5\n"
+			"\tnormalization = AF\n";
 		return 0;
 	}
 	
-	DyscoDistribution distribution = GaussianDistribution;
+	DyscoDistribution distribution = TruncatedGaussianDistribution;
 	DyscoNormalization normalization = AFNormalization;
 	bool reorder = false;
 	unsigned bitsPerFloat=8, bitsPerWeight=12;
-	bool fitToMaximum = false;
-	double distributionTruncation = 0.0;
+	bool fitToMaximum = true;
+	double distributionTruncation = 2.5;
 	
 	std::vector<std::string> columnNames;
 	
@@ -90,23 +123,32 @@ int main(int argc, char *argv[])
 	while(argi < argc && argv[argi][0]=='-')
 	{
 		std::string p(argv[argi]+1);
-		if(p == "bits-per-float")
+		if(p == "data-bit-rate")
 		{
 			++argi;
 			bitsPerFloat = atoi(argv[argi]);
 		}
-		else if(p == "bits-per-weight")
+		else if(p == "weight-bit-rate")
 		{
 			++argi;
 			bitsPerWeight = atoi(argv[argi]);
 		}
 		else if(p == "fit-to-maximum")
 		{
+			std::cout << "WARNING: -fit-to-maximum is now the default and is depricated.\n";
+			fitToMaximum = true;
+		}
+		else if(p == "no-fit-to-maximum" || p == "no-fit-to-max")
+		{
 			fitToMaximum = true;
 		}
 		else if(p == "reorder")
 		{
 			reorder = true;
+		}
+		else if(p == "gaussian")
+		{
+			distribution = GaussianDistribution;
 		}
 		else if(p == "uniform")
 		{
@@ -146,6 +188,48 @@ int main(int argc, char *argv[])
 	if(columnNames.empty())
 		columnNames.push_back("DATA");
 	std::string msPath = argv[argi];
+
+	std::cout <<
+			"\tbits per data val = " << bitsPerFloat << "\n"
+			"\tbits per weight = " << bitsPerWeight << "\n"
+			"\tdistribution = ";
+	switch(distribution)
+	{
+		case UniformDistribution:
+			std::cout << "Uniform";
+			break;
+		case GaussianDistribution:
+			std::cout << "Gaussian";
+			break;
+		case TruncatedGaussianDistribution:
+			std::cout << "Truncated Gaussian with sigma=" << distributionTruncation;
+			break;
+		case StudentsTDistribution:
+			std::cout << "Student T";
+			break;
+		default:
+			std::cout << "?";
+			break;
+	}
+	std::cout << 
+		"\n"
+		"\tnormalization = ";
+	switch(normalization)
+	{
+		case AFNormalization:
+			std::cout << "AF";
+			break;
+		case RFNormalization:
+			std::cout << "RF";
+			break;
+		case RowNormalization:
+			std::cout << "Row";
+			break;
+		default:
+			std::cout << "?";
+			break;
+	}
+	std::cout << "\n\n";
 	
 	std::cout << "Opening ms...\n";
 	std::unique_ptr<casacore::MeasurementSet> ms(new casacore::MeasurementSet(msPath, casacore::Table::Update));
