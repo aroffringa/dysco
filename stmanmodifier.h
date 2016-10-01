@@ -25,8 +25,7 @@ public:
 	 * @param ms Measurement set on which to operate.
 	 */
 	StManModifier(casacore::MeasurementSet& ms) : _ms(ms)
-	{
-	}
+	{	}
 	
 	/**
 	 * Get the name of a storage manager for a given
@@ -59,7 +58,7 @@ public:
 			dataManager = GetStorageManager<casacore::Complex>(columnName);
 		std::cout << "Current data manager of " + columnName + " column: " << dataManager << '\n';
 		
-		if(dataManager == "OffringaStMan")
+		if(dataManager == "DyscoStMan")
 		{
 			std::string tempName = std::string("TEMP_") + columnName;
 			std::cout << "Renaming old " + columnName + " column...\n";

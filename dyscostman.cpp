@@ -105,7 +105,7 @@ void DyscoStMan::setFromSpec(const casacore::Record& spec)
 			_distribution = StudentsTDistribution;
 		else if(str == "TruncatedGaussian")
 			_distribution = TruncatedGaussianDistribution;
-		else throw std::runtime_error("Unsupported distribution specified");
+		else throw DyscoStManError("Unsupported distribution specified");
 		str = spec.asString("normalization");
 		if(str == "RF")
 			_normalization = RFNormalization;
@@ -113,7 +113,7 @@ void DyscoStMan::setFromSpec(const casacore::Record& spec)
 			_normalization = AFNormalization;
 		else if(str == "Row")
 			_normalization = RowNormalization;
-		else throw std::runtime_error("Unsupported normalization specified");
+		else throw DyscoStManError("Unsupported normalization specified");
 		if(spec.description().fieldNumber("studentTNu") >= 0)
 			_studentTNu = spec.asDouble("studentTNu");
 		else
@@ -268,7 +268,7 @@ void DyscoStMan::readHeader()
 void DyscoStMan::initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount)
 {
 	if(areOffsetsInitialized() && (rowsPerBlock != _rowsPerBlock || antennaCount != _antennaCount))
-		throw std::runtime_error("initializeRowsPerBlock() called with two different values; something is wrong");
+		throw DyscoStManError("initializeRowsPerBlock() called with two different values; something is wrong");
 	
 	_rowsPerBlock = rowsPerBlock;
 	_antennaCount = antennaCount;
@@ -319,12 +319,12 @@ casacore::DataManagerColumn* DyscoStMan::makeDirArrColumn(const casacore::String
 		if(dataType == casacore::TpFloat)
 			col = new DyscoWeightColumn(this, dataType);
 		else
-			throw std::runtime_error("Trying to create a Dysco weight column with wrong type");
+			throw DyscoStManError("Trying to create a Dysco weight column with wrong type");
 	}
 	else if(dataType == casacore::TpComplex)
 		col = new DyscoDataColumn(this, dataType);
 	else
-		throw std::runtime_error("Trying to create a Dysco data column with wrong type");
+		throw DyscoStManError("Trying to create a Dysco data column with wrong type");
 	_columns.push_back(col);
 	return col;
 }
@@ -386,17 +386,10 @@ void DyscoStMan::removeRow(casacore::uInt rowNr)
 	_nRow--;
 }
 
-void DyscoStMan::addColumn(casacore::DataManagerColumn* column)
+void DyscoStMan::addColumn(casacore::DataManagerColumn* /*column*/)
 {
 	if(_nBlocksInFile != 0)
 		throw DyscoStManError("Can't add columns while data has been committed to table");
-	
-	//DyscoDataColumn *dataCol = dynamic_cast<DyscoDataColumn*>(column);
-	//if(dataCol != 0)
-	//	dataCol->SetBitsPerSymbol(_dataBitCount);
-	//OffringaWeightColumn *wghtCol = dynamic_cast<OffringaWeightColumn*>(column);
-	//if(wghtCol != 0)
-	//	wghtCol->SetBitsPerSymbol(_weightBitCount);
 	
 	prepare();
 	writeHeader();

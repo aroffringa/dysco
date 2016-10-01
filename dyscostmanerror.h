@@ -7,7 +7,7 @@ namespace dyscostman
 {
 
 /**
- * Represents a runtime exception that occured within the OffringaStMan.
+ * Represents a runtime exception that occured within the DyscoStMan.
  */
 class DyscoStManError : public casacore::DataManError
 {
@@ -17,7 +17,7 @@ public:
 	{	}
 	/** Construct with message.
 	 * @param message The exception message. */
-	DyscoStManError(const std::string& message) : casacore::DataManError(message + " -- Error occured inside the DyscoStManError")
+	DyscoStManError(const std::string& message) : casacore::DataManError(message + " -- Error occured inside the Dysco Storage Manager")
 	{ }
 };
 
