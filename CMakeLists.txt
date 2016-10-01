@@ -70,7 +70,7 @@ add_custom_target(doc
         COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif(DOXYGEN_FOUND)
 
-find_package(Boost COMPONENTS date_time thread system filesystem unit_test_framework)
+find_package(Boost COMPONENTS system filesystem unit_test_framework)
 if(Boost_FOUND)
   add_executable(runtests EXCLUDE_FROM_ALL
     tests/runtests.cpp 
@@ -83,3 +83,6 @@ if(Boost_FOUND)
 else()
   message("Boost testing framework not found.")
 endif()
+
+install (TARGETS dyscostman DESTINATION lib) 
+install (TARGETS dscompress DESTINATION bin)
