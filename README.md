@@ -7,10 +7,17 @@ To install:
     cd build
     cmake ../
     make -j 4
-	make install
+    make install
 
 To be able to open compressed measurement sets, the dysco library ("libdyscostman.so") must be in your path.
 
+## File format compatibility
+I have changed the file format of Dysco on 2016-10-01, which means that observations packed with the older
+DyscoStMan can not be opened by the current version. This change was needed to insert a missing keyword in the file.
+I've carefully designed the new file so that no more incompatible changes are necessary; i.e., the file format is
+fixed now, and all future version of Dysco will be able to open the current files.
+
+## dscompress
 The program 'dscompress' allows compression of a measurement set. Note that this program is mostly aimed at testing the compression.
 For production use I highly recommend to perform compression within a pipeline in which the initial measurement sets are created.
 This can be implemented by asking Casacore to store a column with the DyscoStMan. For LOFAR, Dysco was implemented in DPPP, and
