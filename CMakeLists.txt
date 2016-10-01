@@ -31,12 +31,6 @@ set(CMAKE_CXX_FLAGS "-O3 -ggdb -Wall -DNDEBUG -march=native --std=c++14")
 add_library(dyscostman SHARED dyscostman.cpp dyscodatacolumn.cpp dyscoweightcolumn.cpp gausencoder.cpp threadeddyscocolumn.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp rowtimeblockencoder.cpp)
 target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
 
-add_executable(testgausencoder testgausencoder.cpp stopwatch.cpp gausencoder.cpp)
-target_link_libraries(testgausencoder ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
-
-add_executable(testdithering testdithering.cpp stopwatch.cpp gausencoder.cpp)
-target_link_libraries(testdithering ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
-
 add_executable(dscompress dscompress.cpp stopwatch.cpp)
 target_link_libraries(dscompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
 
@@ -54,8 +48,6 @@ target_link_libraries(encodeexample ${GSL_LIB} ${GSL_CBLAS_LIB})
 
 add_executable(testminsigma testminsigma.cpp gausencoder.cpp)
 target_link_libraries(testminsigma ${GSL_LIB} ${GSL_CBLAS_LIB})
-
-add_executable(testbytepacker testbytepacker.cpp)
 
 add_executable(getmsencdistr getmsencdistr.cpp gausencoder.cpp aftimeblockencoder.cpp)
 target_link_libraries(getmsencdistr ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
@@ -75,6 +67,8 @@ if(Boost_FOUND)
   add_executable(runtests EXCLUDE_FROM_ALL
     tests/runtests.cpp 
     dyscostman.cpp dyscodatacolumn.cpp dyscoweightcolumn.cpp gausencoder.cpp threadeddyscocolumn.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp rowtimeblockencoder.cpp
+    tests/testbytepacking.cpp
+    tests/testdithering.cpp
     tests/testdyscostman.cpp
     )
   target_link_libraries(runtests ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
