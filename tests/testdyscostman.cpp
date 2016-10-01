@@ -25,44 +25,6 @@ casa::Record GetDyscoSpec()
 	return dyscoSpec;
 }
 
-BOOST_AUTO_TEST_CASE( spec )
-{
-	DyscoStMan dysco(8, 12);
-	Record spec = dysco.dataManagerSpec();
-	BOOST_CHECK_EQUAL(spec.asInt("dataBitCount"), 8);
-	BOOST_CHECK_EQUAL(spec.asInt("weightBitCount"), 12);
-}
-
-BOOST_AUTO_TEST_CASE( name )
-{
-	DyscoStMan dysco1(8, 12, "withparameters");
-	BOOST_CHECK_EQUAL(dysco1.dataManagerType(), "DyscoStMan");
-	BOOST_CHECK_EQUAL(dysco1.dataManagerName(), "withparameters");
-
-	DyscoStMan dysco2("testname", GetDyscoSpec());
-	BOOST_CHECK_EQUAL(dysco2.dataManagerType(), "DyscoStMan");
-	BOOST_CHECK_EQUAL(dysco2.dataManagerName(), "testname");
-	
-	std::unique_ptr<DataManager> dysco3(dysco2.clone());
-	BOOST_CHECK_EQUAL(dysco3->dataManagerType(), "DyscoStMan");
-	BOOST_CHECK_EQUAL(dysco3->dataManagerName(), "testname");
-	
-	register_dyscostman();
-	DataManagerCtor dyscoConstructor = DataManager::getCtor("DyscoStMan");
-	std::unique_ptr<DataManager> dysco4(dyscoConstructor("Constructed", GetDyscoSpec()));
-	BOOST_CHECK_EQUAL(dysco4->dataManagerName(), "Constructed");
-}
-
-BOOST_AUTO_TEST_CASE( makecolumn )
-{
-	DyscoStMan dysco(8, 12, "mydysco");
-	dysco.createDirArrColumn("DATA", casacore::DataType::TpComplex, "");
-	dysco.createDirArrColumn("WEIGHT_SPECTRUM", casacore::DataType::TpFloat, "");
-	dysco.createDirArrColumn("CORRECTED_DATA", casacore::DataType::TpComplex, "");
-	dysco.createDirArrColumn("ANYTHING", casacore::DataType::TpComplex, "");
-	BOOST_CHECK(true);
-}
-
 void writeTable(size_t nAnt)
 {
 	casacore::TableDesc tableDesc;
@@ -128,7 +90,51 @@ void writeTable(size_t nAnt)
 		*arr.cbegin() = i;
 		dataCol.put(i, arr);
 	}
-}	
+}
+
+BOOST_AUTO_TEST_CASE( spec )
+{
+	DyscoStMan dysco(8, 12);
+	Record spec = dysco.dataManagerSpec();
+	BOOST_CHECK_EQUAL(spec.asInt("dataBitCount"), 8);
+	BOOST_CHECK_EQUAL(spec.asInt("weightBitCount"), 12);
+}
+
+BOOST_AUTO_TEST_CASE( name )
+{
+	DyscoStMan dysco1(8, 12, "withparameters");
+	BOOST_CHECK_EQUAL(dysco1.dataManagerType(), "DyscoStMan");
+	BOOST_CHECK_EQUAL(dysco1.dataManagerName(), "withparameters");
+
+	DyscoStMan dysco2("testname", GetDyscoSpec());
+	BOOST_CHECK_EQUAL(dysco2.dataManagerType(), "DyscoStMan");
+	BOOST_CHECK_EQUAL(dysco2.dataManagerName(), "testname");
+	
+	std::unique_ptr<DataManager> dysco3(dysco2.clone());
+	BOOST_CHECK_EQUAL(dysco3->dataManagerType(), "DyscoStMan");
+	BOOST_CHECK_EQUAL(dysco3->dataManagerName(), "testname");
+	
+	register_dyscostman();
+	DataManagerCtor dyscoConstructor = DataManager::getCtor("DyscoStMan");
+	std::unique_ptr<DataManager> dysco4(dyscoConstructor("Constructed", GetDyscoSpec()));
+	BOOST_CHECK_EQUAL(dysco4->dataManagerName(), "Constructed");
+	
+	writeTable(3);
+	casacore::Table table("TestTable");
+	casacore::ArrayColumn<casacore::Complex> dataCol(table, "DATA");
+	DataManager* dm = table.findDataManager("DATA",true);
+	BOOST_CHECK_EQUAL(dm->dataManagerName(), "DATA_dm");
+}
+
+BOOST_AUTO_TEST_CASE( makecolumn )
+{
+	DyscoStMan dysco(8, 12, "mydysco");
+	dysco.createDirArrColumn("DATA", casacore::DataType::TpComplex, "");
+	dysco.createDirArrColumn("WEIGHT_SPECTRUM", casacore::DataType::TpFloat, "");
+	dysco.createDirArrColumn("CORRECTED_DATA", casacore::DataType::TpComplex, "");
+	dysco.createDirArrColumn("ANYTHING", casacore::DataType::TpComplex, "");
+	BOOST_CHECK(true);
+}
 
 BOOST_AUTO_TEST_CASE( maketable )
 {
@@ -141,8 +147,6 @@ BOOST_AUTO_TEST_CASE( maketable )
 	{
 		BOOST_CHECK_CLOSE_FRACTION((*dataCol(i).cbegin()).real(), float(i), 1e-4);
 	}
-	//table.dataManagerInfo();
-	//BOOST_CHECK_EQUAL(table. "DATA_dm");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
