@@ -37,6 +37,7 @@ public:
   /** Destructor */
   virtual ~DyscoStManColumn() { }
 	
+	/** To be called before destructing the class. */
 	virtual void shutdown() = 0;
 
 	/**
