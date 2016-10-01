@@ -4,7 +4,6 @@
 #include "../rowtimeblockencoder.h"
 #include "../gausencoder.h"
 
-#include <iostream>
 #include <random>
 
 #include <boost/test/unit_test.hpp>

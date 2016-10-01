@@ -2,7 +2,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <iostream>
 #include <fstream>
 #include <random>
 #include <sstream>
@@ -30,7 +29,6 @@ void make(const std::string& filenamePrefix, ao::uvector<double> values)
 		}
 	}
 	double rms = sqrt(sqSum / count);
-	std::cout << "RMS: " << rms << '\n';
 	//GausEncoder<float> enc(1 << bits, rms);
 	//double nu = 1.0;
 	//GausEncoder<float> enc = GausEncoder<float>::StudentTEncoder(1 << bits, nu, rms);
