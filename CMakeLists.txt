@@ -43,9 +43,6 @@ target_link_libraries(rmsdiff dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_
 add_executable(testtimeblockencoder testtimeblockencoder.cpp gausencoder.cpp stopwatch.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp rowtimeblockencoder.cpp)
 target_link_libraries(testtimeblockencoder ${GSL_LIB} ${GSL_CBLAS_LIB})
 
-add_executable(encodeexample encodeexample.cpp gausencoder.cpp)
-target_link_libraries(encodeexample ${GSL_LIB} ${GSL_CBLAS_LIB})
-
 add_executable(testminsigma testminsigma.cpp gausencoder.cpp)
 target_link_libraries(testminsigma ${GSL_LIB} ${GSL_CBLAS_LIB})
 
@@ -65,8 +62,16 @@ endif(DOXYGEN_FOUND)
 find_package(Boost COMPONENTS system filesystem unit_test_framework)
 if(Boost_FOUND)
   add_executable(runtests EXCLUDE_FROM_ALL
+    dyscostman.cpp
+    dyscodatacolumn.cpp
+    dyscoweightcolumn.cpp
+    gausencoder.cpp
+    threadeddyscocolumn.cpp
+    aftimeblockencoder.cpp
+    rftimeblockencoder.cpp
+    rowtimeblockencoder.cpp
     tests/runtests.cpp 
-    dyscostman.cpp dyscodatacolumn.cpp dyscoweightcolumn.cpp gausencoder.cpp threadeddyscocolumn.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp rowtimeblockencoder.cpp
+    tests/encodeexample.cpp
     tests/testbytepacking.cpp
     tests/testdithering.cpp
     tests/testdyscostman.cpp

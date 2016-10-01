@@ -1,4 +1,6 @@
-#include "gausencoder.h"
+#include "../gausencoder.h"
+
+#include <boost/test/unit_test.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -9,6 +11,8 @@ using namespace dyscostman;
 
 const size_t bits = 4;
 const bool useUniform = false;
+
+BOOST_AUTO_TEST_SUITE(encode_example)
 
 void make(const std::string& filenamePrefix, ao::uvector<double> values)
 {
@@ -52,13 +56,16 @@ void make(const std::string& filenamePrefix, ao::uvector<double> values)
 		for(size_t i=0; i!=values.size(); ++i)
 		{
 			file << i << '\t' << values[i] << '\t' << sums[i]/trial << '\n';
+			if(trial >= 100 && std::fabs(values[i]) < enc.MaxQuantity())
+				BOOST_CHECK_LT(std::fabs(sums[i]/trial - values[i]), 0.1);
 		}
 	}
 }
 
-int main(int argc, char* argv[])
+constexpr size_t n=100;
+
+BOOST_AUTO_TEST_CASE( sinus )
 {
-	constexpr size_t n=100;
 	ao::uvector<double> values(n);
 	for(size_t i=0; i!=n; ++i)
 	{
@@ -66,14 +73,22 @@ int main(int argc, char* argv[])
 		values[i] = sin(x);
 	}
 	make("sinus", values);
-	
+}
+
+BOOST_AUTO_TEST_CASE( oneOver )
+{
+	ao::uvector<double> values(n);
 	for(size_t i=0; i!=n ;++i)
 	{
 		double x = double(i)/n;
 		values[i] = 1.0 / (12.0*x);
 	}
 	make("oneOver", values);
+}
 
+BOOST_AUTO_TEST_CASE( sinc )
+{
+	ao::uvector<double> values(n);
 	for(size_t i=1; i!=n ;++i)
 	{
 		double x = double(i)/n * 2.5 * M_PI;
@@ -81,5 +96,6 @@ int main(int argc, char* argv[])
 	}
 	values[0] = 1.0;
 	make("sinc", values);
-	
 }
+
+BOOST_AUTO_TEST_SUITE_END()
