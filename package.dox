@@ -5,6 +5,9 @@ namespace dyscostman {
 The DyscoStMan (Dynamical Statistical Compression Storage Manager) is
 a CASA storage manager that can compress visibilities and weights. 
 
+The compression technique is explained in Offringa (2016;
+https://arxiv.org/abs/1609.02019).
+
 Visibilities can be stored with a non-linear quantization scheme,
 such as a least-squared error quantizer for Gaussian values. "Error"
 is here the difference between original and encoded value. The

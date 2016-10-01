@@ -31,10 +31,10 @@ DyscoStMan::DyscoStMan(unsigned dataBitCount, unsigned weightBitCount, const cas
 	_name(name),
 	_dataBitCount(dataBitCount),
 	_weightBitCount(weightBitCount),
-	_distribution(GaussianDistribution),
-	_normalization(RFNormalization),
+	_distribution(TruncatedGaussianDistribution),
+	_normalization(AFNormalization),
 	_studentTNu(0.0),
-	_distributionTruncation(0.0)
+	_distributionTruncation(2.5)
 {
 }
 

@@ -40,30 +40,84 @@ class DyscoStManColumn;
 class DyscoStMan : public casacore::DataManager
 {
 public:
-	DyscoStMan(unsigned bitsPerFloat, unsigned bitsPerWeight, const casacore::String& name = "DyscoStMan");
+	/**
+	 * Convience constructor to create a new storage manager with some settings without
+	 * having to fill a 'spec' Record.
+	 * The storage manager will be initialized to AF normalization with a truncated
+	 * Gaussian distribution for the quantization, and a truncation of sigma = 2.5.
+	 * To change the settings, use one of the Set...Distribution() methods and 
+	 * SetNormalization().
+	 * @param databitRate The number of bits per float used for visibilities.
+	 * @param weightBitRate The number of bits per float used for the weight column.
+	 * @param name Storage manager name.
+	 */
+	DyscoStMan(unsigned dataBitRate, unsigned weightBitRate, const casacore::String& name = "DyscoStMan");
 	
+	/**
+	 * Initialize the storage manager to use a Gaussian distribution for the quantization.
+	 * This method should only be called directly after creating DyscoStMan, before adding
+	 * columns, and reading/writing data.
+	 * 
+	 * In tests with MWA and LOFAR data, the Gaussian distribution showed lesser compression
+	 * accuracy compared to the truncated Gaussian and uniform distributions.
+	 * @see SetUniformDistribution(), SetTruncatedGaussianDistribution()
+	 */
 	void SetGaussianDistribution()
 	{
 		_distribution = GaussianDistribution;
 	}
 	
+	/**
+	 * Initialize the storage manager to use a Uniform distribution for the quantization
+	 * (i.e., use a linear quantizer).
+	 * This method should only be called directly after creating DyscoStMan, before adding
+	 * columns, and reading/writing data.
+	 * 
+	 * In tests with MWA and LOFAR data, the Uniform distribution showed very good results,
+	 * only the truncated Gaussian distribution showed better results for some cases.
+	 */
 	void SetUniformDistribution()
 	{
 		_distribution = UniformDistribution;
 	}
 	
+	/**
+	 * Initialize the storage manager to use a Student T distribution for the quantization
+	 * (i.e., use a linear quantizer).
+	 * This method should only be called directly after creating DyscoStMan, before adding
+	 * columns, and reading/writing data.
+	 * 
+	 * The Student T distribution performed not very well on test sets, and was mainly added
+	 * for testing.
+	 */
 	void SetStudentsTDistribution(double nu)
 	{
 		_distribution = StudentsTDistribution;
 		_studentTNu = nu;
 	}
 
+	/**
+	 * Initialize the storage manager to use a Uniform distribution for the quantization
+	 * (i.e., use a linear quantizer).
+	 * This method should only be called directly after creating DyscoStMan, before adding
+	 * columns, and reading/writing data.
+	 * 
+	 * In tests with MWA and LOFAR data, the truncated Gaussian distribution with a 
+	 * sigma of 1.5 to 2.5 is the recommended distribution.
+	 * @param truncationSigma At which point the distribution is truncated. Good values are
+	 * 1.5 to 2.5.
+	 */
 	void SetTruncatedGaussianDistribution(double truncationSigma)
 	{
 		_distribution = TruncatedGaussianDistribution;
 		_distributionTruncation = truncationSigma;
 	}
 	
+	/**
+	 * Set the type of normalization.
+	 * This method should only be called directly after creating DyscoStMan, before adding
+	 * columns, and reading/writing data.
+	 */
 	void SetNormalization(DyscoNormalization normalization)
 	{
 		_normalization = normalization;
@@ -91,6 +145,10 @@ public:
 	/** Destructor. */
 	~DyscoStMan();
 	
+	/** Assignment -- new dyscostman takes the settings of the source (but not the
+	 * columns and/or data).
+	 * @param source Source manager.
+	 */
 	DyscoStMan &operator=(const DyscoStMan& source) = delete;
 	
 	/** Polymorphical copy constructor, equal to DyscoStMan(const DyscoStMan&).
@@ -166,12 +224,10 @@ public:
 	*/
 	static void registerClass();
 	
-	/** TODO */
-	void setDataColumnProperties(const std::string& columnName, size_t bitCount);
-	
 protected:
 	/**
 	* The number of rows that are actually stored in the file.
+	* This method is synchronized (i.e., thread-safe).
 	*/
 	uint64_t nBlocksInFile() const
 	{
@@ -179,18 +235,63 @@ protected:
 		return _nBlocksInFile;
 	}
 	
+	/**
+	 * Number of rows in one "time-block", i.e. a sequence of rows that
+	 * belong to the same timestep, spw and field.
+	 * This value is only available after a first time block was written
+	 * (see areOffsetsInitialized()).
+	 * @returns Number of measurement set rows in one time block.
+	 */
 	size_t nRowsInBlock() const { return _rowsPerBlock; }
 	
+	/**
+	 * Number of antennae used in a time block. This does not have to be equal
+	 * to the number of antennae stored in the measurement set.
+	 * This value is only available after a first time block was written
+	 * (see areOffsetsInitialized()).
+	 * @returns Number of antennae.
+	 */
 	size_t nAntennae() const { return _antennaCount; }
 	
-	size_t getBlockIndex(uint64_t row) { return row / _rowsPerBlock; }
+	/**
+	 * Return index of block that contains the given measurement set row.
+	 * This can only be calculated after a first time block was written
+	 * (see areOffsetsInitialized()).
+	 * @param row A measurement set row.
+	 * @returns Block index.
+	 */
+	size_t getBlockIndex(uint64_t row) const { return row / _rowsPerBlock; }
 	
-	size_t getRowWithinBlock(uint64_t row) { return row % _rowsPerBlock; }
+	/**
+	 * Return the offset of the row within the block.
+	 * This can only be calculated after a first time block was written
+	 * (see areOffsetsInitialized()).
+	 * @see getBlockIndex().
+	 * @param row A measurement set row.
+	 * @returns offset of row within block.
+	 */
+	size_t getRowWithinBlock(uint64_t row) const { return row % _rowsPerBlock; }
 	
+	/**
+	 * Calculate first measurement set row index of a given block index.
+	 * @param block A block index
+	 * @returns First measurement set row index of given block.
+	 */
 	uint64_t getRowIndex(size_t block) const { return uint64_t(block) * uint64_t(_rowsPerBlock); }
 	
+	/**
+	 * This method returns @c true when the number of rows per block and the number
+	 * of antennae per block are known. This is only the case once the first time-
+	 * block was written to the file.
+	 * @returns True when the nr of rows per block and antennae are available.
+	 */
 	bool areOffsetsInitialized() const { return _rowsPerBlock!=0; }
 	
+	/**
+	 * To be called by a column once it determines rowsPerBlock and antennaCount.
+	 * @param rowsPerBlock Number of measurement set rows in one time block.
+	 * @param antennaCount Highest antenna index+1 used in a time block.
+	 */
 	void initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount);
 	
 private:
