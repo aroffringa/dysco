@@ -1,5 +1,5 @@
-#ifndef GAUS_ENCODER_H
-#define GAUS_ENCODER_H
+#ifndef STOCHASTIC_ENCODER_H
+#define STOCHASTIC_ENCODER_H
 
 #include "uvector.h"
 
@@ -15,8 +15,8 @@ namespace dyscostman
  * 
  * This encoder can encode a numeric value represented by a floating point
  * number (float, double, ...) into an integer value with a given limit.
- * It is the least-square error quantization for Gaussian distributed values,
- * and remains fairly good for near-Gaussian (e.g. uniform) values.
+ * It can be made to be the least-square error quantization for some
+ * distributions.
  * 
  * Encoding and decoding have asymetric time complexity / speeds, as decoding
  * is easier than encoding. Decoding is a single indexing into an array, thus
@@ -30,7 +30,7 @@ namespace dyscostman
  * @author André Offringa (offringa@gmail.com)
  */
 template<typename ValueType=float>
-class GausEncoder
+class StochasticEncoder
 {
 	public:
 		/**
@@ -44,18 +44,18 @@ class GausEncoder
 		 * to the real stddev, the more accurate the encoder will be.
 		 * @param gaussianMapping Used for testing with non-gaussian distributions.
 		 */
-		GausEncoder(size_t quantCount, ValueType stddev, bool gaussianMapping = true);
+		StochasticEncoder(size_t quantCount, ValueType stddev, bool gaussianMapping = true);
 		
-		static GausEncoder StudentTEncoder(size_t quantCount, double nu, double rms)
+		static StochasticEncoder StudentTEncoder(size_t quantCount, double nu, double rms)
 		{
-			GausEncoder<ValueType> encoder(quantCount);
+			StochasticEncoder<ValueType> encoder(quantCount);
 			encoder.initializeStudentT(nu, rms);
 			return encoder;
 		}
 		
-		static GausEncoder TruncatedGausEncoder(size_t quantCount, double trunc, double rms)
+		static StochasticEncoder TruncatedGausEncoder(size_t quantCount, double trunc, double rms)
 		{
-			GausEncoder<ValueType> encoder(quantCount);
+			StochasticEncoder<ValueType> encoder(quantCount);
 			encoder.initializeTruncatedGaussian(trunc, rms);
 			return encoder;
 		}
@@ -165,7 +165,7 @@ class GausEncoder
 		}
 		
 	private:
-		GausEncoder(size_t quantCount) :
+		StochasticEncoder(size_t quantCount) :
 			_encDictionary(quantCount-1), _decDictionary(quantCount-1)
 		{ }
 		

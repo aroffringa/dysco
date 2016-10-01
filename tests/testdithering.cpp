@@ -11,15 +11,15 @@ using namespace dyscostman;
 
 BOOST_AUTO_TEST_SUITE(dithering)
 
-std::unique_ptr<GausEncoder<float>> MakeEncoder()
+std::unique_ptr<StochasticEncoder<float>> MakeEncoder()
 {
 	//GausEncoder<float> encoder(256, 1.0, !uniform);
-	return std::unique_ptr<GausEncoder<float>>(new GausEncoder<float>(GausEncoder<float>::StudentTEncoder(256, 1.0, 1.0)));
+	return std::unique_ptr<StochasticEncoder<float>>(new StochasticEncoder<float>(StochasticEncoder<float>::StudentTEncoder(256, 1.0, 1.0)));
 }
 
 BOOST_AUTO_TEST_CASE( avg_deviation )
 {
-	std::unique_ptr<GausEncoder<float>> encoder = MakeEncoder();
+	std::unique_ptr<StochasticEncoder<float>> encoder = MakeEncoder();
 	
 	constexpr size_t N=12;
 	const double values[] = { -(M_PI), -(M_E), -(M_SQRT2), -1.0, -0.01, 0.0, 0.01, 1.0, M_SQRT2, M_E, M_PI, std::numeric_limits<double>::infinity() };

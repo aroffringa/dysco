@@ -46,13 +46,13 @@ public:
 	
 	virtual ~TimeBlockEncoder() { }
 	
-	virtual void EncodeWithDithering(const dyscostman::GausEncoder<float>& gausEncoder, FBuffer& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount, std::mt19937& rnd) = 0;
+	virtual void EncodeWithDithering(const dyscostman::StochasticEncoder<float>& gausEncoder, FBuffer& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount, std::mt19937& rnd) = 0;
 	
-	virtual void EncodeWithoutDithering(const dyscostman::GausEncoder<float>& gausEncoder, FBuffer& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount) = 0;
+	virtual void EncodeWithoutDithering(const dyscostman::StochasticEncoder<float>& gausEncoder, FBuffer& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount) = 0;
 	
 	virtual void InitializeDecode(const float* metaBuffer, size_t nRow, size_t nAntennae) = 0;
 	
-	virtual void Decode(const dyscostman::GausEncoder<float>& gausEncoder, FBuffer& buffer, const symbol_t* symbolBuffer, size_t blockRow, size_t antenna1, size_t antenna2) = 0;
+	virtual void Decode(const dyscostman::StochasticEncoder<float>& gausEncoder, FBuffer& buffer, const symbol_t* symbolBuffer, size_t blockRow, size_t antenna1, size_t antenna2) = 0;
 	
 	virtual size_t SymbolCount(size_t nRow, size_t nPol, size_t nChannels) const = 0;
 

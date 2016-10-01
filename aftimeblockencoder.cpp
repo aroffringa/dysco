@@ -6,13 +6,13 @@ AFTimeBlockEncoder::AFTimeBlockEncoder(size_t nPol, size_t nChannels, bool fitTo
 	_nPol(nPol), _nChannels(nChannels),
 	_fitToMaximum(fitToMaximum),
 	_rmsPerChannel(_nChannels * nPol),
-	_ditherDist(dyscostman::GausEncoder<double>::GetDitherDistribution())
+	_ditherDist(dyscostman::StochasticEncoder<double>::GetDitherDistribution())
 { }
 
 AFTimeBlockEncoder::~AFTimeBlockEncoder()
 { }
 
-void AFTimeBlockEncoder::Normalize(const dyscostman::GausEncoder<float>& gausEncoder, TimeBlockBuffer<std::complex<float>>& buffer, size_t antennaCount)
+void AFTimeBlockEncoder::Normalize(const dyscostman::StochasticEncoder<float>& gausEncoder, TimeBlockBuffer<std::complex<float>>& buffer, size_t antennaCount)
 {
 	if(_rmsPerAntenna.size() < antennaCount)
 		_rmsPerAntenna.resize(antennaCount);
@@ -131,7 +131,7 @@ void AFTimeBlockEncoder::changeChannelFactor(std::vector<DBufferRow>& data, floa
 //
 // Approach: iterate over all antenna and channels, and find the antenna/channel that can
 // increase the sum the most.
-void AFTimeBlockEncoder::fitToMaximum(std::vector<DBufferRow>& data, float* metaBuffer, const dyscostman::GausEncoder<float>& gausEncoder, size_t antennaCount)
+void AFTimeBlockEncoder::fitToMaximum(std::vector<DBufferRow>& data, float* metaBuffer, const dyscostman::StochasticEncoder<float>& gausEncoder, size_t antennaCount)
 {
 	// First, the maximum value is scaled to be the same as the maximum encodable value
 	const size_t visPerRow = _nPol * _nChannels;
@@ -258,7 +258,7 @@ void AFTimeBlockEncoder::fitToMaximum(std::vector<DBufferRow>& data, float* meta
 }
 
 template<bool UseDithering>
-void AFTimeBlockEncoder::encode(const dyscostman::GausEncoder<float>& gausEncoder, const TimeBlockBuffer<std::complex<float>>& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd)
+void AFTimeBlockEncoder::encode(const dyscostman::StochasticEncoder<float>& gausEncoder, const TimeBlockBuffer<std::complex<float>>& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd)
 {
 	if(_rmsPerAntenna.size() < antennaCount)
 		_rmsPerAntenna.resize(antennaCount);
@@ -330,9 +330,9 @@ void AFTimeBlockEncoder::encode(const dyscostman::GausEncoder<float>& gausEncode
 }
 
 template
-void AFTimeBlockEncoder::encode<true>(const dyscostman::GausEncoder<float>& gausEncoder, const TimeBlockBuffer<std::complex<float>>& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd);
+void AFTimeBlockEncoder::encode<true>(const dyscostman::StochasticEncoder<float>& gausEncoder, const TimeBlockBuffer<std::complex<float>>& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd);
 template
-void AFTimeBlockEncoder::encode<false>(const dyscostman::GausEncoder<float>& gausEncoder, const TimeBlockBuffer<std::complex<float>>& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd);
+void AFTimeBlockEncoder::encode<false>(const dyscostman::StochasticEncoder<float>& gausEncoder, const TimeBlockBuffer<std::complex<float>>& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd);
 
 void AFTimeBlockEncoder::calculateAntennaeRMS(const std::vector<DBufferRow>& data, size_t polIndex, size_t antennaCount)
 {
@@ -418,7 +418,7 @@ void AFTimeBlockEncoder::InitializeDecode(const float* metaBuffer, size_t nRow, 
 	}
 }
 
-void AFTimeBlockEncoder::Decode(const dyscostman::GausEncoder<float>& gausEncoder, FBuffer& buffer, const AFTimeBlockEncoder::symbol_t* symbolBuffer, size_t blockRow, size_t antenna1, size_t antenna2)
+void AFTimeBlockEncoder::Decode(const dyscostman::StochasticEncoder<float>& gausEncoder, FBuffer& buffer, const AFTimeBlockEncoder::symbol_t* symbolBuffer, size_t blockRow, size_t antenna1, size_t antenna2)
 {
 	ao::uvector<double> antFactors(_nPol);
 	for(size_t p=0; p!=_nPol; ++p)

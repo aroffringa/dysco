@@ -6,7 +6,7 @@ using namespace dyscostman;
 RowTimeBlockEncoder::RowTimeBlockEncoder(size_t nPol, size_t nChannels) :
 	_nPol(nPol),
 	_nChannels(nChannels),
-	_ditherDist(GausEncoder<float>::GetDitherDistribution()),
+	_ditherDist(StochasticEncoder<float>::GetDitherDistribution()),
 	_rowFactors()
 {
 }
@@ -16,7 +16,7 @@ void RowTimeBlockEncoder::InitializeDecode(const float* metaBuffer, size_t nRow,
 	_rowFactors.assign(metaBuffer, metaBuffer + nRow);
 }
 
-void RowTimeBlockEncoder::Decode(const GausEncoder<float>& gausEncoder, FBuffer& buffer, const symbol_t* symbolBuffer, size_t blockRow, size_t antenna1, size_t antenna2)
+void RowTimeBlockEncoder::Decode(const StochasticEncoder<float>& gausEncoder, FBuffer& buffer, const symbol_t* symbolBuffer, size_t blockRow, size_t antenna1, size_t antenna2)
 {
 	FBufferRow& row = buffer[blockRow];
 	row.antenna1 = antenna1;
@@ -37,7 +37,7 @@ void RowTimeBlockEncoder::Decode(const GausEncoder<float>& gausEncoder, FBuffer&
 }
 
 template<bool UseDithering>
-void RowTimeBlockEncoder::encode(const GausEncoder<float>& gausEncoder, const FBuffer& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd)
+void RowTimeBlockEncoder::encode(const StochasticEncoder<float>& gausEncoder, const FBuffer& buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd)
 {
 	// Note that encoding is performed with doubles
 	std::vector<DBufferRow> data;

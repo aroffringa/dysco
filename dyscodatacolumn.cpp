@@ -27,16 +27,16 @@ void DyscoDataColumn::Prepare(DyscoDistribution distribution, DyscoNormalization
 	
 	switch(distribution) {
 		case GaussianDistribution:
-			_gausEncoder.reset(new GausEncoder<float>(1 << getBitsPerSymbol(), 1.0, true));
+			_gausEncoder.reset(new StochasticEncoder<float>(1 << getBitsPerSymbol(), 1.0, true));
 			break;
 		case UniformDistribution:
-			_gausEncoder.reset(new GausEncoder<float>(1 << getBitsPerSymbol(), 1.0, false));
+			_gausEncoder.reset(new StochasticEncoder<float>(1 << getBitsPerSymbol(), 1.0, false));
 			break;
 		case StudentsTDistribution:
-			_gausEncoder.reset(new GausEncoder<float>(GausEncoder<float>::StudentTEncoder(1 << getBitsPerSymbol(), studentsTNu, 1.0)));
+			_gausEncoder.reset(new StochasticEncoder<float>(StochasticEncoder<float>::StudentTEncoder(1 << getBitsPerSymbol(), studentsTNu, 1.0)));
 			break;
 		case TruncatedGaussianDistribution:
-			_gausEncoder.reset(new GausEncoder<float>(GausEncoder<float>::TruncatedGausEncoder(1 << getBitsPerSymbol(), distributionTruncation, 1.0)));
+			_gausEncoder.reset(new StochasticEncoder<float>(StochasticEncoder<float>::TruncatedGausEncoder(1 << getBitsPerSymbol(), distributionTruncation, 1.0)));
 			break;
 	}
 }

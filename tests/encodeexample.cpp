@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(encode_example)
 void make(const std::string& filenamePrefix, ao::uvector<double> values)
 {
 	std::mt19937 mt;
-	std::uniform_int_distribution<unsigned> dist = GausEncoder<double>::GetDitherDistribution();
+	std::uniform_int_distribution<unsigned> dist = StochasticEncoder<double>::GetDitherDistribution();
 	
 	double sqSum = 0.0;
 	size_t count = 0;
@@ -33,7 +33,7 @@ void make(const std::string& filenamePrefix, ao::uvector<double> values)
 	//double nu = 1.0;
 	//GausEncoder<float> enc = GausEncoder<float>::StudentTEncoder(1 << bits, nu, rms);
 	double truncVal = 2.0;
-	GausEncoder<float> enc = GausEncoder<float>::TruncatedGausEncoder(1 << bits, truncVal, rms);
+	StochasticEncoder<float> enc = StochasticEncoder<float>::TruncatedGausEncoder(1 << bits, truncVal, rms);
 	
 	ao::uvector<size_t> trials{1, 3, 10, 100};
 	for(size_t trial : trials)

@@ -7,14 +7,14 @@ RFTimeBlockEncoder::RFTimeBlockEncoder(size_t nPol, size_t nChannels) :
 	_nPol(nPol), _nChannels(nChannels),
 	_channelFactors(_nChannels * nPol),
 	_rowFactors(),
-	_ditherDist(dyscostman::GausEncoder<double>::GetDitherDistribution())
+	_ditherDist(dyscostman::StochasticEncoder<double>::GetDitherDistribution())
 { }
 
 RFTimeBlockEncoder::~RFTimeBlockEncoder()
 { }
 
 template<bool UseDithering>
-void RFTimeBlockEncoder::encode(const dyscostman::GausEncoder<float>& gausEncoder, const TimeBlockEncoder::FBuffer& buffer, float* metaBuffer, TimeBlockEncoder::symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd)
+void RFTimeBlockEncoder::encode(const dyscostman::StochasticEncoder<float>& gausEncoder, const TimeBlockEncoder::FBuffer& buffer, float* metaBuffer, TimeBlockEncoder::symbol_t* symbolBuffer, size_t antennaCount, std::mt19937* rnd)
 {
 	// Note that encoding is performed with doubles
 	std::vector<DBufferRow> data;
@@ -112,7 +112,7 @@ void RFTimeBlockEncoder::InitializeDecode(const float* metaBuffer, size_t nRow, 
 	_rowFactors.assign(metaBuffer, metaBuffer + _nPol*nRow);
 }
 
-void RFTimeBlockEncoder::Decode(const dyscostman::GausEncoder<float>& gausEncoder, TimeBlockEncoder::FBuffer& buffer, const TimeBlockEncoder::symbol_t* symbolBuffer, size_t blockRow, size_t antenna1, size_t antenna2)
+void RFTimeBlockEncoder::Decode(const dyscostman::StochasticEncoder<float>& gausEncoder, TimeBlockEncoder::FBuffer& buffer, const TimeBlockEncoder::symbol_t* symbolBuffer, size_t blockRow, size_t antenna1, size_t antenna2)
 {
 	FBufferRow& row = buffer[blockRow];
 	row.antenna1 = antenna1;

@@ -63,7 +63,7 @@ private:
 	};
 	
 	std::mt19937 _rnd;
-	std::unique_ptr<GausEncoder<float>> _gausEncoder;
+	std::unique_ptr<StochasticEncoder<float>> _gausEncoder;
 	std::unique_ptr<TimeBlockEncoder> _decoder;
 	DyscoDistribution _distribution;
 	DyscoNormalization _normalization;

@@ -14,13 +14,13 @@ namespace dyscostman
 {
 
 template<typename ValueType>
-inline typename GausEncoder<ValueType>::num_t GausEncoder<ValueType>::cumulative(num_t x)
+inline typename StochasticEncoder<ValueType>::num_t StochasticEncoder<ValueType>::cumulative(num_t x)
 {
 	return num_t(0.5) + num_t(0.5) * gsl_sf_erf(x/num_t(M_SQRT2l));
 }
 
 template<typename ValueType>
-typename GausEncoder<ValueType>::num_t GausEncoder<ValueType>::invCumulative(num_t c, num_t err)
+typename StochasticEncoder<ValueType>::num_t StochasticEncoder<ValueType>::invCumulative(num_t c, num_t err)
 {
 	if(c < 0.5) return(-invCumulative(1.0 - c, err));
 	else if(c == 0.5) return 0.0;
@@ -66,7 +66,7 @@ typename GausEncoder<ValueType>::num_t GausEncoder<ValueType>::invCumulative(num
 }
 
 template<typename ValueType>
-GausEncoder<ValueType>::GausEncoder(size_t quantCount, ValueType stddev, bool gaussianMapping) :
+StochasticEncoder<ValueType>::StochasticEncoder(size_t quantCount, ValueType stddev, bool gaussianMapping) :
 	_encDictionary(quantCount-1), _decDictionary(quantCount-1)
 {
 	// The minimum squared error is reached when each quantity gets an equal share of error
@@ -126,7 +126,7 @@ GausEncoder<ValueType>::GausEncoder(size_t quantCount, ValueType stddev, bool ga
 }
 
 template<typename ValueType>
-void GausEncoder<ValueType>::initializeStudentT(double nu, double rms)
+void StochasticEncoder<ValueType>::initializeStudentT(double nu, double rms)
 {
 	size_t quantCount = _encDictionary.size() + 1;
 	_decDictionary.reserve(quantCount);
@@ -150,7 +150,7 @@ void GausEncoder<ValueType>::initializeStudentT(double nu, double rms)
 }
 
 template<typename ValueType>
-void GausEncoder<ValueType>::initializeTruncatedGaussian(double truncationValue, double rms)
+void StochasticEncoder<ValueType>::initializeTruncatedGaussian(double truncationValue, double rms)
 {
 	size_t quantCount = _encDictionary.size() + 1;
 	_decDictionary.reserve(quantCount);
@@ -180,6 +180,6 @@ void GausEncoder<ValueType>::initializeTruncatedGaussian(double truncationValue,
 }
 
 
-template class GausEncoder<float>;
+template class StochasticEncoder<float>;
 
 } // end of namespace

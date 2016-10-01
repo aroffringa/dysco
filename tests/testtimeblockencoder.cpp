@@ -55,7 +55,7 @@ void TestSimpleExample(DyscoNormalization blockNormalization)
 	buffer.SetData(9, 3, 3, data);
 	const TimeBlockBuffer<std::complex<float>> input(buffer);
 	
-	GausEncoder<float> gausEncoder(256, 1.0, false);
+	StochasticEncoder<float> gausEncoder(256, 1.0, false);
 	std::unique_ptr<TimeBlockEncoder> encoder = CreateEncoder(blockNormalization, nPol, nChan);
 	
 	size_t metaDataCount = encoder->MetaDataCount(nRow, nPol, nChan, nAnt);
@@ -98,7 +98,7 @@ void TestTimeBlockEncoder(DyscoNormalization blockNormalization)
 	TimeBlockBuffer<std::complex<float>> buffer(nPol, nChan);
 	std::mt19937 rnd;
 	std::normal_distribution<float> dist;
-	GausEncoder<float> gausEncoder(256, 1.0, false);
+	StochasticEncoder<float> gausEncoder(256, 1.0, false);
 	std::uniform_int_distribution<unsigned> dither = gausEncoder.GetDitherDistribution();
 	
 	dist(rnd);
