@@ -24,7 +24,7 @@ include_directories(${CASACORE_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${GSL_INCLUDE_DIR})
 
-set(CMAKE_CXX_FLAGS "-O3 -ggdb -Wall -DNDEBUG -march=native --std=c++14")
+set(CMAKE_CXX_FLAGS "-O3 -Wall -DNDEBUG -march=native --std=c++11")
 
 # Note: casapy fails if Casa is linked in the storage manager, so we have to trust that
 # casapy's version of casacore is binary compatible with this storage manager's casacore.
@@ -36,15 +36,6 @@ target_link_libraries(dscompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACO
 
 add_executable(decompress decompress.cpp)
 target_link_libraries(decompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
-
-add_executable(rmsdiff rmsdiff.cpp rmscollector.cpp)
-target_link_libraries(rmsdiff dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
-
-add_executable(testminsigma testminsigma.cpp gausencoder.cpp)
-target_link_libraries(testminsigma ${GSL_LIB} ${GSL_CBLAS_LIB})
-
-add_executable(getmsencdistr getmsencdistr.cpp gausencoder.cpp aftimeblockencoder.cpp)
-target_link_libraries(getmsencdistr ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
 
 # add target to generate API documentation with Doxygen
 find_package(Doxygen)
