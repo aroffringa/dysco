@@ -26,9 +26,20 @@ include_directories(${GSL_INCLUDE_DIR})
 
 set(CMAKE_CXX_FLAGS "-O3 -Wall -DNDEBUG -march=native --std=c++11")
 
+add_library(dyscostman-object OBJECT
+	aftimeblockencoder.cpp
+	dyscostman.cpp
+	dyscodatacolumn.cpp
+	dyscoweightcolumn.cpp
+	gausencoder.cpp
+	threadeddyscocolumn.cpp
+	rftimeblockencoder.cpp
+	rowtimeblockencoder.cpp)
+set_property(TARGET dyscostman-object PROPERTY POSITION_INDEPENDENT_CODE 1) 
+
 # Note: casapy fails if Casa is linked in the storage manager, so we have to trust that
 # casapy's version of casacore is binary compatible with this storage manager's casacore.
-add_library(dyscostman SHARED dyscostman.cpp dyscodatacolumn.cpp dyscoweightcolumn.cpp gausencoder.cpp threadeddyscocolumn.cpp aftimeblockencoder.cpp rftimeblockencoder.cpp rowtimeblockencoder.cpp)
+add_library(dyscostman SHARED $<TARGET_OBJECTS:dyscostman-object>)
 target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
 
 add_executable(dscompress dscompress.cpp stopwatch.cpp)
@@ -50,14 +61,7 @@ endif(DOXYGEN_FOUND)
 find_package(Boost COMPONENTS system filesystem unit_test_framework)
 if(Boost_FOUND)
   add_executable(runtests EXCLUDE_FROM_ALL
-    dyscostman.cpp
-    dyscodatacolumn.cpp
-    dyscoweightcolumn.cpp
-    gausencoder.cpp
-    threadeddyscocolumn.cpp
-    aftimeblockencoder.cpp
-    rftimeblockencoder.cpp
-    rowtimeblockencoder.cpp
+    $<TARGET_OBJECTS:dyscostman-object>
     tests/runtests.cpp 
     tests/encodeexample.cpp
     tests/testbytepacking.cpp

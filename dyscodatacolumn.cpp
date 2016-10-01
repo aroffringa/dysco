@@ -5,18 +5,17 @@
 
 namespace dyscostman {
 
-void DyscoDataColumn::Prepare(bool fitToMaximum, DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
+void DyscoDataColumn::Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
 {
-	_fitToMaximum = fitToMaximum;
 	_distribution = distribution;
 	_studentsTNu = studentsTNu;
 	_normalization = normalization;
-	ThreadedDyscoColumn::Prepare(fitToMaximum, distribution, normalization, studentsTNu, distributionTruncation);
+	ThreadedDyscoColumn::Prepare(distribution, normalization, studentsTNu, distributionTruncation);
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
 	
 	switch(normalization) {
 		case AFNormalization:
-			_decoder.reset(new AFTimeBlockEncoder(nPolarizations, nChannels, _fitToMaximum));
+			_decoder.reset(new AFTimeBlockEncoder(nPolarizations, nChannels, true));
 			break;
 		case RFNormalization:
 			_decoder.reset(new RFTimeBlockEncoder(nPolarizations, nChannels));
@@ -58,7 +57,7 @@ void DyscoDataColumn::initializeEncodeThread(void** threadData)
 	TimeBlockEncoder* encoder = 0;
 	switch(_normalization) {
 		case AFNormalization:
-			encoder = new AFTimeBlockEncoder(nPolarizations, nChannels, _fitToMaximum);
+			encoder = new AFTimeBlockEncoder(nPolarizations, nChannels, true);
 			break;
 		case RFNormalization:
 			encoder = new RFTimeBlockEncoder(nPolarizations, nChannels);

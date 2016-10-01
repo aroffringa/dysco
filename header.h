@@ -29,7 +29,6 @@ struct Header : public Serializable
 	
 	uint8_t dataBitCount;
 	uint8_t weightBitCount;
-	bool fitToMaximum;
 	uint8_t distribution;
 	uint8_t normalization;
 	double studentTNu, distributionTruncation;
@@ -57,7 +56,6 @@ struct Header : public Serializable
 		SerializeToUInt16(stream, versionMinor);
 		SerializeToUInt8(stream, dataBitCount);
 		SerializeToUInt8(stream, weightBitCount);
-		SerializeToBool8(stream, fitToMaximum);
 		SerializeToUInt8(stream, distribution);
 		SerializeToUInt8(stream, normalization);
 		SerializeToDouble(stream, studentTNu);
@@ -82,7 +80,6 @@ struct Header : public Serializable
 		
 		dataBitCount = UnserializeUInt8(stream);
 		weightBitCount = UnserializeUInt8(stream);
-		fitToMaximum = UnserializeBool8(stream);
 		distribution = UnserializeUInt8(stream);
 		normalization = UnserializeUInt8(stream);
 		studentTNu = UnserializeDouble(stream);

@@ -40,31 +40,27 @@ class DyscoStManColumn;
 class DyscoStMan : public casacore::DataManager
 {
 public:
-	explicit DyscoStMan(unsigned bitsPerFloat, unsigned bitsPerWeight, const casacore::String& name = "DyscoStMan");
+	DyscoStMan(unsigned bitsPerFloat, unsigned bitsPerWeight, const casacore::String& name = "DyscoStMan");
 	
-	void SetGaussianDistribution(bool fitToMaximum)
+	void SetGaussianDistribution()
 	{
 		_distribution = GaussianDistribution;
-		_fitToMaximum = fitToMaximum;
 	}
 	
 	void SetUniformDistribution()
 	{
 		_distribution = UniformDistribution;
-		_fitToMaximum = true;
 	}
 	
-	void SetStudentsTDistribution(bool fitToMaximum, double nu)
+	void SetStudentsTDistribution(double nu)
 	{
 		_distribution = StudentsTDistribution;
-		_fitToMaximum = fitToMaximum;
 		_studentTNu = nu;
 	}
 
-	void SetTruncatedGaussianDistribution(bool fitToMaximum, double truncationSigma)
+	void SetTruncatedGaussianDistribution(double truncationSigma)
 	{
 		_distribution = TruncatedGaussianDistribution;
-		_fitToMaximum = fitToMaximum;
 		_distributionTruncation = truncationSigma;
 	}
 	
@@ -281,7 +277,6 @@ private:
 	std::string _name;
 	unsigned _dataBitCount;
 	unsigned _weightBitCount;
-	bool _fitToMaximum;
 	DyscoDistribution _distribution;
 	DyscoNormalization _normalization;
 	double _studentTNu, _distributionTruncation;

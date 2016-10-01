@@ -2,9 +2,9 @@
 
 namespace dyscostman {
 
-void DyscoWeightColumn::Prepare(bool fitToMaximum, DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
+void DyscoWeightColumn::Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
 {
-	ThreadedDyscoColumn::Prepare(fitToMaximum, distribution, normalization, studentsTNu, distributionTruncation);
+	ThreadedDyscoColumn::Prepare(distribution, normalization, studentsTNu, distributionTruncation);
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
 	_encoder.reset(new WeightBlockEncoder(nPolarizations, nChannels, 1 << getBitsPerSymbol()));
 }

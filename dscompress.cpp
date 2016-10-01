@@ -15,7 +15,7 @@
 using namespace dyscostman;
 
 template<typename T>
-void createDyscoStManColumn(casacore::MeasurementSet& ms, const std::string& name, const casacore::IPosition& shape, unsigned bitsPerComplex, unsigned bitsPerWeight, bool fitToMaximum, DyscoNormalization normalization, DyscoDistribution distribution, double studentsTNu, double distributionTruncation)
+void createDyscoStManColumn(casacore::MeasurementSet& ms, const std::string& name, const casacore::IPosition& shape, unsigned bitsPerComplex, unsigned bitsPerWeight, DyscoNormalization normalization, DyscoDistribution distribution, double studentsTNu, double distributionTruncation)
 {
 	std::cout << "Constructing new column '" << name << "'...\n";
 	casacore::ArrayColumnDesc<T> columnDesc(name, "", "DyscoStMan", "DyscoStMan", shape);
@@ -32,16 +32,16 @@ void createDyscoStManColumn(casacore::MeasurementSet& ms, const std::string& nam
 		DyscoStMan dataManager(bitsPerComplex, bitsPerWeight);
 		switch(distribution) {
 			case GaussianDistribution:
-				dataManager.SetGaussianDistribution(fitToMaximum);
+				dataManager.SetGaussianDistribution();
 				break;
 			case UniformDistribution:
 				dataManager.SetUniformDistribution();
 				break;
 			case StudentsTDistribution:
-				dataManager.SetStudentsTDistribution(fitToMaximum, studentsTNu);
+				dataManager.SetStudentsTDistribution(studentsTNu);
 				break;
 			case TruncatedGaussianDistribution:
-				dataManager.SetTruncatedGaussianDistribution(fitToMaximum, distributionTruncation);
+				dataManager.SetTruncatedGaussianDistribution(distributionTruncation);
 				break;
 		}
 		dataManager.SetNormalization(normalization);
@@ -90,9 +90,6 @@ int main(int argc, char *argv[])
 			"\tSets the number of bits per float for the data weights. The storage manager will use a single\n"
 			"\tweight for all polarizations, hence with four polarizations the compression of weight is\n"
 			"\t1/4 * n/32.\n"
-			"-no-fit-to-max\n"
-			"\tDisable rescaling the visibilities within the range of the quantization. This is not recommended,\n"
-			"\tas it can lead to bias in the case of high SNR.\n"
 			"-reorder\n"
 			"\tWill rewrite the measurement set after replacing the column. This makes sure that the space\n"
 			"\tof the old column is freed. It is for testing only, because the compression error is applied\n"
@@ -114,7 +111,6 @@ int main(int argc, char *argv[])
 	DyscoNormalization normalization = AFNormalization;
 	bool reorder = false;
 	unsigned bitsPerFloat=8, bitsPerWeight=12;
-	bool fitToMaximum = true;
 	double distributionTruncation = 2.5;
 	
 	std::vector<std::string> columnNames;
@@ -132,15 +128,6 @@ int main(int argc, char *argv[])
 		{
 			++argi;
 			bitsPerWeight = atoi(argv[argi]);
-		}
-		else if(p == "fit-to-maximum")
-		{
-			std::cout << "WARNING: -fit-to-maximum is now the default and is depricated.\n";
-			fitToMaximum = true;
-		}
-		else if(p == "no-fit-to-maximum" || p == "no-fit-to-max")
-		{
-			fitToMaximum = true;
 		}
 		else if(p == "reorder")
 		{
@@ -285,9 +272,9 @@ int main(int argc, char *argv[])
 		for(std::string columnName : columnNames)
 		{
 			if(columnName == "WEIGHT_SPECTRUM")
-				createDyscoStManColumn<float>(*ms, columnName, shape, bitsPerFloat, bitsPerWeight, fitToMaximum, normalization, distribution, 1.0, distributionTruncation);
+				createDyscoStManColumn<float>(*ms, columnName, shape, bitsPerFloat, bitsPerWeight, normalization, distribution, 1.0, distributionTruncation);
 			else
-				createDyscoStManColumn<casacore::Complex>(*ms, columnName, shape, bitsPerFloat, bitsPerWeight, fitToMaximum, normalization, distribution, 1.0, distributionTruncation);
+				createDyscoStManColumn<casacore::Complex>(*ms, columnName, shape, bitsPerFloat, bitsPerWeight, normalization, distribution, 1.0, distributionTruncation);
 		}
 		for(std::string columnName : columnNames)
 		{

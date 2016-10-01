@@ -31,7 +31,6 @@ DyscoStMan::DyscoStMan(unsigned dataBitCount, unsigned weightBitCount, const cas
 	_name(name),
 	_dataBitCount(dataBitCount),
 	_weightBitCount(weightBitCount),
-	_fitToMaximum(false),
 	_distribution(GaussianDistribution),
 	_normalization(RFNormalization),
 	_studentTNu(0.0),
@@ -50,7 +49,6 @@ DyscoStMan::DyscoStMan(const casacore::String& name, const casacore::Record& spe
 	_name(name),
 	_dataBitCount(0),
 	_weightBitCount(0),
-	_fitToMaximum(false),
 	_distribution(GaussianDistribution),
 	_normalization(AFNormalization),
 	_studentTNu(0.0),
@@ -70,7 +68,6 @@ DyscoStMan::DyscoStMan(const DyscoStMan& source) :
 	_name(source._name),
 	_dataBitCount(source._dataBitCount),
 	_weightBitCount(source._weightBitCount),
-	_fitToMaximum(source._fitToMaximum),
 	_distribution(source._distribution),
 	_normalization(source._normalization),
 	_studentTNu(source._studentTNu),
@@ -92,10 +89,6 @@ void DyscoStMan::setFromSpec(const casacore::Record& spec)
 		if(_weightBitCount == 0)
 			throw DyscoStManError("Invalid error for weight bit rate");
 		
-		if(spec.description().fieldNumber("fitToMaximum") >= 0)
-			_fitToMaximum = spec.asBool("fitToMaximum");
-		else
-			_fitToMaximum = true;
 		std::string str = spec.asString("distribution");
 		if(str == "Uniform")
 			_distribution = UniformDistribution;
@@ -142,7 +135,6 @@ casacore::Record DyscoStMan::dataManagerSpec() const
   casacore::Record spec;
   spec.define("dataBitCount", _dataBitCount);
   spec.define("weightBitCount", _weightBitCount);
-  spec.define("fitToMaximum", _fitToMaximum);
   std::string distStr;
   switch(_distribution) {
     case GaussianDistribution: distStr = "Gaussian"; break;
@@ -195,7 +187,6 @@ void DyscoStMan::writeHeader()
 	header.versionMinor = VERSION_MINOR;
 	header.dataBitCount = _dataBitCount;
 	header.weightBitCount = _weightBitCount;
-	header.fitToMaximum = _fitToMaximum;
 	header.distribution = _distribution;
 	header.normalization = _normalization;
 	header.studentTNu = _studentTNu;
@@ -231,7 +222,6 @@ void DyscoStMan::readHeader()
 	_name = header.storageManagerName;
 	_dataBitCount = header.dataBitCount;
 	_weightBitCount = header.weightBitCount;
-	_fitToMaximum = header.fitToMaximum;
 	_distribution = (enum DyscoDistribution) header.distribution;
 	_normalization = (enum DyscoNormalization) header.normalization;
 	_studentTNu = header.studentTNu;
@@ -360,7 +350,7 @@ void DyscoStMan::prepare()
 			if(wghtCol != 0)
 				wghtCol->SetBitsPerSymbol(_weightBitCount);
 		}
-		col->Prepare(_fitToMaximum, _distribution, _normalization, _studentTNu, _distributionTruncation);
+		col->Prepare( _distribution, _normalization, _studentTNu, _distributionTruncation);
 	}
 	
 	// In case this is a new measurement set, we do not know the rowsPerBlock yet

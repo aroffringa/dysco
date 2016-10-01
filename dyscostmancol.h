@@ -32,8 +32,7 @@ public:
 		casacore::StManColumn(dtype),
 		_columnIndex(0),
 		_storageManager(parent)
-	{
-	}
+	{	}
   
   /** Destructor */
   virtual ~DyscoStManColumn() { }
@@ -46,7 +45,7 @@ public:
 	 */
   virtual casacore::Bool isWritable() const override { return true; }
 	
-	virtual void Prepare(bool fitToMaximum, DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) = 0;
+	virtual void Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) = 0;
 	
 	virtual void InitializeAfterNRowsPerBlockIsKnown() = 0;
 

@@ -25,7 +25,6 @@ public:
 		ThreadedDyscoColumn(parent, dtype),
 		_rnd(std::random_device{}()),
 		_gausEncoder(),
-		_fitToMaximum(false),
 		_distribution(GaussianDistribution),
 		_normalization(RFNormalization)
 	{ }
@@ -37,7 +36,7 @@ public:
   /** Destructor. */
   virtual ~DyscoDataColumn() { shutdown(); }
 	
-	virtual void Prepare(bool fitToMaximum, DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) override;
+	virtual void Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) override;
 	
 protected:
 	virtual void initializeDecode(TimeBlockBuffer<data_t>* buffer, const float* metaBuffer, size_t nRow, size_t nAntennae) final override;
@@ -66,7 +65,6 @@ private:
 	std::mt19937 _rnd;
 	std::unique_ptr<GausEncoder<float>> _gausEncoder;
 	std::unique_ptr<TimeBlockEncoder> _decoder;
-	bool _fitToMaximum;
 	DyscoDistribution _distribution;
 	DyscoNormalization _normalization;
 	double _studentsTNu;
