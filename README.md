@@ -7,12 +7,14 @@ To install:
     cd build
     cmake ../
     make -j 4
+	make install
 
 To be able to open compressed measurement sets, the dysco library ("libdyscostman.so") must be in your path.
 
-The program 'dscompress' allows compression of a measurement set. Note that it is mostly aimed at testing the compression. For
-production use I highly recommend to perform compression within a pipeline in which the initial measurement sets are created.
-This can be implemented by asking Casacore to store a column with the DyscoStMan.
+The program 'dscompress' allows compression of a measurement set. Note that this program is mostly aimed at testing the compression.
+For production use I highly recommend to perform compression within a pipeline in which the initial measurement sets are created.
+This can be implemented by asking Casacore to store a column with the DyscoStMan. For LOFAR, Dysco was implemented in DPPP, and
+using DPPP is the recommended way to compress a LOFAR measurement set.
 
 Run 'dscompress' without parameters to get help. Here's an example command:
 
@@ -24,6 +26,6 @@ Casacore might not clear up the space of the old column after replacing it. Henc
 effects of compression, but not to see the size of the measurement set.
 
 To be able to get a measure of the size, one can add '-reorder' to the command line. This will free up the space of the old column,
-but currently in order to do so, the full measurement set will be rewritten. This is causes the compression to be performed twice,
+but currently in order to do so, the full measurement set will be rewritten. This causes the compression to be performed twice,
 and hence the compression noise will be added twice. Therefore, the '-reorder' option is useful for testing the size of the compression,
 but should not be used in production.
