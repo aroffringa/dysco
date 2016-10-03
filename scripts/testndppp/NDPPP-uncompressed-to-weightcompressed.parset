@@ -1,0 +1,12 @@
+
+msin=tmp-uncompressed.ms
+msin.datacolumn=DATA
+
+msout=tmp-weightcompressed.ms
+msout.storagemanager=dysco
+msout.storagemanager.databitrate=0
+msout.storagemanager.weightbitrate=10
+
+numthreads=1
+
+steps=[]

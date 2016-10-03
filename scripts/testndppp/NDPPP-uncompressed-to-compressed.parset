@@ -1,0 +1,15 @@
+
+msin=tmp-uncompressed.ms
+msin.datacolumn=DATA
+
+msout=tmp-compressed.ms
+msout.storagemanager=dysco
+msout.storagemanager.databitrate=3
+msout.storagemanager.distribution="TruncatedGaussian"
+msout.storagemanager.disttruncation=1.5
+msout.storagemanager.normalization="AF"
+msout.storagemanager.weightbitrate=12
+
+numthreads=1
+
+steps=[]

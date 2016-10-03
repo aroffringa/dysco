@@ -1,0 +1,10 @@
+
+msin=tmp-uncompressed.ms
+msin.datacolumn=DATA
+
+msout=.
+msout.datacolumn=UNCOMPRESSED_DATA
+
+numthreads=1
+
+steps=[]

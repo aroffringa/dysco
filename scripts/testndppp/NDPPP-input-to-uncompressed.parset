@@ -1,0 +1,9 @@
+
+msin=L258627_SAP000_SB120_uv.MS.1ch12s.dppp
+msin.datacolumn=DATA
+
+msout=tmp-uncompressed.ms
+
+numthreads=1
+
+steps=[]
