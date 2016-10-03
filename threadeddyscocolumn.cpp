@@ -112,31 +112,41 @@ void ThreadedDyscoColumn<DataType>::getValues(casacore::uInt rowNr, casacore::Ar
 {
 	if(!areOffsetsInitialized())
 	{
+		// Trying to read before first block was written -- return zero
+		// TODO if a few rows were written of the first block, those are
+		// incorrectly returned. This is a rare case but can be fixed.
 		for(typename casacore::Array<DataType>::contiter i=dataPtr->cbegin(); i!=dataPtr->cend(); ++i)
 			*i = DataType();
-		//throw std::runtime_error("Trying to read from uninitialized storage manager");
 	}
 	else {
 		size_t blockIndex = getBlockIndex(rowNr);
-		mutex::scoped_lock lock(_mutex);
-		// Wait until the block to be read is not in the write cache
-		typename cache_t::const_iterator cacheItemPtr = _cache.find(blockIndex);
-		while(cacheItemPtr != _cache.end())
+		if(blockIndex >= nBlocksInFile())
 		{
-			_cacheChangedCondition.wait(lock);
-			cacheItemPtr = _cache.find(blockIndex);
+			// Trying to read a row that was not stored yet -- return zero
+			for(typename casacore::Array<DataType>::contiter i=dataPtr->cbegin(); i!=dataPtr->cend(); ++i)
+				*i = DataType();
 		}
-		lock.unlock();
-		
-		if(_currentBlock != blockIndex)
-		{
-			if(_isCurrentBlockChanged)
-				storeBlock();
-			loadBlock(blockIndex);
+		else {
+			mutex::scoped_lock lock(_mutex);
+			// Wait until the block to be read is not in the write cache
+			typename cache_t::const_iterator cacheItemPtr = _cache.find(blockIndex);
+			while(cacheItemPtr != _cache.end())
+			{
+				_cacheChangedCondition.wait(lock);
+				cacheItemPtr = _cache.find(blockIndex);
+			}
+			lock.unlock();
+			
+			if(_currentBlock != blockIndex)
+			{
+				if(_isCurrentBlockChanged)
+					storeBlock();
+				loadBlock(blockIndex);
+			}
+			
+			// The time block encoder is now initialized and contains the unpacked block.
+			_timeBlockBuffer->GetData(getRowWithinBlock(rowNr), dataPtr->data());
 		}
-		
-		// The time block encoder is now initialized and contains the unpacked block.
-		_timeBlockBuffer->GetData(getRowWithinBlock(rowNr), dataPtr->data());
 	}
 }
 

@@ -157,4 +157,22 @@ BOOST_AUTO_TEST_CASE( maketable )
 	}
 }
 
+BOOST_AUTO_TEST_CASE( read_past_end )
+{
+	/**
+	 * While reading past the end of a file might seem wrong in any case, it can
+	 * happen that a user reads a line that was not stored yet in the particular
+	 * column, but which does exist in the table. This is valid (and DPPP does this).
+	 */
+	size_t nAnt = 3;
+	TestTableFixture fixture(nAnt);
+	
+	casacore::Table table("TestTable");
+	casacore::ArrayColumn<casacore::Complex> dataCol(table, "DATA");
+	for(size_t i=table.nrow(); i!=table.nrow()*2; ++i)
+	{
+		BOOST_CHECK_CLOSE_FRACTION((*dataCol(i).cbegin()).real(), 0.0, 1e-4);
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()
