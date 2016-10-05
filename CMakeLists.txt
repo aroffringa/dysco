@@ -12,6 +12,8 @@ find_library(GSL_LIB NAMES gsl)
 find_path(GSL_INCLUDE_DIR NAMES gsl/gsl_version.h)
 find_library(GSL_CBLAS_LIB NAMES gslcblas)
 
+find_package(Threads REQUIRED)
+
 find_package(Boost COMPONENTS system REQUIRED)
 
 include(CheckCXXCompilerFlag)
@@ -40,13 +42,13 @@ set_property(TARGET dyscostman-object PROPERTY POSITION_INDEPENDENT_CODE 1)
 # Note: casapy fails if Casa is linked in the storage manager, so we have to trust that
 # casapy's version of casacore is binary compatible with this storage manager's casacore.
 add_library(dyscostman SHARED $<TARGET_OBJECTS:dyscostman-object>)
-target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} pthread)
 
 add_executable(dscompress dscompress.cpp stopwatch.cpp)
-target_link_libraries(dscompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+target_link_libraries(dscompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} pthread)
 
 add_executable(decompress decompress.cpp)
-target_link_libraries(decompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+target_link_libraries(decompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} pthread)
 
 # add target to generate API documentation with Doxygen
 find_package(Doxygen)
@@ -69,7 +71,7 @@ if(Boost_FOUND)
     tests/testdyscostman.cpp
     tests/testtimeblockencoder.cpp
     )
-  target_link_libraries(runtests ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES})
+  target_link_libraries(runtests ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} pthread)
   add_test(runtests runtests)
   add_custom_target(check COMMAND runtests -l unit_scope DEPENDS runtests)
 else()
