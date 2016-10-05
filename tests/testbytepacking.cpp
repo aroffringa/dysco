@@ -2,7 +2,6 @@
 #include "../uvector.h"
 
 #include <boost/test/unit_test.hpp>
-#include <boost/test/data/test_case.hpp>
 
 #include <sstream>
 
@@ -118,16 +117,19 @@ void testCombinations(const ao::uvector<unsigned int>& data, int bitCount)
 
 const int bitrates[] = {2, 3, 4, 6, 8, 10, 12, 16};
 
-BOOST_DATA_TEST_CASE( pack_unpack, boost::unit_test::data::make(bitrates) )
+BOOST_AUTO_TEST_CASE( pack_unpack )
 {
-	ao::uvector<unsigned int> testArray{1337, 2, 100, 0};
-	for(int i=0; i!=1000; ++i)
+	for(int sample : bitrates)
 	{
-		testArray.push_back(i);
-		testArray.push_back(i*37);
-		testArray.push_back(i*20000);
+		ao::uvector<unsigned int> testArray{1337, 2, 100, 0};
+		for(int i=0; i!=1000; ++i)
+		{
+			testArray.push_back(i);
+			testArray.push_back(i*37);
+			testArray.push_back(i*20000);
+		}
+		testCombinations(testArray, sample);
 	}
-	testCombinations(testArray, sample);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
