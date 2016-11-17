@@ -66,7 +66,10 @@ void DyscoDataColumn::initializeEncodeThread(void** threadData)
 			encoder = new RowTimeBlockEncoder(nPolarizations, nChannels);
 			break;
 	}
-	*reinterpret_cast<ThreadData**>(threadData) = new ThreadData(encoder);
+	ThreadData* newThreadData = new ThreadData(encoder);
+	// Seed every thread from a random number
+	newThreadData->rnd.seed(_rnd());
+	*reinterpret_cast<ThreadData**>(threadData) = newThreadData;
 }
 
 void DyscoDataColumn::destructEncodeThread(void* threadData)
@@ -78,7 +81,7 @@ void DyscoDataColumn::destructEncodeThread(void* threadData)
 void DyscoDataColumn::encode(void* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae)
 {
 	ThreadData& data = *reinterpret_cast<ThreadData*>(threadData);
-	data.encoder->EncodeWithDithering(*_gausEncoder, *buffer, metaBuffer, symbolBuffer, nAntennae, _rnd);
+	data.encoder->EncodeWithDithering(*_gausEncoder, *buffer, metaBuffer, symbolBuffer, nAntennae, data.rnd);
 }
 
 size_t DyscoDataColumn::metaDataFloatCount(size_t nRows, size_t nPolarizations, size_t nChannels, size_t nAntennae) const

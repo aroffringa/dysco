@@ -60,6 +60,7 @@ private:
 			encoder(encoder_)
 			{ }
 		std::unique_ptr<TimeBlockEncoder> encoder;
+		std::mt19937 rnd;
 	};
 	
 	std::mt19937 _rnd;
