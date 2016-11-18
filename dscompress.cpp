@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 	
 	DyscoDistribution distribution = TruncatedGaussianDistribution;
 	DyscoNormalization normalization = AFNormalization;
-	bool reorder = false;
+	bool reorder = false, doCheckMSFormat = true;
 	unsigned bitsPerFloat=8, bitsPerWeight=12;
 	double distributionTruncation = 2.5;
 	
@@ -251,6 +251,69 @@ int main(int argc, char *argv[])
 		}
 	}
 	std::cout << "Time taken: " << watch.ToString() << '\n';
+	
+	if(doCheckMSFormat)
+	{
+		std::cout << "Validating MS ordering...\n";
+		watch.Reset();
+		watch.Start();
+		
+		casacore::ScalarColumn<int> antenna1Col(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::ANTENNA1));
+		casacore::ScalarColumn<int> antenna2Col(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::ANTENNA2));
+		casacore::ScalarColumn<int> fieldIdCol(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::FIELD_ID));
+		casacore::ScalarColumn<int> dataDescIdCol(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::DATA_DESC_ID));
+		casacore::ScalarColumn<double> timeCol(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::TIME));
+		
+		int lastFieldId = fieldIdCol(0), lastDataDescId = dataDescIdCol(0);
+		double lastTime = timeCol(0);
+		std::vector<std::pair<int,int>> antennasInBlock;
+		size_t blockOffset = 0, blockNumber = 0;
+		for(size_t row=0; row!=ms->nrow(); ++row)
+		{
+			int
+				antenna1 = antenna1Col(row),
+				antenna2 = antenna2Col(row),
+				fieldId = fieldIdCol(row),
+				dataDescId = dataDescIdCol(row);
+			double time = timeCol(row);
+			if(time != lastTime || fieldId != lastFieldId || dataDescId != lastDataDescId)
+			{
+				if(blockOffset != antennasInBlock.size())
+				{
+					std::ostringstream msg;
+					msg << "This measurement set is not 'regular'; at table row " << row << ", timeblock index " << blockNumber << ", timeblock offset " << blockOffset << " the number of baselines in the timeblock (" << blockOffset << ") is not equal to the number of baselines in previous timeblocks (" << antennasInBlock.size() << "). In other words, not all timesteps had the same baselines. This is required to be able to compress with Dysco.";
+					throw std::runtime_error(msg.str());
+				}
+				blockOffset = 0;
+				++blockNumber;
+			}
+			if(blockNumber==0)
+			{
+				antennasInBlock.push_back(std::make_pair(antenna1, antenna2));
+			}
+			else {
+				if(antennasInBlock[blockOffset].first != antenna1 || antennasInBlock[blockOffset].second != antenna2)
+				{
+					std::string antstr;
+					if(antennasInBlock[blockOffset].first != antenna1)
+						antstr="antenna1";
+					else
+						antstr="antenna2";
+					std::ostringstream msg;
+					msg << "This measurement set is not 'regular'; at table row " << row << ", timeblock index " << blockNumber << ", timeblock offset " << blockOffset << " the index for " << antstr << " is not the same as for previous timesteps. In other words, not all timesteps had the same baselines. This is required to be able to compress with Dysco.";
+					throw std::runtime_error(msg.str());
+				}
+			}
+			++blockOffset;
+			lastTime = time;
+			lastDataDescId = dataDescId;
+			lastFieldId = fieldId;
+		}
+		if(blockOffset != antennasInBlock.size())
+			throw std::runtime_error("The final timeblock did not have the same number of timesteps as the previous timeblocks. In other words, not all timesteps had the same baselines. This is required to be able to compress with Dysco.");
+		std::cout << "Time taken: " << watch.ToString() << '\n';
+	}
+	
 	watch.Reset();
 	watch.Start();
 	
