@@ -112,7 +112,7 @@ public:
 	/** @brief Construct an empty uvector.
 	 * @param allocator Allocator used for allocating and deallocating memory.
 	 */
-	uvector(const allocator_type& allocator = Alloc()) noexcept
+	explicit uvector(const allocator_type& allocator = Alloc()) noexcept
 	: Alloc(allocator), _begin(nullptr), _end(nullptr), _endOfStorage(nullptr)
 	{
 	}

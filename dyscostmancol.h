@@ -30,7 +30,7 @@ public:
 	 */
   explicit DyscoStManColumn(DyscoStMan* parent, int dtype) :
 		casacore::StManColumn(dtype),
-		_columnIndex(0),
+		_offsetInBlock(0),
 		_storageManager(parent)
 	{	}
   
@@ -106,11 +106,10 @@ protected:
 	
 	void initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount);
 private:
-	DyscoStManColumn(const DyscoStManColumn &source) : casacore::StManColumn(0), _isRemoved(false) { }
-	void operator=(const DyscoStManColumn &source) { }
+	DyscoStManColumn(const DyscoStManColumn &source) = delete;
+	void operator=(const DyscoStManColumn &source) = delete;
 	
-	bool _isRemoved;
-	size_t _columnIndex, _offsetInBlock;
+	size_t _offsetInBlock;
   DyscoStMan *_storageManager;
 };
 

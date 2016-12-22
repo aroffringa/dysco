@@ -24,7 +24,7 @@ public:
 	 * Constructor.
 	 * @param ms Measurement set on which to operate.
 	 */
-	StManModifier(casacore::MeasurementSet& ms) : _ms(ms)
+	explicit StManModifier(casacore::MeasurementSet& ms) : _ms(ms)
 	{	}
 	
 	/**

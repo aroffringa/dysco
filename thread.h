@@ -33,7 +33,7 @@ class thread
 		 * @param threadFunc the functor to be called from the new thread.
 		 */
 		template<typename T>
-		thread(T threadFunc) : _threadFunc(new T(threadFunc))
+		explicit thread(T threadFunc) : _threadFunc(new T(threadFunc))
 		{
 			int status = pthread_create(&_thread, NULL, &thread::start<T>, this);
 			if(status != 0)
@@ -170,7 +170,7 @@ class mutex
 				 * Create a locked scoped_lock for the given mutex.
 				 * @param mutex Mutex that will be locked.
 				 */
-				scoped_lock(mutex &mutex) : _hasLock(false), _mutex(mutex)
+				explicit scoped_lock(mutex &mutex) : _hasLock(false), _mutex(mutex)
 				{
 					_mutex.lock();
 					_hasLock = true;

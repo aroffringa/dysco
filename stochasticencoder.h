@@ -165,7 +165,7 @@ class StochasticEncoder
 		}
 		
 	private:
-		StochasticEncoder(size_t quantCount) :
+		explicit StochasticEncoder(size_t quantCount) :
 			_encDictionary(quantCount-1), _decDictionary(quantCount-1)
 		{ }
 		
@@ -181,7 +181,7 @@ class StochasticEncoder
 				
 				Dictionary() : _values() { }
 				
-				Dictionary(size_t size) : _values(size) { }
+				explicit Dictionary(size_t size) : _values(size) { }
 				
 				void reserve(size_t size) {
 					_values.reserve(size);

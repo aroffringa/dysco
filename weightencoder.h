@@ -25,7 +25,7 @@ class WeightEncoder
 		/** Construct a new encoder with the given quantization count.
 		 * @param quantCount The number of quantization levels.
 		 */
-		WeightEncoder(unsigned quantCount) : _quantCount(quantCount)
+		explicit WeightEncoder(unsigned quantCount) : _quantCount(quantCount)
 		{
 		}
 		

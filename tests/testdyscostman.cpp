@@ -28,7 +28,7 @@ casa::Record GetDyscoSpec()
 
 struct TestTableFixture
 {
-	TestTableFixture(size_t nAnt)
+	explicit TestTableFixture(size_t nAnt)
 	{
 		casacore::TableDesc tableDesc;
 		IPosition shape(2, 1, 1);
