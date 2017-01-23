@@ -10,23 +10,16 @@ find_package(Casacore REQUIRED COMPONENTS casa ms tables measures)
 
 find_library(GSL_LIB NAMES gsl)
 find_path(GSL_INCLUDE_DIR NAMES gsl/gsl_version.h)
-find_library(GSL_CBLAS_LIB NAMES gslcblas)
 
 find_package(Threads REQUIRED)
 
 find_package(Boost COMPONENTS system REQUIRED)
 
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-pedantic -Wno-long-long -Werror=vla" COMPILER_SUPPORTS_PEDANTIC)
-if(COMPILER_SUPPORTS_PEDANTIC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wno-long-long -Werror=vla")
-endif(COMPILER_SUPPORTS_PEDANTIC)
-
 include_directories(${CASACORE_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${GSL_INCLUDE_DIR})
 
-set(CMAKE_CXX_FLAGS "-O3 -Wall -DNDEBUG -march=native --std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -DNDEBUG -march=native --std=c++11")
 
 add_library(dyscostman-object OBJECT
 	aftimeblockencoder.cpp
@@ -42,13 +35,14 @@ set_property(TARGET dyscostman-object PROPERTY POSITION_INDEPENDENT_CODE 1)
 # Note: casapy fails if Casa is linked in the storage manager, so we have to trust that
 # casapy's version of casacore is binary compatible with this storage manager's casacore.
 add_library(dyscostman SHARED $<TARGET_OBJECTS:dyscostman-object>)
-target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+set_target_properties(dyscostman PROPERTIES SOVERSION 0)
+target_link_libraries(dyscostman ${GSL_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(dscompress dscompress.cpp stopwatch.cpp)
-target_link_libraries(dscompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(dscompress dyscostman ${GSL_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(decompress decompress.cpp)
-target_link_libraries(decompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(decompress dyscostman ${GSL_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 # add target to generate API documentation with Doxygen
 find_package(Doxygen)
