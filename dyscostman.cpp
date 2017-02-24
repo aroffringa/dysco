@@ -216,6 +216,8 @@ void DyscoStMan::readHeader()
 	Header header;
 	_fStream->seekg(0, std::ios_base::beg);
 	header.Unserialize(*_fStream);
+	if(_fStream->fail())
+		throw DyscoStManError("I/O error: could not read file '" + fileName() + "' -- is the file corrupted?");
 	_headerSize = header.headerSize;
 	size_t curColumnHeaderOffset = header.columnHeaderOffset;
 	size_t columnCount = header.columnCount;
