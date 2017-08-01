@@ -10,6 +10,7 @@ find_package(Casacore REQUIRED COMPONENTS casa ms tables measures)
 
 find_library(GSL_LIB NAMES gsl)
 find_path(GSL_INCLUDE_DIR NAMES gsl/gsl_version.h)
+find_library(GSL_CBLAS_LIB NAMES gslcblas)
 
 find_package(Threads REQUIRED)
 
@@ -42,13 +43,13 @@ set_property(TARGET dyscostman-object PROPERTY POSITION_INDEPENDENT_CODE 1)
 # casapy's version of casacore is binary compatible with this storage manager's casacore.
 add_library(dyscostman SHARED $<TARGET_OBJECTS:dyscostman-object>)
 set_target_properties(dyscostman PROPERTIES SOVERSION 0)
-target_link_libraries(dyscostman ${GSL_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(dscompress dscompress.cpp stopwatch.cpp)
-target_link_libraries(dscompress dyscostman ${GSL_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(dscompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(decompress decompress.cpp)
-target_link_libraries(decompress dyscostman ${GSL_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(decompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 # add target to generate API documentation with Doxygen
 find_package(Doxygen)
