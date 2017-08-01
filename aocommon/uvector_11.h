@@ -77,6 +77,12 @@ template<typename Tp, typename Alloc = std::allocator<Tp> >
 class uvector : private Alloc
 {
 	static_assert(std::is_standard_layout<Tp>(), "A uvector can only hold classes with standard layout");
+private:
+#if __cplusplus > 201402L
+	typedef std::allocator_traits<allocator_type>::is_always_equal allocator_is_always_equal;
+#else
+	typedef std::false_type allocator_is_always_equal;
+#endif
 public:
 	/// Element type
 	typedef Tp value_type;
@@ -187,7 +193,7 @@ public:
 	/** @brief Move construct a uvector.
 	 * @param other Source uvector to be moved from.
 	 */
-	uvector(uvector<Tp,Alloc>&& other) :
+	uvector(uvector<Tp,Alloc>&& other) noexcept :
 		Alloc(std::move(other)),
 		_begin(other._begin),
 		_end(other._end),
@@ -202,7 +208,7 @@ public:
 	 * @param other Source uvector to be moved from.
 	 * @param allocator Allocator used for allocating and deallocating memory.
 	 */
-	uvector(uvector<Tp,Alloc>&& other, const allocator_type& allocator) :
+	uvector(uvector<Tp,Alloc>&& other, const allocator_type& allocator) noexcept :
 		Alloc(allocator),
 		_begin(other._begin),
 		_end(other._end),
@@ -232,7 +238,7 @@ public:
 	}
 	
 	/** @brief Destructor. */
-	~uvector()
+	~uvector() noexcept
 	{
 		deallocate();
 	}
@@ -250,46 +256,48 @@ public:
 	 * @details The allocator of the uvector will be assigned to @p other when
 	 * std::allocator_traits<Alloc>::propagate_on_container_move_assignment() is of true_type.
 	 */
-	uvector& operator=(uvector<Tp,Alloc>&& other)
+	uvector& operator=(uvector<Tp,Alloc>&& other) noexcept(
+		std::allocator_traits<Alloc>::propagate_on_container_move_assignment::value||
+		allocator_is_always_equal::value)
 	{
 		return assign_move_from(std::move(other), typename std::allocator_traits<Alloc>::propagate_on_container_move_assignment());
 	}
 	
 	/** @brief Get iterator to first element. */
-	iterator begin() { return _begin; }
+	iterator begin() noexcept { return _begin; }
 	
 	/** @brief Get constant iterator to first element. */
-	const_iterator begin() const { return _begin; }
+	const_iterator begin() const noexcept { return _begin; }
 	
 	/** @brief Get iterator to element past last element. */
-	iterator end() { return _end; }
+	iterator end() noexcept { return _end; }
 	
 	/** @brief Get constant iterator to element past last element. */
-	const_iterator end() const { return _end; }
+	const_iterator end() const noexcept { return _end; }
 	
 	/** @brief Get reverse iterator to last element. */
-	reverse_iterator rbegin() { return reverse_iterator(end()); }
+	reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
 	
 	/** @brief Get constant reverse iterator to last element. */
-	const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+	const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
 	
 	/** @brief Get reverse iterator to element before first element. */
-	reverse_iterator rend() { return reverse_iterator(begin()); }
+	reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
 	
 	/** @brief Get constant reverse iterator to element before first element. */
-	const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+	const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
 	
 	/** @brief Get constant iterator to first element. */
-	const_iterator cbegin() const { return _begin; }
+	const_iterator cbegin() const noexcept { return _begin; }
 	
 	/** @brief Get constant iterator to element past last element. */
-	const_iterator cend() const { return _end; }
+	const_iterator cend() const noexcept { return _end; }
 	
 	/** @brief Get constant reverse iterator to last element. */
-	const_reverse_iterator crbegin() const { return const_reverse_iterator(end()); }
+	const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(end()); }
 	
 	/** @brief Get constant reverse iterator to element before first element. */
-	const_reverse_iterator crend() const { return const_reverse_iterator(begin()); }
+	const_reverse_iterator crend() const noexcept { return const_reverse_iterator(begin()); }
 	
 	/** @brief Get number of elements in container. */
 	size_t size() const noexcept { return _end - _begin; }
@@ -391,7 +399,7 @@ public:
 			_end = nullptr;
 			_endOfStorage = nullptr;
 		}
-		else {
+		else if(curSize < capacity()) {
 			pointer newStorage = allocate(curSize);
 			memcpy(newStorage, _begin, curSize * sizeof(Tp));
 			deallocate();
@@ -402,10 +410,10 @@ public:
 	}
 	
 	/** @brief Get a reference to the element at the given index. */
-	Tp& operator[](size_t index) { return _begin[index]; }
+	Tp& operator[](size_t index) noexcept { return _begin[index]; }
 	
 	/** @brief Get a constant reference to the element at the given index. */
-	const Tp& operator[](size_t index) const { return _begin[index]; }
+	const Tp& operator[](size_t index) const noexcept { return _begin[index]; }
 	
 	/** @brief Get a reference to the element at the given index with bounds checking.
 	 * @throws std::out_of_range when given index is past the last element.
@@ -426,22 +434,22 @@ public:
 	}
 	
 	/** @brief Get reference to first element in container. */ 
-	Tp& front() { return *_begin; }
+	Tp& front() noexcept { return *_begin; }
 	
 	/** @brief Get constant reference to first element in container. */ 
-	const Tp& front() const { return *_begin; }
+	const Tp& front() const noexcept { return *_begin; }
 	
 	/** @brief Get reference to last element in container. */ 
-	Tp& back() { return *(_end - 1); }
+	Tp& back() noexcept { return *(_end - 1); }
 	
 	/** @brief Get constant reference to last element in container. */ 
-	const Tp& back() const { return *(_end - 1); }
+	const Tp& back() const noexcept { return *(_end - 1); }
 	
 	/** @brief Get pointer to internal storage. */ 
-	Tp* data() { return _begin; }
+	Tp* data() noexcept { return _begin; }
 	
 	/** @brief Get constant pointer to internal storage. */ 
-	const Tp* data() const { return _begin; }
+	const Tp* data() const noexcept { return _begin; }
 	
 	/** @brief Assign this container to be equal to the given range.
 	 * @details The container will be resized to fit the length of the given
@@ -689,7 +697,7 @@ public:
 	 * @c propagate_on_container_swap is false.
 	 * @param other Other uvector whose contents it to be swapped with this.
 	 */
-	void swap(uvector<Tp, Alloc>& other)
+	void swap(uvector<Tp, Alloc>& other) noexcept
 	{
 		swap(other, typename std::allocator_traits<Alloc>::propagate_on_container_swap());
 	}
@@ -721,7 +729,7 @@ public:
 			memmove(const_cast<iterator>(position)+1, position, (_end - position) * sizeof(Tp));
 			++_end;
 		}
-		*const_cast<iterator>(position) = Tp(std::forward<Args...>(args...));
+		*const_cast<iterator>(position) = Tp(std::forward<Args>(args)...);
 		return const_cast<iterator>(position);
 	}
 	
@@ -734,7 +742,7 @@ public:
 	{
 		if(_end == _endOfStorage)
 			enlarge(enlarge_size(1));
-		*_end = Tp(std::forward<Args...>(args...));
+		*_end = Tp(std::forward<Args>(args)...);
 		++_end;
 	}
 	
@@ -838,12 +846,12 @@ private:
 		return Alloc::allocate(n);
 	}
 	
-	void deallocate()
+	void deallocate() noexcept
 	{
 		deallocate(_begin, capacity());
 	}
 	
-	void deallocate(pointer begin, size_t n)
+	void deallocate(pointer begin, size_t n) noexcept
 	{
 		if(begin != nullptr)
 			Alloc::deallocate(begin, n);
@@ -1000,7 +1008,7 @@ private:
 		_endOfStorage = _begin + newSize;
 	}
 	
-	// implementation of operator=() without propagate_on_container_copy_assignment
+	// implementation of operator=(const&) without propagate_on_container_copy_assignment
 	uvector& assign_copy_from(const uvector<Tp,Alloc>& other, std::false_type)
 	{
 		const size_t n = other.size();
@@ -1015,10 +1023,10 @@ private:
 		return *this;
 	}
 	
-	// implementation of operator=() with propagate_on_container_copy_assignment
+	// implementation of operator=(const&) with propagate_on_container_copy_assignment
 	uvector& assign_copy_from(const uvector<Tp,Alloc>& other, std::true_type)
 	{
-		if(static_cast<Alloc&>(other) == static_cast<Alloc&>(*this))
+		if(allocator_is_always_equal() || static_cast<Alloc&>(other) == static_cast<Alloc&>(*this))
 		{
 			assign_copy_from(other, std::false_type());
 		}
@@ -1036,9 +1044,9 @@ private:
 	}
 	
 	// implementation of operator=() without propagate_on_container_move_assignment
-	uvector& assign_move_from(uvector<Tp,Alloc>&& other, std::false_type)
+	uvector& assign_move_from(uvector<Tp,Alloc>&& other, std::false_type) noexcept(allocator_is_always_equal::value)
 	{
-		if(static_cast<Alloc&>(other) == static_cast<Alloc&>(*this))
+		if(allocator_is_always_equal::value || static_cast<Alloc&>(other) == static_cast<Alloc&>(*this))
 		{
 			deallocate();
 			_begin = other._begin;
@@ -1059,7 +1067,7 @@ private:
 	}
 	
 	// implementation of operator=() with propagate_on_container_move_assignment
-	uvector& assign_move_from(uvector<Tp,Alloc>&& other, std::true_type)
+	uvector& assign_move_from(uvector<Tp,Alloc>&& other, std::true_type) noexcept
 	{
 		deallocate();
 		Alloc::operator=(std::move(static_cast<Alloc&>(other)));
@@ -1073,7 +1081,7 @@ private:
 	}
 	
 	// implementation of swap with propagate_on_container_swap
-	void swap(uvector<Tp,Alloc>& other, std::true_type)
+	void swap(uvector<Tp,Alloc>& other, std::true_type) noexcept
 	{
 		std::swap(_begin, other._begin);
 		std::swap(_end, other._end);
@@ -1082,7 +1090,7 @@ private:
 	}
 	
 	// implementation of swap without propagate_on_container_swap
-	void swap(uvector<Tp,Alloc>& other, std::false_type)
+	void swap(uvector<Tp,Alloc>& other, std::false_type) noexcept
 	{
 		std::swap(_begin, other._begin);
 		std::swap(_end, other._end);
@@ -1149,14 +1157,14 @@ private:
 
 /** @brief Compare two uvectors for equality. */
 template<class Tp, class Alloc>
-inline bool operator==(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs)
+inline bool operator==(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs) noexcept
 {
 	return lhs.size()==rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
 /** @brief Compare two uvectors for inequality. */
 template<class Tp, class Alloc>
-inline bool operator!=(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs)
+inline bool operator!=(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs) noexcept
 {
 	return !(lhs == rhs);
 }
@@ -1166,7 +1174,7 @@ inline bool operator!=(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rh
  * the smallest size is consider to be smaller.
  */
 template <class Tp, class Alloc>
-inline bool operator<(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs)
+inline bool operator<(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs) noexcept
 {
 	const size_t minSize = std::min(lhs.size(), rhs.size());
 	for(size_t i=0; i!=minSize; ++i)
@@ -1184,7 +1192,7 @@ inline bool operator<(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs
  * the smallest size is consider to be smaller.
  */
 template <class Tp, class Alloc>
-inline bool operator<=(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs)
+inline bool operator<=(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs) noexcept
 {
 	const size_t minSize = std::min(lhs.size(), rhs.size());
 	for(size_t i=0; i!=minSize; ++i)
@@ -1202,7 +1210,7 @@ inline bool operator<=(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rh
  * the smallest size is consider to be smaller.
  */
 template <class Tp, class Alloc>
-inline bool operator>(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs)
+inline bool operator>(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs) noexcept
 {
 	return rhs < lhs;
 }
@@ -1212,7 +1220,7 @@ inline bool operator>(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs
  * the smallest size is consider to be smaller.
  */
 template <class Tp, class Alloc>
-inline bool operator>=(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs)
+inline bool operator>=(const uvector<Tp,Alloc>& lhs, const uvector<Tp,Alloc>& rhs) noexcept
 {
 	return rhs <= lhs;
 }
