@@ -111,7 +111,7 @@ public:
 	/** @brief Construct an empty uvector.
 	 * @param allocator Allocator used for allocating and deallocating memory.
 	 */
-	uvector(const allocator_type& allocator = Alloc())
+	explicit uvector(const allocator_type& allocator = Alloc())
 	: Alloc(allocator), _begin(0), _end(0), _endOfStorage(0)
 	{
 	}
