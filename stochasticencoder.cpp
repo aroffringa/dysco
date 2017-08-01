@@ -81,7 +81,6 @@ StochasticEncoder<ValueType>::StochasticEncoder(size_t quantCount, ValueType std
 	typename Dictionary::iterator decItem = _decDictionary.begin();
 	if(gaussianMapping)
 	{
-		num_t previousVal = 0.0;
 		for(size_t i=0; i!=quantCount-1; ++i)
 		{
 			if(i != 0)
@@ -93,7 +92,6 @@ StochasticEncoder<ValueType>::StochasticEncoder(size_t quantCount, ValueType std
 			
 			num_t val = ((num_t) i + num_t(0.5)) / (num_t) (quantCount-1);
 			*decItem = stddev * invCumulative(val);
-			previousVal = val;
 			++decItem;
 		}
 	} else {
