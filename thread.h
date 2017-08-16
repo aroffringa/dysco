@@ -37,7 +37,19 @@ class thread
 		{
 			int status = pthread_create(&_thread, NULL, &thread::start<T>, this);
 			if(status != 0)
-				throw std::runtime_error("Could not create thread");
+			{
+				switch(status)
+				{
+				case EAGAIN:
+					throw std::runtime_error("Could not create thread: Insufficient resources to create another thread, or a system-imposed limit on the number of threads was encountered.");
+				case EINVAL:
+					throw std::runtime_error("Could not create thread: Invalid settings in attr.");
+				case EPERM:
+					throw std::runtime_error("Could not create thread: No permission to set the scheduling policy and parameters specified in attr.");
+				default:
+					throw std::runtime_error("Could not create thread: pthread_create() returned an unknown error.");
+				}
+			}
 		}
 		
 		thread(thread&) = delete;
