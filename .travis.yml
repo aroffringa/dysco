@@ -1,6 +1,7 @@
 language: cpp
 compiler: gcc
 os: linux
+dist: zesty
 
 addons:
   apt:
