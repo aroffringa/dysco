@@ -4,7 +4,7 @@ os: linux
 dist: zesty
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y cmake casacore-dev libgsl-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
+  - sudo apt-get install -y cmake casacore-dev libgsl0-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
 
 script:
   - mkdir build && cd build && cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug .. && make && make check
