@@ -8,4 +8,4 @@ before_install:
   - sudo apt-get install -y cmake casacore-dev libgsl0-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
 
 script:
-  - mkdir build && cd build && cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug .. && make && make check
+  - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && make && make install
