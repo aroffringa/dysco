@@ -3,6 +3,7 @@ compiler: gcc
 os: linux
 dist: zesty
 before_install:
+  - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ zesty main restricted universe multiverse" -y
   - sudo apt-get -qq update
   - sudo apt-get install -y cmake casacore-dev libgsl0-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
 
