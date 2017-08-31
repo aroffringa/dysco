@@ -72,7 +72,7 @@ if(Boost_FOUND)
     tests/testdyscostman.cpp
     tests/testtimeblockencoder.cpp
     )
-  target_link_libraries(runtests ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(runtests ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   add_test(runtests runtests)
   add_custom_target(check COMMAND runtests -l unit_scope DEPENDS runtests)
 else()
