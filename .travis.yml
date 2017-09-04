@@ -5,8 +5,14 @@ dist: artful
 before_install:
   - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ artful main restricted universe multiverse" -y
   - sudo apt-get -qq update
-  - sudo apt-get install -y cmake casacore-dev libgsl0-dev libboost-system-dev libboost-filesystem-dev
-# libboost-test-dev
+  - sudo apt-get install -y cmake casacore-dev libgsl0-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
 
 script:
-  - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && make && sudo make install
+# Not all tests are run, because some fail on travisci because they run out of the (restricted) memory requirements of Travis.
+  - mkdir build && \
+  cd build && \
+  cmake -DCMAKE_BUILD_TYPE=Debug .. && \
+  make && \
+  sudo make install && \
+  make runtests && \
+  ./runtests -t encode_example,bytepacking,dithering,timeblock_encoder
