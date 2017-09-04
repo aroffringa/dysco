@@ -9,10 +9,10 @@ before_install:
 
 script:
 # Not all tests are run, because some fail on travisci because they run out of the (restricted) memory requirements of Travis.
-  - mkdir build && \
-  cd build && \
-  cmake -DCMAKE_BUILD_TYPE=Debug .. && \
-  make && \
-  sudo make install && \
-  make runtests && \
-  ./runtests -t encode_example,bytepacking,dithering,timeblock_encoder
+  - mkdir build \
+    && cd build \
+    && cmake -DCMAKE_BUILD_TYPE=Debug .. \
+    && make \
+    && sudo make install \
+    && make runtests \
+    && ./runtests -t encode_example,bytepacking,dithering,timeblock_encoder
