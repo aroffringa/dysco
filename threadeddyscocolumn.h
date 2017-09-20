@@ -176,8 +176,8 @@ private:
 	bool isWriteItemAvailable(typename cache_t::iterator &i);
 	void loadBlock(size_t blockIndex);
 	void storeBlock();
-	size_t cpuCount() const;
-	size_t maxCacheSize() const { return cpuCount()*12/10+1; }
+	size_t defaultThreadCount() const;
+	size_t maxCacheSize() const { return defaultThreadCount()*12/10+1; }
 	
 	unsigned _bitsPerSymbol;
 	casacore::IPosition _shape;

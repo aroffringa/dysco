@@ -9,6 +9,7 @@
 #include <casacore/tables/Tables/ScalarColumn.h>
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 
+#include <algorithm>
 #include <limits>
 
 using namespace altthread;
@@ -250,9 +251,10 @@ void ThreadedDyscoColumn<DataType>::Prepare(DyscoDistribution distribution, Dysc
 }
 
 template<typename DataType>
-size_t ThreadedDyscoColumn<DataType>::cpuCount() const
+size_t ThreadedDyscoColumn<DataType>::defaultThreadCount() const
 {
-	return sysconf(_SC_NPROCESSORS_ONLN);
+	// Don't spawn more than 8 threads; it causes problems in NDPPP
+	return std::min(8l, sysconf(_SC_NPROCESSORS_ONLN));
 }
 
 template<typename DataType>
@@ -270,7 +272,7 @@ void ThreadedDyscoColumn<DataType>::InitializeAfterNRowsPerBlockIsKnown()
 	//TODO _timeBlockEncoder->SetNAntennae(_antennaCount);
 	
 	// start the threads
-	size_t threadCount = cpuCount();
+	size_t threadCount = defaultThreadCount();
 	EncodingThreadFunctor functor;
 	functor.parent = this;
 	_stopThreads = false;
