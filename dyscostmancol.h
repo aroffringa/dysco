@@ -166,7 +166,7 @@ inline bool DyscoStManColumn::areOffsetsInitialized() const
 
 inline void DyscoStManColumn::initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount)
 {
-	_storageManager->initializeRowsPerBlock(rowsPerBlock, antennaCount);
+	_storageManager->initializeRowsPerBlock(rowsPerBlock, antennaCount, true);
 }
 
 } // end of namespace

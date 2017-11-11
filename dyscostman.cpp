@@ -257,7 +257,7 @@ void DyscoStMan::readHeader()
 	}
 }
 
-void DyscoStMan::initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount)
+void DyscoStMan::initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount, bool writeToHeader)
 {
 	if(areOffsetsInitialized() && (rowsPerBlock != _rowsPerBlock || antennaCount != _antennaCount))
 		throw DyscoStManError("initializeRowsPerBlock() called with two different values; something is wrong");
@@ -273,15 +273,20 @@ void DyscoStMan::initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount
 		
 		col->InitializeAfterNRowsPerBlockIsKnown();
 	}
-	writeHeader();
+	if(writeToHeader)
+		writeHeader();
 }
 
 void DyscoStMan::open(casacore::uInt nRow, casacore::AipsIO&)
 {
 	_nRow = nRow;
-	_fStream.reset(new std::fstream(fileName().c_str()));
+	_fStream.reset(new std::fstream(fileName().c_str(), std::ios_base::in | std::ios_base::out));
 	if(_fStream->fail())
-		throw DyscoStManError("I/O error: could not open file '" + fileName() + "', which should be an existing file");
+	{
+		_fStream.reset(new std::fstream(fileName().c_str(), std::ios_base::in));
+		if(_fStream->fail())
+			throw DyscoStManError("I/O error: could not open file '" + fileName() + "', which should be an existing file");
+	}
 	
 	readHeader();
 	
@@ -352,14 +357,14 @@ void DyscoStMan::prepare()
 			if(wghtCol != 0)
 				wghtCol->SetBitsPerSymbol(_weightBitCount);
 		}
-		col->Prepare( _distribution, _normalization, _studentTNu, _distributionTruncation);
+		col->Prepare(_distribution, _normalization, _studentTNu, _distributionTruncation);
 	}
 	
 	// In case this is a new measurement set, we do not know the rowsPerBlock yet
 	// If this measurement set is opened, we do know it, and we have to call
 	// initializeRowsPerBlock() to let the columns know this value.
 	if(areOffsetsInitialized())
-		initializeRowsPerBlock(_rowsPerBlock, _antennaCount);
+		initializeRowsPerBlock(_rowsPerBlock, _antennaCount, false);
 }
 
 void DyscoStMan::reopenRW()

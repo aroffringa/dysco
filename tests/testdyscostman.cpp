@@ -175,4 +175,26 @@ BOOST_AUTO_TEST_CASE( read_past_end )
 	}
 }
 
+BOOST_AUTO_TEST_CASE( readonly )
+{
+	size_t nAnt = 3;
+	TestTableFixture fixture(nAnt);
+	
+	boost::filesystem::directory_iterator end_itr;
+
+	for (boost::filesystem::directory_iterator itr("TestTable/"); itr != end_itr; ++itr)
+	{
+		if (boost::filesystem::is_regular_file(itr->path())) {
+			boost::filesystem::permissions(itr->path(),
+				boost::filesystem::others_read|boost::filesystem::owner_read);
+		}
+	}	
+	casacore::Table table("TestTable");
+	casacore::ArrayColumn<casacore::Complex> dataCol(table, "DATA");
+	for(size_t i=0; i!=table.nrow(); ++i)
+	{
+		BOOST_CHECK_CLOSE_FRACTION((*dataCol(i).cbegin()).real(), float(i), 1e-4);
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()

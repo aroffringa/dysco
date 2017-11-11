@@ -295,7 +295,7 @@ protected:
 	 * @param rowsPerBlock Number of measurement set rows in one time block.
 	 * @param antennaCount Highest antenna index+1 used in a time block.
 	 */
-	void initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount);
+	void initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount, bool writeToHeader);
 	
 private:
 	friend class DyscoStManColumn;
