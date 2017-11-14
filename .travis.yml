@@ -2,10 +2,11 @@ language: cpp
 compiler: gcc
 os: linux
 sudo: required
-dist: trusty
+dist: artful
 before_install:
-#  - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ artful main restricted universe multiverse" -y
+  - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ artful main restricted universe multiverse" -y
   - sudo apt-get -qq update
+  - sudo apt-get upgrade apt
   - sudo apt-get install -y cmake casacore-dev libgsl0-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
 
 script:
