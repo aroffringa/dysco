@@ -2,7 +2,7 @@ language: cpp
 compiler: gcc
 os: linux
 sudo: required
-dist: artful
+dist: trusty
 before_install:
   - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ artful main restricted universe multiverse" -y
   - sudo apt-get -qq update
