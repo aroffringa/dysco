@@ -4,9 +4,8 @@ os: linux
 sudo: required
 dist: trusty
 before_install:
-  - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ artful main restricted universe multiverse" -y
+#  - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ artful main restricted universe multiverse" -y
   - sudo apt-get -qq update
-  - sudo apt-get -qq upgrade
   - sudo apt-get install -y cmake casacore-dev libgsl0-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
 
 script:
