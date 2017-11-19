@@ -26,7 +26,8 @@ public:
 		_rnd(std::random_device{}()),
 		_gausEncoder(),
 		_distribution(GaussianDistribution),
-		_normalization(RFNormalization)
+		_normalization(RFNormalization),
+		_randomize(true)
 	{ }
   
 	DyscoDataColumn(const DyscoDataColumn &source) = delete;
@@ -37,6 +38,13 @@ public:
   virtual ~DyscoDataColumn() { shutdown(); }
 	
 	virtual void Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) override;
+	
+	void SetStaticRandomizationSeed()
+	{
+		std::cout << "Warning: Initializing random number generator with static seed!\n";
+		_rnd = std::mt19937();
+		_randomize = false;
+	}
 	
 protected:
 	virtual void initializeDecode(TimeBlockBuffer<data_t>* buffer, const float* metaBuffer, size_t nRow, size_t nAntennae) final override;
@@ -69,6 +77,7 @@ private:
 	DyscoDistribution _distribution;
 	DyscoNormalization _normalization;
 	double _studentsTNu;
+	bool _randomize;
 };
 
 } // end of namespace

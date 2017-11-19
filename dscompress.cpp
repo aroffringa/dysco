@@ -15,7 +15,7 @@
 using namespace dyscostman;
 
 template<typename T>
-void createDyscoStManColumn(casacore::MeasurementSet& ms, const std::string& name, const casacore::IPosition& shape, unsigned bitsPerComplex, unsigned bitsPerWeight, DyscoNormalization normalization, DyscoDistribution distribution, double studentsTNu, double distributionTruncation)
+void createDyscoStManColumn(casacore::MeasurementSet& ms, const std::string& name, const casacore::IPosition& shape, unsigned bitsPerComplex, unsigned bitsPerWeight, DyscoNormalization normalization, DyscoDistribution distribution, double studentsTNu, double distributionTruncation, bool staticSeed)
 {
 	std::cout << "Constructing new column '" << name << "'...\n";
 	casacore::ArrayColumnDesc<T> columnDesc(name, "", "DyscoStMan", "DyscoStMan", shape);
@@ -45,6 +45,10 @@ void createDyscoStManColumn(casacore::MeasurementSet& ms, const std::string& nam
 				break;
 		}
 		dataManager.SetNormalization(normalization);
+		if(staticSeed) {
+			std::cout << "Setting static seed...\n";
+			dataManager.SetStaticSeed(true);
+		}
 		std::cout << "Adding column...\n";
 		ms.addColumn(columnDesc, dataManager);
 		isAlreadyUsed = false;
@@ -98,6 +102,10 @@ int main(int argc, char *argv[])
 			"\tSelect the distribution used for the quantization of the data. The truncated gaussian and\n"
 			"\tuniform distributions generally produce the most accurate results. The default is truncgaus\n"
 			"\twith sigma=2.5, which is approximately optimal for bitrates 4-8.\n" 
+			"-static-seed\n"
+			"\tInitialize the random number generator with a static seed. This causes correlated\n"
+			"\tnoise between different measurement sets and should therefore only be used for\n"
+			"\texperimentation.\n"
 			"\n"
 			"Defaults: \n"
 			"\tbits per data val = 8\n"
@@ -112,6 +120,7 @@ int main(int argc, char *argv[])
 	bool reorder = false, doCheckMSFormat = true;
 	unsigned bitsPerFloat=8, bitsPerWeight=12;
 	double distributionTruncation = 2.5;
+	bool staticSeed = false;
 	
 	std::vector<std::string> columnNames;
 	
@@ -167,6 +176,10 @@ int main(int argc, char *argv[])
 		else if(p == "rownormalization")
 		{
 			normalization = RowNormalization;
+		}
+		else if(p == "static-seed")
+		{
+			staticSeed = true;
 		}
 		else throw std::runtime_error(std::string("Invalid parameter: ") + argv[argi]);
 		++argi;
@@ -335,9 +348,9 @@ int main(int argc, char *argv[])
 		for(std::string columnName : columnNames)
 		{
 			if(columnName == "WEIGHT_SPECTRUM")
-				createDyscoStManColumn<float>(*ms, columnName, shape, bitsPerFloat, bitsPerWeight, normalization, distribution, 1.0, distributionTruncation);
+				createDyscoStManColumn<float>(*ms, columnName, shape, bitsPerFloat, bitsPerWeight, normalization, distribution, 1.0, distributionTruncation, staticSeed);
 			else
-				createDyscoStManColumn<casacore::Complex>(*ms, columnName, shape, bitsPerFloat, bitsPerWeight, normalization, distribution, 1.0, distributionTruncation);
+				createDyscoStManColumn<casacore::Complex>(*ms, columnName, shape, bitsPerFloat, bitsPerWeight, normalization, distribution, 1.0, distributionTruncation, staticSeed);
 		}
 		for(std::string columnName : columnNames)
 		{

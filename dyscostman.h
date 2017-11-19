@@ -125,6 +125,11 @@ public:
 	{
 		_normalization = normalization;
 	}
+	
+	void SetStaticSeed(bool staticSeed)
+	{
+		_staticSeed = staticSeed;
+	}
 
 	/**
 	* This constructor is called by Casa when it needs to create a DyscoStMan.
@@ -384,6 +389,7 @@ private:
 	DyscoDistribution _distribution;
 	DyscoNormalization _normalization;
 	double _studentTNu, _distributionTruncation;
+	bool _staticSeed;
 
 	std::vector<DyscoStManColumn*> _columns;
 };

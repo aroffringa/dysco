@@ -34,7 +34,8 @@ DyscoStMan::DyscoStMan(unsigned dataBitCount, unsigned weightBitCount, const cas
 	_distribution(TruncatedGaussianDistribution),
 	_normalization(AFNormalization),
 	_studentTNu(0.0),
-	_distributionTruncation(2.5)
+	_distributionTruncation(2.5),
+	_staticSeed(false)
 {
 }
 
@@ -52,7 +53,8 @@ DyscoStMan::DyscoStMan(const casacore::String& name, const casacore::Record& spe
 	_distribution(GaussianDistribution),
 	_normalization(AFNormalization),
 	_studentTNu(0.0),
-	_distributionTruncation(0.0)
+	_distributionTruncation(0.0),
+	_staticSeed(false)
 {
 	setFromSpec(spec);
 }
@@ -71,7 +73,8 @@ DyscoStMan::DyscoStMan(const DyscoStMan& source) :
 	_distribution(source._distribution),
 	_normalization(source._normalization),
 	_studentTNu(source._studentTNu),
-	_distributionTruncation(source._distributionTruncation)
+	_distributionTruncation(source._distributionTruncation),
+	_staticSeed(source._staticSeed)
 {
 }
 
@@ -319,8 +322,11 @@ casacore::DataManagerColumn* DyscoStMan::makeDirArrColumn(const casacore::String
 			throw DyscoStManError("Trying to create a Dysco weight column with wrong type");
 	}
 	else if(dataType == casacore::TpComplex)
+	{
 		col = new DyscoDataColumn(this, dataType);
-	else
+		if(_staticSeed)
+			static_cast<DyscoDataColumn*>(col)->SetStaticRandomizationSeed();
+	} else
 		throw DyscoStManError("Trying to create a Dysco data column with wrong type");
 	_columns.push_back(col);
 	return col;

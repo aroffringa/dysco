@@ -68,7 +68,10 @@ void DyscoDataColumn::initializeEncodeThread(void** threadData)
 	}
 	ThreadData* newThreadData = new ThreadData(encoder);
 	// Seed every thread from a random number
-	newThreadData->rnd.seed(_rnd());
+	if(_randomize)
+		newThreadData->rnd.seed(_rnd());
+	else
+		std::cout << "Warning: New thread NOT seeded.\n";
 	*reinterpret_cast<ThreadData**>(threadData) = newThreadData;
 }
 
