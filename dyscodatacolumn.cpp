@@ -97,4 +97,16 @@ size_t DyscoDataColumn::symbolCount(size_t nRowsInBlock, size_t nPolarizations, 
 	return _decoder->SymbolCount(nRowsInBlock, nPolarizations, nChannels);
 }
 
+size_t DyscoDataColumn::defaultThreadCount() const
+{
+	if(!_randomize)
+	{
+		std::cout << "Warning: using only one thread to avoid randomizing the results.\n";
+		return 1;
+	}
+	else {
+		return ThreadedDyscoColumn::defaultThreadCount();
+	}
+}
+
 } // end of namespace

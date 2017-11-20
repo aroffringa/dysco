@@ -124,9 +124,11 @@ protected:
 	
 	virtual size_t symbolCount(size_t nRowsInBlock, size_t nPolarizations, size_t nChannels) const = 0;
 	
-	size_t getBitsPerSymbol() const { return _bitsPerSymbol; }
-	
 	virtual void shutdown() override final;
+	
+	virtual size_t defaultThreadCount() const;
+	
+	size_t getBitsPerSymbol() const { return _bitsPerSymbol; }
 	
 	const casacore::IPosition& shape() const { return _shape; }
 	
@@ -176,8 +178,7 @@ private:
 	bool isWriteItemAvailable(typename cache_t::iterator &i);
 	void loadBlock(size_t blockIndex);
 	void storeBlock();
-	size_t defaultThreadCount() const;
-	size_t maxCacheSize() const { return defaultThreadCount()*12/10+1; }
+	size_t maxCacheSize() const { return ThreadedDyscoColumn::defaultThreadCount()*12/10+1; }
 	
 	unsigned _bitsPerSymbol;
 	casacore::IPosition _shape;
