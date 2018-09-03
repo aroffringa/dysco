@@ -14,10 +14,7 @@ find_library(GSL_CBLAS_LIB NAMES gslcblas)
 
 find_package(Threads REQUIRED)
 
-find_package(Boost COMPONENTS system REQUIRED)
-
 include_directories(${CASACORE_INCLUDE_DIRS})
-include_directories(${Boost_INCLUDE_DIR})
 include_directories(${GSL_INCLUDE_DIR})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -DNDEBUG --std=c++11")
@@ -63,6 +60,7 @@ endif(DOXYGEN_FOUND)
 
 find_package(Boost COMPONENTS system filesystem unit_test_framework)
 if(Boost_FOUND)
+	include_directories(${Boost_INCLUDE_DIR})
   add_executable(runtests EXCLUDE_FROM_ALL
     $<TARGET_OBJECTS:dyscostman-object>
     tests/runtests.cpp 
