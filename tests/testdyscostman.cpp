@@ -15,9 +15,9 @@ using namespace dyscostman;
 
 BOOST_AUTO_TEST_SUITE(dyscostman)
 
-casa::Record GetDyscoSpec()
+casacore::Record GetDyscoSpec()
 {
-	casa::Record dyscoSpec;
+	casacore::Record dyscoSpec;
 	dyscoSpec.define ("distribution", "TruncatedGaussian");
 	dyscoSpec.define ("normalization", "AF");
 	dyscoSpec.define ("distributionTruncation", 2.0);
