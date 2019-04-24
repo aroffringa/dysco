@@ -25,6 +25,10 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native") 
 endif(PORTABLE)
 
+if(ENABLE_THREADS)
+	add_definitions(-DENABLE_THREADS)
+endif(ENABLE_THREADS)
+
 add_library(dyscostman-object OBJECT
 	aftimeblockencoder.cpp
 	dyscostman.cpp

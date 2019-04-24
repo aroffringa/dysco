@@ -19,17 +19,23 @@ namespace dyscostman {
 template<typename DataType>
 ThreadedDyscoColumn<DataType>::ThreadedDyscoColumn(DyscoStMan* parent, int dtype) :
 	DyscoStManColumn(parent, dtype),
+#ifndef ENABLE_THREADS
+	_threadUserData(nullptr),
+	_userDataInitialized(false),
+#endif
 	_bitsPerSymbol(0),
 	_ant1Col(),
 	_ant2Col(),
 	_fieldCol(),
 	_packedBlockReadBuffer(),
 	_unpackedSymbolReadBuffer(),
-	_stopThreads(false),
 	_currentBlock(std::numeric_limits<size_t>::max()),
 	_isCurrentBlockChanged(false),
 	_blockSize(0),
 	_antennaCount(0),
+#ifdef ENABLE_THREADS
+	_stopThreads(false),
+#endif
 	_timeBlockBuffer()
 {
 }
@@ -43,7 +49,16 @@ void ThreadedDyscoColumn<DataType>::shutdown()
 	if(_isCurrentBlockChanged)
 		storeBlock();
 	
+#ifdef ENABLE_THREADS
 	stopThreads();
+#else
+	if(_userDataInitialized)
+	{
+		destructEncodeThread(_threadUserData);
+		_userDataInitialized = false;
+	}
+#endif
+
 }
 
 template<typename DataType>
@@ -52,6 +67,7 @@ ThreadedDyscoColumn<DataType>::~ThreadedDyscoColumn()
 	shutdown();
 }
 
+#ifdef ENABLE_THREADS
 template<typename DataType>
 void ThreadedDyscoColumn<DataType>::stopThreads()
 {
@@ -76,6 +92,7 @@ void ThreadedDyscoColumn<DataType>::stopThreads()
 		_threadGroup.join_all();
 	}
 }
+#endif
 
 template<typename DataType>
 void ThreadedDyscoColumn<DataType>::setShapeColumn(const casacore::IPosition& shape)
@@ -128,6 +145,7 @@ void ThreadedDyscoColumn<DataType>::getValues(casacore::uInt rowNr, casacore::Ar
 				*i = DataType();
 		}
 		else {
+#ifdef ENABLE_THREADS
 			mutex::scoped_lock lock(_mutex);
 			// Wait until the block to be read is not in the write cache
 			typename cache_t::const_iterator cacheItemPtr = _cache.find(blockIndex);
@@ -137,6 +155,7 @@ void ThreadedDyscoColumn<DataType>::getValues(casacore::uInt rowNr, casacore::Ar
 				cacheItemPtr = _cache.find(blockIndex);
 			}
 			lock.unlock();
+#endif
 			
 			if(_currentBlock != blockIndex)
 			{
@@ -154,9 +173,11 @@ void ThreadedDyscoColumn<DataType>::getValues(casacore::uInt rowNr, casacore::Ar
 template<typename DataType>
 void ThreadedDyscoColumn<DataType>::storeBlock()
 {
+#ifdef ENABLE_THREADS
+	
 	// Put the data of the current block into the cache so that the parallell threads can write them
 	mutex::scoped_lock lock(_mutex);
-	CacheItem *item = new CacheItem(std::move(_timeBlockBuffer));
+	CacheItem* item = new CacheItem(std::move(_timeBlockBuffer));
 	// Wait until there is space available AND the row to be written is not in the cache
 	typename cache_t::iterator cacheItemPtr = _cache.find(_currentBlock);
 	while(_cache.size() >= maxCacheSize() || cacheItemPtr != _cache.end())
@@ -168,10 +189,16 @@ void ThreadedDyscoColumn<DataType>::storeBlock()
 	_cacheChangedCondition.notify_all();
 	lock.unlock();
 	
-	_isCurrentBlockChanged = false;
 	const size_t nPolarizations = _shape[0], nChannels = _shape[1];
 	_timeBlockBuffer.reset(new TimeBlockBuffer<data_t>(nPolarizations, nChannels));
-	//_timeBlockBuffer->SetNAntennae(_antennaCount);
+	
+#else
+	CacheItem item(std::move(_timeBlockBuffer));
+	encodeAndWrite(_currentBlock, item, _packedBlockReadBuffer.data(), _unpackedSymbolReadBuffer.data(), _threadUserData);
+	_timeBlockBuffer = std::move(item.encoder);
+#endif
+	
+	_isCurrentBlockChanged = false;
 }
 
 template<typename DataType>
@@ -233,7 +260,9 @@ void ThreadedDyscoColumn<DataType>::putValues(casacore::uInt rowNr, const casaco
 template<typename DataType>
 void ThreadedDyscoColumn<DataType>::Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
 {
+#ifdef ENABLE_THREADS
 	stopThreads();
+#endif
 	casacore::Table &table = storageManager().table();
 	_ant1Col.reset( new casacore::ScalarColumn<int>(table, casacore::MeasurementSet::columnName(casacore::MSMainEnums::ANTENNA1)) );
 	_ant2Col.reset( new casacore::ScalarColumn<int>(table, casacore::MeasurementSet::columnName(casacore::MSMainEnums::ANTENNA2)) ); 
@@ -243,10 +272,6 @@ void ThreadedDyscoColumn<DataType>::Prepare(DyscoDistribution distribution, Dysc
 	
 	size_t nPolarizations = _shape[0], nChannels = _shape[1];
 	_timeBlockBuffer.reset(new TimeBlockBuffer<data_t>(nPolarizations, nChannels));
-	if(_antennaCount != 0)
-	{
-		//TODO _timeBlockEncoder->SetNAntennae(_antennaCount);
-	}
 	_currentBlock = std::numeric_limits<size_t>::max();
 }
 
@@ -260,7 +285,9 @@ size_t ThreadedDyscoColumn<DataType>::defaultThreadCount() const
 template<typename DataType>
 void ThreadedDyscoColumn<DataType>::InitializeAfterNRowsPerBlockIsKnown()
 {
+#ifdef ENABLE_THREADS
 	stopThreads();
+#endif
 	if(_bitsPerSymbol == 0)
 		throw DyscoStManError("bitsPerSymbol not initialized in ThreadedDyscoColumn");
 	
@@ -271,6 +298,7 @@ void ThreadedDyscoColumn<DataType>::InitializeAfterNRowsPerBlockIsKnown()
 	_unpackedSymbolReadBuffer.resize(symbolCount(nRowsInBlock(), nPolarizations, nChannels));
 	//TODO _timeBlockEncoder->SetNAntennae(_antennaCount);
 	
+#ifdef ENABLE_THREADS
 	// start the threads
 	size_t threadCount = defaultThreadCount();
 	EncodingThreadFunctor functor;
@@ -278,10 +306,17 @@ void ThreadedDyscoColumn<DataType>::InitializeAfterNRowsPerBlockIsKnown()
 	_stopThreads = false;
 	for(size_t i=0;i!=threadCount;++i)
 		_threadGroup.create_thread(functor);
+#else
+	if(!_userDataInitialized)
+	{
+		initializeEncodeThread(&_threadUserData);
+		_userDataInitialized = true;
+	}
+#endif
 }
 
 template<typename DataType>
-void ThreadedDyscoColumn<DataType>::encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, void* threadUserData)
+void ThreadedDyscoColumn<DataType>::encodeAndWrite(size_t blockIndex, const CacheItem& item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, void* threadUserData)
 {
 	const size_t nPolarizations = _shape[0], nChannels = _shape[1];
 	const size_t metaDataSize = sizeof(float) * metaDataFloatCount(nRowsInBlock(), nPolarizations, nChannels, _antennaCount);
@@ -298,6 +333,7 @@ void ThreadedDyscoColumn<DataType>::encodeAndWrite(size_t blockIndex, const Cach
 	writeCompressedData(blockIndex, packedSymbolBuffer, metaDataSize + binarySize);
 }
 
+#ifdef ENABLE_THREADS
 // Continuously write items from the cache into the measurement
 // set untill asked to quit.
 template<typename DataType>
@@ -351,6 +387,7 @@ bool ThreadedDyscoColumn<DataType>::isWriteItemAvailable(typename cache_t::itera
 		++i;
 	return (i != _cache.end());
 }
+#endif
 
 template<typename DataType>
 size_t ThreadedDyscoColumn<DataType>::CalculateBlockSize(size_t nRowsInBlock, size_t nAntennae) const

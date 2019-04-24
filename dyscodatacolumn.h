@@ -62,6 +62,7 @@ protected:
 	virtual size_t symbolCount(size_t nRowsInBlock, size_t nPolarizations, size_t nChannels) const final override;
 	
 	virtual size_t defaultThreadCount() const final override;
+	
 private:
 	struct ThreadData
 	{
