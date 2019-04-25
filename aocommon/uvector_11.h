@@ -24,10 +24,10 @@ namespace ao {
 
 /**
  * @brief A container similar to std::vector, but one that allows construction without initializing its elements.
- * @details This container is similar to a std::vector, except that it can be constructor without
+ * @details This container is similar to a std::vector, except that it can be constructed without
  * initializing its elements. This saves the overhead of initialization, hence the
  * constructor @ref uvector(size_t) is significantly faster than the corresponding std::vector
- * constructor, and has no overhead to a manually allocated array.
+ * constructor, and has no overhead compared to a manually allocated array.
  * 
  * Probably its greatest strength lies in the construction of containers with a number of elements
  * that is runtime defined, but that will be initialized later. For example:
@@ -44,14 +44,10 @@ namespace ao {
  * @endcode
  * 
  * However, it has a few more use-cases with improved performance over std::vector. This is
- * true because of more strengent requirements on the element's type.
+ * possible because of more strengent requirements on the element's type.
  * 
  * The container will behave correctly with any trivial type, but will not work for almost
  * all non-trivial types.
- * 
- * The element type must be trivial. Because of the use of @c memcpy and @c memmove,
- * the @ref push_back() and @ref insert() methods are a bit faster than the std::vector
- * counterparts, at least on gcc 4.7. 
  * 
  * The methods with different semantics compared to std::vector are:
  * * @ref uvector(size_t n)
@@ -174,7 +170,7 @@ public:
 		_end(_begin + other.size()),
 		_endOfStorage(_end)
 	{
-		memcpy(_begin, other._begin, other.size() * sizeof(Tp));
+		std::copy(other._begin, other._end, _begin);
 	}
 	
 	/** @brief Copy construct a uvector with custom allocator.
@@ -187,7 +183,7 @@ public:
 		_end(_begin + other.size()),
 		_endOfStorage(_end)
 	{
-		memcpy(_begin, other._begin, other.size() * sizeof(Tp));
+		std::copy(other._begin, other._end, _begin);
 	}
 	
 	/** @brief Move construct a uvector.
@@ -320,7 +316,7 @@ public:
 		{
 			size_t newSize = enlarge_size(n);
 			pointer newStorage = allocate(newSize);
-			memcpy(newStorage, _begin, size() * sizeof(Tp));
+			std::move(_begin, _end, newStorage);
 			deallocate();
 			_begin = newStorage;
 			_endOfStorage = _begin + newSize;
@@ -343,7 +339,7 @@ public:
 		if(capacity() < n)
 		{
 			pointer newStorage = allocate(n);
-			memcpy(newStorage, _begin, size() * sizeof(Tp));
+			std::move(_begin, _end, newStorage);
 			deallocate();
 			_begin = newStorage;
 			_endOfStorage = _begin + n;
@@ -375,7 +371,7 @@ public:
 		{
 			const size_t curSize = size();
 			pointer newStorage = allocate(n);
-			memcpy(newStorage, _begin, curSize * sizeof(Tp));
+			std::move(_begin, _begin + curSize, newStorage);
 			deallocate();
 			_begin = newStorage;
 			_end = newStorage + curSize;
@@ -401,7 +397,7 @@ public:
 		}
 		else if(curSize < capacity()) {
 			pointer newStorage = allocate(curSize);
-			memcpy(newStorage, _begin, curSize * sizeof(Tp));
+			std::move(_begin, _begin + curSize, newStorage);
 			deallocate();
 			_begin = newStorage;
 			_end = newStorage + curSize;
@@ -554,7 +550,7 @@ public:
 			position = _begin + index;
 		}
 		else {
-			memmove(const_cast<iterator>(position)+1, position, (_end - position) * sizeof(Tp));
+			std::move_backward(const_cast<iterator>(position), _end, _end+1);
 			++_end;
 		}
 		*const_cast<iterator>(position) = item;
@@ -579,7 +575,7 @@ public:
 			position = _begin + index;
 		}
 		else {
-			memmove(const_cast<iterator>(position)+n, position, (_end - position) * sizeof(Tp));
+			std::move_backward(const_cast<iterator>(position), _end, _end+n);
 			_end += n;
 		}
 		std::uninitialized_fill_n<Tp*,size_t>(const_cast<iterator>(position), n, val);
@@ -622,7 +618,7 @@ public:
 			position = _begin + index;
 		}
 		else {
-			memmove(const_cast<iterator>(position)+1, position, (_end - position) * sizeof(Tp));
+			std::move_backward(const_cast<iterator>(position), _end, _end+1);
 			++_end;
 		}
 		*const_cast<iterator>(position) = std::move(item);
@@ -646,7 +642,7 @@ public:
 			position = _begin + index;
 		}
 		else {
-			memmove(const_cast<iterator>(position)+initlist.size(), position, (_end - position) * sizeof(Tp));
+			std::move_backward(const_cast<iterator>(position), _end, _end+initlist.size());
 			_end += initlist.size();
 		}
 		iterator destIter = const_cast<iterator>(position);
@@ -666,8 +662,8 @@ public:
 	 */
 	iterator erase(const_iterator position)
 	{
+		std::move(const_cast<iterator>(position)+1, _end, const_cast<iterator>(position));
 		--_end;
-		memmove(const_cast<iterator>(position), position+1, (_end-position)*sizeof(Tp));
 		return const_cast<iterator>(position);
 	}
 	
@@ -680,9 +676,8 @@ public:
 	 */
 	iterator erase(const_iterator first, const_iterator last)
 	{
-		size_t n = last - first;
-		_end -= n;
-		memmove(const_cast<iterator>(first), first+n, (_end-first)*sizeof(Tp));
+		std::move(const_cast<iterator>(last), _end, const_cast<iterator>(first));
+		_end -= last - first;
 		return const_cast<iterator>(first);
 	}
 	
@@ -726,7 +721,7 @@ public:
 			position = _begin + index;
 		}
 		else {
-			memmove(const_cast<iterator>(position)+1, position, (_end - position) * sizeof(Tp));
+			std::move_backward(const_cast<iterator>(position), _end, _end+1);
 			++_end;
 		}
 		*const_cast<iterator>(position) = Tp(std::forward<Args>(args)...);
@@ -773,7 +768,7 @@ public:
 			position = _begin + index;
 		}
 		else {
-			memmove(const_cast<iterator>(position)+n, position, (_end - position) * sizeof(Tp));
+			std::move_backward(const_cast<iterator>(position), _end, _end+n);
 			_end += n;
 		}
 		return const_cast<iterator>(position);
@@ -946,7 +941,7 @@ private:
 			position = _begin + index;
 		}
 		else {
-			memmove(const_cast<iterator>(position)+n, position, (_end - position) * sizeof(Tp));
+			std::move_backward(const_cast<iterator>(position), _end, _end+n);
 			_end += n;
 		}
 		std::uninitialized_fill_n<Tp*,size_t>(const_cast<iterator>(position), n, val);
@@ -964,7 +959,7 @@ private:
 			position = _begin + index;
 		}
 		else {
-			memmove(const_cast<iterator>(position)+n, position, (_end - position) * sizeof(Tp));
+			std::move_backward(const_cast<iterator>(position), _end, _end+n);
 			_end += n;
 		}
 		Tp* destIter = const_cast<iterator>(position);
@@ -990,7 +985,7 @@ private:
 	void enlarge(size_t newSize)
 	{
 		pointer newStorage = allocate(newSize);
-		memcpy(newStorage, _begin, size() * sizeof(Tp));
+		std::copy(_begin, _end, newStorage);
 		deallocate();
 		_end = newStorage + size();
 		_begin = newStorage;
@@ -1000,8 +995,8 @@ private:
 	void enlarge_for_insert(size_t newSize, size_t insert_position, size_t insert_count)
 	{
 		pointer newStorage = allocate(newSize);
-		memcpy(newStorage, _begin, insert_position * sizeof(Tp));
-		memcpy(newStorage + insert_position + insert_count, _begin + insert_position, (size() - insert_position) * sizeof(Tp));
+		std::copy(_begin, _begin + insert_position, newStorage);
+		std::copy(_begin + insert_position, _end, newStorage + insert_position + insert_count);
 		deallocate();
 		_end = newStorage + size() + insert_count;
 		_begin = newStorage;
@@ -1019,7 +1014,7 @@ private:
 			_end = _begin + n;
 			_endOfStorage = _end;
 		}
-		memcpy(_begin, other._begin, n * sizeof(Tp));
+		std::copy(other._begin, other._begin + n, _begin);
 		return *this;
 	}
 	
@@ -1037,7 +1032,7 @@ private:
 			_begin = newStorage;
 			_end = _begin + n;
 			_endOfStorage = _end;
-			memcpy(_begin, other._begin, n * sizeof(Tp));
+			std::copy(other._begin, other._begin + n, _begin);
 			Alloc::operator=(static_cast<Alloc&>(other));
 		}
 		return *this;
