@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.6)
 
 project(dysco)
 
@@ -19,11 +19,24 @@ include_directories(${GSL_INCLUDE_DIR})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -DNDEBUG --std=c++11")
 
-if(PORTABLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+option(PORTABLE "Generate portable code" OFF)
+option(BUILD_PACKAGES "Build Debian packages" OFF)
+
+if(NOT PORTABLE)
+  if(USE_AVX512F)
+    add_compile_options(-mavx512f)
+  elseif(USE_AVX2)
+    add_compile_options(-mavx2)
+  elseif(USE_AVX)
+    add_compile_options(-mavx)
+  else()
+    add_compile_options(-march=native)
+  endif()
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native") 
-endif(PORTABLE)
+  if(USE_AVX512F OR USE_AVX2 OR USE_AVX)
+    message(FATAL_ERROR "Cannot enable AVX features when building portable code.")
+  endif()
+endif()
 
 add_library(dyscostman-object OBJECT
 	aftimeblockencoder.cpp
@@ -79,3 +92,8 @@ endif()
 
 install (TARGETS dyscostman DESTINATION lib) 
 install (TARGETS dscompress DESTINATION bin)
+
+# Add CPack directory if user wants to generate Debian packages
+if(BUILD_PACKAGES)
+  add_subdirectory(CPack)
+endif()
