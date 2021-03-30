@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.6)
 
 project(dysco)
 
@@ -8,22 +8,33 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
 SET(CASACORE_MAKE_REQUIRED_EXTERNALS_OPTIONAL TRUE)
 find_package(Casacore REQUIRED COMPONENTS casa ms tables measures)
 
-find_library(GSL_LIB NAMES gsl)
-find_path(GSL_INCLUDE_DIR NAMES gsl/gsl_version.h)
-find_library(GSL_CBLAS_LIB NAMES gslcblas)
+find_package(GSL REQUIRED)
 
 find_package(Threads REQUIRED)
 
 include_directories(${CASACORE_INCLUDE_DIRS})
-include_directories(${GSL_INCLUDE_DIR})
+include_directories(${GSL_INCLUDE_DIRS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -DNDEBUG --std=c++11")
 
-if(PORTABLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+option(PORTABLE "Generate portable code" OFF)
+option(BUILD_PACKAGES "Build Debian packages" OFF)
+
+if(NOT PORTABLE)
+  if(USE_AVX512F)
+    add_compile_options(-mavx512f)
+  elseif(USE_AVX2)
+    add_compile_options(-mavx2)
+  elseif(USE_AVX)
+    add_compile_options(-mavx)
+  else()
+    add_compile_options(-march=native)
+  endif()
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native") 
-endif(PORTABLE)
+  if(USE_AVX512F OR USE_AVX2 OR USE_AVX)
+    message(FATAL_ERROR "Cannot enable AVX features when building portable code.")
+  endif()
+endif()
 
 add_library(dyscostman-object OBJECT
 	aftimeblockencoder.cpp
@@ -40,13 +51,13 @@ set_property(TARGET dyscostman-object PROPERTY POSITION_INDEPENDENT_CODE 1)
 # casapy's version of casacore is binary compatible with this storage manager's casacore.
 add_library(dyscostman SHARED $<TARGET_OBJECTS:dyscostman-object>)
 set_target_properties(dyscostman PROPERTIES SOVERSION 0)
-target_link_libraries(dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(dyscostman ${GSL_LIBRARIES} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(dscompress dscompress.cpp stopwatch.cpp)
-target_link_libraries(dscompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(dscompress dyscostman ${GSL_LIBRARIES} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(decompress decompress.cpp)
-target_link_libraries(decompress dyscostman ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(decompress dyscostman ${GSL_LIBRARIES} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 # add target to generate API documentation with Doxygen
 find_package(Doxygen)
@@ -70,7 +81,7 @@ if(Boost_FOUND)
     tests/testdyscostman.cpp
     tests/testtimeblockencoder.cpp
     )
-  target_link_libraries(runtests ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${GSL_LIB} ${GSL_CBLAS_LIB} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(runtests ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${GSL_LIBRARIES} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   add_test(runtests runtests)
   add_custom_target(check COMMAND runtests -l unit_scope DEPENDS runtests)
 else()
@@ -79,3 +90,8 @@ endif()
 
 install (TARGETS dyscostman DESTINATION lib) 
 install (TARGETS dscompress DESTINATION bin)
+
+# Add CPack directory if user wants to generate Debian packages
+if(BUILD_PACKAGES)
+  add_subdirectory(CPack)
+endif()
