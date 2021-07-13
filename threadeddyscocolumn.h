@@ -108,17 +108,21 @@ public:
 	
 	virtual void UnserializeExtraHeader(std::istream& stream) final override;
 protected:
+  class ThreadDataBase
+  {
+  public:
+    virtual ~ThreadDataBase() { };
+  };
+  
 	typedef typename TimeBlockBuffer<data_t>::symbol_t symbol_t;
 	
 	virtual void initializeDecode(TimeBlockBuffer<data_t>* buffer, const float* metaBuffer, size_t nRow, size_t nAntennae) = 0;
 	
 	virtual void decode(TimeBlockBuffer<data_t>* buffer, const symbol_t* data, size_t blockRow, size_t a1, size_t a2) = 0;
 	
-	virtual void initializeEncodeThread(void** threadData) = 0;
+	virtual std::unique_ptr<ThreadDataBase> initializeEncodeThread() = 0;
 	
-	virtual void destructEncodeThread(void* threadData) = 0;
-	
-	virtual void encode(void* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae) = 0;
+	virtual void encode(ThreadDataBase* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae) = 0;
 	
 	virtual size_t metaDataFloatCount(size_t nRow, size_t nPolarizations, size_t nChannels, size_t nAntennae) const = 0;
 	
@@ -174,7 +178,7 @@ private:
 	void putValues(casacore::uInt rowNr, const casacore::Array<data_t>* dataPtr);
 	
 	void stopThreads();
-	void encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, void* threadUserData);
+	void encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, ThreadDataBase* threadUserData);
 	bool isWriteItemAvailable(typename cache_t::iterator &i);
 	void loadBlock(size_t blockIndex);
 	void storeBlock();

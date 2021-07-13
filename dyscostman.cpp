@@ -118,10 +118,9 @@ void DyscoStMan::setFromSpec(const casacore::Record& spec)
 
 void DyscoStMan::makeEmpty()
 {
-	for(std::vector<DyscoStManColumn*>::iterator i = _columns.begin(); i!=_columns.end(); ++i)
+	for(std::unique_ptr<DyscoStManColumn>& col : _columns)
 	{
-		(*i)->shutdown();
-		delete *i;
+		col->shutdown();
 	}
 	_columns.clear();
 }
@@ -195,13 +194,13 @@ void DyscoStMan::writeHeader()
 	
 	header.columnHeaderOffset = header.calculateColumnHeaderOffset();
 	_headerSize = header.columnHeaderOffset;
-	for(DyscoStManColumn* col : _columns)
+	for(std::unique_ptr<DyscoStManColumn>& col : _columns)
 		_headerSize += sizeof(GenericColumnHeader) + col->ExtraHeaderSize();
 	header.headerSize = _headerSize;
 	
 	header.Serialize(*_fStream);
 	
-	for(DyscoStManColumn* col : _columns)
+	for(std::unique_ptr<DyscoStManColumn>& col : _columns)
 	{
 		GenericColumnHeader cHeader;
 		cHeader.columnHeaderSize = cHeader.calculateSize() + col->ExtraHeaderSize();
@@ -266,7 +265,7 @@ void DyscoStMan::initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount
 	_rowsPerBlock = rowsPerBlock;
 	_antennaCount = antennaCount;
 	_blockSize = 0;
-	for(DyscoStManColumn* col : _columns)
+	for(std::unique_ptr<DyscoStManColumn>& col : _columns)
 	{
 		size_t columnBlockSize = col->CalculateBlockSize(rowsPerBlock, antennaCount);
 		col->SetOffsetInBlock(_blockSize);
@@ -310,24 +309,24 @@ casacore::DataManagerColumn* DyscoStMan::makeScalarColumn(const casacore::String
 
 casacore::DataManagerColumn* DyscoStMan::makeDirArrColumn(const casacore::String& name, int dataType, const casacore::String& dataTypeID)
 {
-	DyscoStManColumn *col = 0;
+	std::unique_ptr<DyscoStManColumn> col;
 	
 	if(name == "WEIGHT_SPECTRUM")
 	{
 		if(dataType == casacore::TpFloat)
-			col = new DyscoWeightColumn(this, dataType);
+			col.reset(new DyscoWeightColumn(this, dataType));
 		else
 			throw DyscoStManError("Trying to create a Dysco weight column with wrong type");
 	}
 	else if(dataType == casacore::TpComplex)
 	{
-		col = new DyscoDataColumn(this, dataType);
+		col.reset(new DyscoDataColumn(this, dataType));
 		if(_staticSeed)
-			static_cast<DyscoDataColumn*>(col)->SetStaticRandomizationSeed();
+			static_cast<DyscoDataColumn*>(col.get())->SetStaticRandomizationSeed();
 	} else
 		throw DyscoStManError("Trying to create a Dysco data column with wrong type");
-	_columns.push_back(col);
-	return col;
+	_columns.push_back(std::move(col));
+	return _columns.back().get();
 }
 
 casacore::DataManagerColumn* DyscoStMan::makeIndArrColumn(const casacore::String& name, int dataType, const casacore::String& dataTypeID)
@@ -351,14 +350,14 @@ void DyscoStMan::prepare()
 	if(_dataBitCount == 0 || _weightBitCount == 0)
 		throw DyscoStManError("One of the required parameters of the DyscoStMan was not set!\nDyscoStMan was not correctly initialized by your program.");
 	
-	for(DyscoStManColumn* col : _columns)
+	for(std::unique_ptr<DyscoStManColumn>& col : _columns)
 	{
-		DyscoDataColumn* dataCol = dynamic_cast<DyscoDataColumn*>(col);
-		if(dataCol != 0)
+		DyscoDataColumn* dataCol = dynamic_cast<DyscoDataColumn*>(col.get());
+		if(dataCol)
 			dataCol->SetBitsPerSymbol(_dataBitCount);
 		else {
-			DyscoWeightColumn* wghtCol = dynamic_cast<DyscoWeightColumn*>(col);
-			if(wghtCol != 0)
+			DyscoWeightColumn* wghtCol = dynamic_cast<DyscoWeightColumn*>(col.get());
+			if(wghtCol)
 				wghtCol->SetBitsPerSymbol(_weightBitCount);
 		}
 		col->Prepare(_distribution, _normalization, _studentTNu, _distributionTruncation);
@@ -398,11 +397,10 @@ void DyscoStMan::addColumn(casacore::DataManagerColumn* /*column*/)
 
 void DyscoStMan::removeColumn(casacore::DataManagerColumn* column)
 {
-	for(std::vector<DyscoStManColumn*>::iterator i=_columns.begin(); i!=_columns.end(); ++i)
+	for(std::vector<std::unique_ptr<DyscoStManColumn>>::iterator i=_columns.begin(); i!=_columns.end(); ++i)
 	{
-		if(*i == column)
+		if(i->get() == column)
 		{
-			delete *i;
 			_columns.erase(i);
 			writeHeader();
 			return;

@@ -279,7 +279,7 @@ void ThreadedDyscoColumn<DataType>::InitializeAfterNRowsPerBlockIsKnown()
 }
 
 template<typename DataType>
-void ThreadedDyscoColumn<DataType>::encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, void* threadUserData)
+void ThreadedDyscoColumn<DataType>::encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, ThreadDataBase* threadUserData)
 {
 	const size_t nPolarizations = _shape[0], nChannels = _shape[1];
 	const size_t metaDataSize = sizeof(float) * metaDataFloatCount(nRowsInBlock(), nPolarizations, nChannels, _antennaCount);
@@ -309,8 +309,7 @@ void ThreadedDyscoColumn<DataType>::EncodingThreadFunctor::operator()()
 	ao::uvector<unsigned> unpackedSymbolBuffer(nSymbols);
 	cache_t &cache = parent->_cache;
 	
-	void* threadUserData;
-	parent->initializeEncodeThread(&threadUserData);
+	std::unique_ptr<ThreadDataBase> threadUserData = parent->initializeEncodeThread();
 	
 	while(!parent->_stopThreads)
 	{
@@ -329,7 +328,7 @@ void ThreadedDyscoColumn<DataType>::EncodingThreadFunctor::operator()()
 			item.isBeingWritten = true;
 			
 			lock.unlock();
-			parent->encodeAndWrite(blockIndex, item, &packedSymbolBuffer[0], &unpackedSymbolBuffer[0], threadUserData);
+			parent->encodeAndWrite(blockIndex, item, &packedSymbolBuffer[0], &unpackedSymbolBuffer[0], threadUserData.get());
 			
 			lock.lock();
 			delete &item;
@@ -337,7 +336,6 @@ void ThreadedDyscoColumn<DataType>::EncodingThreadFunctor::operator()()
 			parent->_cacheChangedCondition.notify_all();
 		}
 	}
-	parent->destructEncodeThread(threadUserData);
 }
 
 // This function should only be called with a locked mutex

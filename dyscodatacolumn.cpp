@@ -51,39 +51,33 @@ void DyscoDataColumn::decode(TimeBlockBuffer<data_t>* buffer, const unsigned int
 	_decoder->Decode(*_gausEncoder, *buffer, data, blockRow, a1, a2);
 }
 
-void DyscoDataColumn::initializeEncodeThread(void** threadData)
+std::unique_ptr<ThreadedDyscoColumn<std::complex<float>>::ThreadDataBase> DyscoDataColumn::initializeEncodeThread()
 {
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
-	TimeBlockEncoder* encoder = 0;
+	std::unique_ptr<TimeBlockEncoder> encoder;
 	switch(_normalization) {
 		case AFNormalization:
-			encoder = new AFTimeBlockEncoder(nPolarizations, nChannels, true);
+			encoder.reset(new AFTimeBlockEncoder(nPolarizations, nChannels, true));
 			break;
 		case RFNormalization:
-			encoder = new RFTimeBlockEncoder(nPolarizations, nChannels);
+			encoder.reset(new RFTimeBlockEncoder(nPolarizations, nChannels));
 			break;
 		case RowNormalization:
-			encoder = new RowTimeBlockEncoder(nPolarizations, nChannels);
+			encoder.reset(new RowTimeBlockEncoder(nPolarizations, nChannels));
 			break;
 	}
-	ThreadData* newThreadData = new ThreadData(encoder);
+	std::unique_ptr<ThreadData> newThreadData(new ThreadData(std::move(encoder)));
 	// Seed every thread from a random number
 	if(_randomize)
 		newThreadData->rnd.seed(_rnd());
 	else
 		std::cout << "Warning: New thread NOT seeded.\n";
-	*reinterpret_cast<ThreadData**>(threadData) = newThreadData;
+	return newThreadData;
 }
 
-void DyscoDataColumn::destructEncodeThread(void* threadData)
+void DyscoDataColumn::encode(ThreadDataBase* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae)
 {
-	ThreadData* data = reinterpret_cast<ThreadData*>(threadData);
-	delete data;
-}
-
-void DyscoDataColumn::encode(void* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae)
-{
-	ThreadData& data = *reinterpret_cast<ThreadData*>(threadData);
+	ThreadData& data = *static_cast<ThreadData*>(threadData);
 	data.encoder->EncodeWithDithering(*_gausEncoder, *buffer, metaBuffer, symbolBuffer, nAntennae, data.rnd);
 }
 

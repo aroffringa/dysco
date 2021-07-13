@@ -391,7 +391,7 @@ private:
 	double _studentTNu, _distributionTruncation;
 	bool _staticSeed;
 
-	std::vector<DyscoStManColumn*> _columns;
+	std::vector<std::unique_ptr<DyscoStManColumn>> _columns;
 };
 
 } // end of namespace
