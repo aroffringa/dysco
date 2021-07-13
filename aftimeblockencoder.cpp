@@ -115,6 +115,8 @@ void AFTimeBlockEncoder::changeChannelFactor(std::vector<DBufferRow>& data, floa
 // We want to maximize all values (average abs value as large as possible)
 // Example: (10=max)
 //  ch1     ch2
+//  a1a2a3   a1a2a3
+//  ------   ------
 //   1 1 1    1 1 1
 //  10 1 1    1 1 1
 //   1 1 1    1 1 1
@@ -133,7 +135,8 @@ void AFTimeBlockEncoder::changeChannelFactor(std::vector<DBufferRow>& data, floa
 // increase the sum the most.
 void AFTimeBlockEncoder::fitToMaximum(std::vector<DBufferRow>& data, float* metaBuffer, const dyscostman::StochasticEncoder<float>& gausEncoder, size_t antennaCount)
 {
-	// First, the maximum value is scaled to be the same as the maximum encodable value
+	// First, the channels and polarizations are scaled such that the maximum value
+  // equals the maximum encodable value
 	const size_t visPerRow = _nPol * _nChannels;
 	for(size_t visIndex=0; visIndex!=visPerRow; ++visIndex)
 	{
@@ -243,6 +246,8 @@ void AFTimeBlockEncoder::fitToMaximum(std::vector<DBufferRow>& data, float* meta
 					bestAntenna = a;
 				}
 			}
+			// The benefit was calculated for increasing an antenna and increasing a channel
+			// Select which of those two has the largest benefit and apply:
 			if(bestAntennaIncrease > bestChannelIncrease)
 			{
 				double factor = (maxCompPerAntenna[bestAntenna]==0.0) ? 0.0 : (gausEncoder.MaxQuantity() / maxCompPerAntenna[bestAntenna]);
