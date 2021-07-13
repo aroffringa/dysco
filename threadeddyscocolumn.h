@@ -6,15 +6,15 @@
 #include <casacore/casa/Arrays/IPosition.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
 
+#include <condition_variable>
+#include <cstdint>
 #include <map>
 #include <random>
-
-#include <stdint.h>
 
 #include "dyscostmancol.h"
 #include "serializable.h"
 #include "stochasticencoder.h"
-#include "thread.h"
+#include "threadgroup.h"
 #include "timeblockbuffer.h"
 
 namespace dyscostman {
@@ -190,9 +190,9 @@ private:
 	ao::uvector<unsigned int> _unpackedSymbolReadBuffer;
 	cache_t _cache;
 	bool _stopThreads;
-	altthread::mutex _mutex;
-	altthread::threadgroup _threadGroup;
-	altthread::condition _cacheChangedCondition;
+	std::mutex _mutex;
+	threadgroup _threadGroup;
+	std::condition_variable _cacheChangedCondition;
 	size_t _currentBlock;
 	bool _isCurrentBlockChanged;
 	size_t _blockSize;

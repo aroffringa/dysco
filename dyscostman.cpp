@@ -6,8 +6,6 @@
 
 #include "header.h"
 
-using namespace altthread;
-
 void register_dyscostman()
 {
 	dyscostman::DyscoStMan::registerClass();
@@ -348,7 +346,7 @@ void DyscoStMan::deleteManager()
 
 void DyscoStMan::prepare()
 {
-	mutex::scoped_lock lock(_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	
 	if(_dataBitCount == 0 || _weightBitCount == 0)
 		throw DyscoStManError("One of the required parameters of the DyscoStMan was not set!\nDyscoStMan was not correctly initialized by your program.");
@@ -415,7 +413,7 @@ void DyscoStMan::removeColumn(casacore::DataManagerColumn* column)
 
 void DyscoStMan::readCompressedData(size_t blockIndex, const DyscoStManColumn *column, unsigned char* dest, size_t size)
 {
-	mutex::scoped_lock lock(_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	size_t fileOffset = getFileOffset(blockIndex);
 	
 	size_t columnOffset = column->OffsetInBlock();
@@ -433,7 +431,7 @@ void DyscoStMan::readCompressedData(size_t blockIndex, const DyscoStManColumn *c
 
 void DyscoStMan::writeCompressedData(size_t blockIndex, const DyscoStManColumn *column, const unsigned char *data, size_t size)
 {
-	mutex::scoped_lock lock(_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	if(_nBlocksInFile <= blockIndex)
 	{
 		_nBlocksInFile = blockIndex + 1;

@@ -3,7 +3,7 @@
 #include "dyscostman.h"
 #include "dyscostmanerror.h"
 
-#include "thread.h"
+#include "threadgroup.h"
 #include "bytepacker.h"
 
 #include <casacore/tables/Tables/ScalarColumn.h>
@@ -11,8 +11,6 @@
 
 #include <algorithm>
 #include <limits>
-
-using namespace altthread;
 
 namespace dyscostman {
 
@@ -55,7 +53,7 @@ ThreadedDyscoColumn<DataType>::~ThreadedDyscoColumn()
 template<typename DataType>
 void ThreadedDyscoColumn<DataType>::stopThreads()
 {
-	mutex::scoped_lock lock(_mutex);
+	std::unique_lock<std::mutex> lock(_mutex);
 	
 	if(_threadGroup.empty())
 	{
@@ -128,7 +126,7 @@ void ThreadedDyscoColumn<DataType>::getValues(casacore::uInt rowNr, casacore::Ar
 				*i = DataType();
 		}
 		else {
-			mutex::scoped_lock lock(_mutex);
+			std::unique_lock<std::mutex> lock(_mutex);
 			// Wait until the block to be read is not in the write cache
 			typename cache_t::const_iterator cacheItemPtr = _cache.find(blockIndex);
 			while(cacheItemPtr != _cache.end())
@@ -155,7 +153,7 @@ template<typename DataType>
 void ThreadedDyscoColumn<DataType>::storeBlock()
 {
 	// Put the data of the current block into the cache so that the parallell threads can write them
-	mutex::scoped_lock lock(_mutex);
+	std::unique_lock<std::mutex> lock(_mutex);
 	CacheItem *item = new CacheItem(std::move(_timeBlockBuffer));
 	// Wait until there is space available AND the row to be written is not in the cache
 	typename cache_t::iterator cacheItemPtr = _cache.find(_currentBlock);
@@ -306,7 +304,7 @@ void ThreadedDyscoColumn<DataType>::EncodingThreadFunctor::operator()()
 	const size_t nPolarizations = parent->_shape[0], nChannels = parent->_shape[1];
 	const size_t nSymbols = parent->symbolCount(parent->nRowsInBlock(), nPolarizations, nChannels);
 	
-	mutex::scoped_lock lock(parent->_mutex);
+	std::unique_lock<std::mutex> lock(parent->_mutex);
 	ao::uvector<unsigned char> packedSymbolBuffer(parent->_blockSize);
 	ao::uvector<unsigned> unpackedSymbolBuffer(nSymbols);
 	cache_t &cache = parent->_cache;

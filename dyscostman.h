@@ -11,7 +11,7 @@
 #include "uvector.h"
 #include "dyscodistribution.h"
 #include "dysconormalization.h"
-#include "thread.h"
+#include "threadgroup.h"
 
 /**
 * @file
@@ -239,7 +239,7 @@ protected:
 	*/
 	uint64_t nBlocksInFile() const
 	{
-		altthread::mutex::scoped_lock lock(_mutex);
+		std::lock_guard<std::mutex> lock(_mutex);
 		return _nBlocksInFile;
 	}
 	
@@ -380,7 +380,7 @@ private:
 	uint32_t _blockSize;
 	
 	unsigned _headerSize;
-	mutable altthread::mutex _mutex;
+	mutable std::mutex _mutex;
 	std::unique_ptr<std::fstream> _fStream;
 	
 	std::string _name;
