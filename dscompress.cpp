@@ -15,7 +15,7 @@
 using namespace dyscostman;
 
 template<typename T>
-void createDyscoStManColumn(casacore::MeasurementSet& ms, const std::string& name, const casacore::IPosition& shape, unsigned bitsPerComplex, unsigned bitsPerWeight, DyscoNormalization normalization, DyscoDistribution distribution, double studentsTNu, double distributionTruncation, bool staticSeed)
+void createDyscoStManColumn(casacore::MeasurementSet& ms, const std::string& name, const casacore::IPosition& shape, unsigned bitsPerComplex, unsigned bitsPerWeight, Normalization normalization, DyscoDistribution distribution, double studentsTNu, double distributionTruncation, bool staticSeed)
 {
 	std::cout << "Constructing new column '" << name << "'...\n";
 	casacore::ArrayColumnDesc<T> columnDesc(name, "", "DyscoStMan", "DyscoStMan", shape);
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 	}
 	
 	DyscoDistribution distribution = TruncatedGaussianDistribution;
-	DyscoNormalization normalization = AFNormalization;
+	   Normalization normalization = Normalization::AF;
 	bool reorder = false, doCheckMSFormat = true;
 	unsigned bitsPerFloat=8, bitsPerWeight=12;
 	double distributionTruncation = 2.5;
@@ -167,15 +167,15 @@ int main(int argc, char *argv[])
 		}
 		else if(p == "rfnormalization")
 		{
-			normalization = RFNormalization;
+			normalization = Normalization::RF;
 		}
 		else if(p == "afnormalization")
 		{
-			normalization = AFNormalization;
+			normalization = Normalization::AF;
 		}
 		else if(p == "rownormalization")
 		{
-			normalization = RowNormalization;
+			normalization = Normalization::Row;
 		}
 		else if(p == "static-seed")
 		{
@@ -216,13 +216,13 @@ int main(int argc, char *argv[])
 		"\tnormalization = ";
 	switch(normalization)
 	{
-		case AFNormalization:
+		case Normalization::AF:
 			std::cout << "AF";
 			break;
-		case RFNormalization:
+		case Normalization::RF:
 			std::cout << "RF";
 			break;
-		case RowNormalization:
+		case Normalization::Row:
 			std::cout << "Row";
 			break;
 		default:
@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
 	
 	Stopwatch watch(true);
 	std::cout << "Replacing flagged values by NaNs...\n";
-	for(std::string columnName : columnNames)
+	for(const std::string& columnName : columnNames)
 	{
 		if(columnName != "WEIGHT_SPECTRUM")
 		{

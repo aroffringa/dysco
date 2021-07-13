@@ -46,7 +46,7 @@ public:
 	 */
   virtual casacore::Bool isWritable() const override { return true; }
 	
-	virtual void Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) = 0;
+	virtual void Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation) = 0;
 	
 	virtual void InitializeAfterNRowsPerBlockIsKnown() = 0;
 

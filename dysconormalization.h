@@ -1,9 +1,9 @@
-#ifndef DYSCO_ENCODER_H
-#define DYSCO_ENCODER_H
+#ifndef DYSCO_NORMALIZATION_H
+#define DYSCO_NORMALIZATION_H
 
 namespace dyscostman {
-	enum DyscoNormalization {
-		AFNormalization, RFNormalization, RowNormalization
+	enum class Normalization {
+    AF, RF, Row
 	};
 }
 

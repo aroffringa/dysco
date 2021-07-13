@@ -26,7 +26,7 @@ public:
 		_rnd(std::random_device{}()),
 		_gausEncoder(),
 		_distribution(GaussianDistribution),
-		_normalization(RFNormalization),
+		_normalization(Normalization::RF),
 		_randomize(true)
 	{ }
   
@@ -37,7 +37,7 @@ public:
   /** Destructor. */
   virtual ~DyscoDataColumn() { shutdown(); }
 	
-	virtual void Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) override;
+	virtual void Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation) override;
 	
 	void SetStaticRandomizationSeed()
 	{
@@ -74,7 +74,7 @@ private:
 	std::unique_ptr<StochasticEncoder<float>> _gausEncoder;
 	std::unique_ptr<TimeBlockEncoder> _decoder;
 	DyscoDistribution _distribution;
-	DyscoNormalization _normalization;
+	   Normalization _normalization;
 	double _studentsTNu;
 	bool _randomize;
 };

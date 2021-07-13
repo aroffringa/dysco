@@ -121,7 +121,7 @@ public:
 	 * This method should only be called directly after creating DyscoStMan, before adding
 	 * columns, and reading/writing data.
 	 */
-	void SetNormalization(DyscoNormalization normalization)
+	void SetNormalization(Normalization normalization)
 	{
 		_normalization = normalization;
 	}
@@ -387,7 +387,7 @@ private:
 	unsigned _dataBitCount;
 	unsigned _weightBitCount;
 	DyscoDistribution _distribution;
-	DyscoNormalization _normalization;
+	   Normalization _normalization;
 	double _studentTNu, _distributionTruncation;
 	bool _staticSeed;
 

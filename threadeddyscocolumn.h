@@ -87,7 +87,7 @@ public:
 		return DyscoStManColumn::putArrayfloatV(rowNr, dataPtr);
 	}
 	
-	virtual void Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) override;
+	virtual void Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation) override;
 	
 	/**
 	 * Prepare this column for reading/writing. Used internally by the stman.

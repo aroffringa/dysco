@@ -12,7 +12,7 @@ using namespace dyscostman;
 
 BOOST_AUTO_TEST_SUITE(timeblock_encoder)
 
-std::unique_ptr<TimeBlockEncoder> CreateEncoder(DyscoNormalization blockNormalization, size_t nPol, size_t nChan)
+std::unique_ptr<TimeBlockEncoder> CreateEncoder(Normalization blockNormalization, size_t nPol, size_t nChan)
 {
 	switch(blockNormalization)
 	{
@@ -26,7 +26,7 @@ std::unique_ptr<TimeBlockEncoder> CreateEncoder(DyscoNormalization blockNormaliz
 	}
 }
 
-void TestSimpleExample(DyscoNormalization blockNormalization)
+void TestSimpleExample(Normalization blockNormalization)
 {
 	const size_t nAnt = 4, nChan = 1, nPol = 2, nRow = (nAnt*(nAnt+1)/2);
 	
@@ -91,7 +91,7 @@ void TestSimpleExample(DyscoNormalization blockNormalization)
 	}
 }
 
-void TestTimeBlockEncoder(DyscoNormalization blockNormalization)
+void TestTimeBlockEncoder(Normalization blockNormalization)
 {
 	const size_t nAnt = 50, nChan = 64, nPol = 4, nRow = (nAnt*(nAnt+1)/2);
 	

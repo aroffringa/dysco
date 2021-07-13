@@ -2,7 +2,7 @@
 
 namespace dyscostman {
 
-void DyscoWeightColumn::Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
+void DyscoWeightColumn::Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation)
 {
 	ThreadedDyscoColumn::Prepare(distribution, normalization, studentsTNu, distributionTruncation);
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];

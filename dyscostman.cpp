@@ -30,7 +30,7 @@ DyscoStMan::DyscoStMan(unsigned dataBitCount, unsigned weightBitCount, const cas
 	_dataBitCount(dataBitCount),
 	_weightBitCount(weightBitCount),
 	_distribution(TruncatedGaussianDistribution),
-	_normalization(AFNormalization),
+	_normalization(Normalization::AF),
 	_studentTNu(0.0),
 	_distributionTruncation(2.5),
 	_staticSeed(false)
@@ -49,7 +49,7 @@ DyscoStMan::DyscoStMan(const casacore::String& name, const casacore::Record& spe
 	_dataBitCount(0),
 	_weightBitCount(0),
 	_distribution(GaussianDistribution),
-	_normalization(AFNormalization),
+	_normalization(Normalization::AF),
 	_studentTNu(0.0),
 	_distributionTruncation(0.0),
 	_staticSeed(false)
@@ -102,11 +102,11 @@ void DyscoStMan::setFromSpec(const casacore::Record& spec)
 		else throw DyscoStManError("Unsupported distribution specified");
 		str = spec.asString("normalization");
 		if(str == "RF")
-			_normalization = RFNormalization;
+			_normalization = Normalization::RF;
 		else if(str == "AF")
-			_normalization = AFNormalization;
+			_normalization = Normalization::AF;
 		else if(str == "Row")
-			_normalization = RowNormalization;
+			_normalization = Normalization::Row;
 		else throw DyscoStManError("Unsupported normalization specified");
 		if(spec.description().fieldNumber("studentTNu") >= 0)
 			_studentTNu = spec.asDouble("studentTNu");
@@ -145,9 +145,9 @@ casacore::Record DyscoStMan::dataManagerSpec() const
   spec.define("distribution", distStr);
   std::string normStr;
   switch(_normalization) {
-    case AFNormalization: normStr = "AF"; break;
-    case RFNormalization: normStr = "RF"; break;
-    case RowNormalization: normStr = "Row"; break;
+    case Normalization::AF: normStr = "AF"; break;
+    case Normalization::RF: normStr = "RF"; break;
+    case Normalization::Row: normStr = "Row"; break;
   }
   spec.define("normalization", normStr);
   spec.define("studentTNu", _studentTNu);
@@ -188,7 +188,7 @@ void DyscoStMan::writeHeader()
 	header.dataBitCount = _dataBitCount;
 	header.weightBitCount = _weightBitCount;
 	header.distribution = _distribution;
-	header.normalization = _normalization;
+	header.normalization = static_cast<uint8_t>(_normalization);
 	header.studentTNu = _studentTNu;
 	header.distributionTruncation = _distributionTruncation;
 	
@@ -225,7 +225,7 @@ void DyscoStMan::readHeader()
 	_dataBitCount = header.dataBitCount;
 	_weightBitCount = header.weightBitCount;
 	_distribution = (enum DyscoDistribution) header.distribution;
-	_normalization = (enum DyscoNormalization) header.normalization;
+	_normalization = (enum Normalization) header.normalization;
 	_studentTNu = header.studentTNu;
 	_distributionTruncation = header.distributionTruncation;
 	_rowsPerBlock = header.rowsPerBlock;

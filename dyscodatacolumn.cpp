@@ -5,7 +5,7 @@
 
 namespace dyscostman {
 
-void DyscoDataColumn::Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
+void DyscoDataColumn::Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation)
 {
 	_distribution = distribution;
 	_studentsTNu = studentsTNu;
@@ -14,13 +14,13 @@ void DyscoDataColumn::Prepare(DyscoDistribution distribution, DyscoNormalization
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
 	
 	switch(normalization) {
-		case AFNormalization:
+		case Normalization::AF:
 			_decoder.reset(new AFTimeBlockEncoder(nPolarizations, nChannels, true));
 			break;
-		case RFNormalization:
+		case Normalization::RF:
 			_decoder.reset(new RFTimeBlockEncoder(nPolarizations, nChannels));
 			break;
-		case RowNormalization:
+		case Normalization::Row:
 			_decoder.reset(new RowTimeBlockEncoder(nPolarizations, nChannels));
 			break;
 	}
@@ -56,13 +56,13 @@ std::unique_ptr<ThreadedDyscoColumn<std::complex<float>>::ThreadDataBase> DyscoD
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
 	std::unique_ptr<TimeBlockEncoder> encoder;
 	switch(_normalization) {
-		case AFNormalization:
+		case Normalization::AF:
 			encoder.reset(new AFTimeBlockEncoder(nPolarizations, nChannels, true));
 			break;
-		case RFNormalization:
+		case Normalization::RF:
 			encoder.reset(new RFTimeBlockEncoder(nPolarizations, nChannels));
 			break;
-		case RowNormalization:
+		case Normalization::Row:
 			encoder.reset(new RowTimeBlockEncoder(nPolarizations, nChannels));
 			break;
 	}

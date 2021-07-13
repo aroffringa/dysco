@@ -31,7 +31,7 @@ public:
   /** Destructor. */
   virtual ~DyscoWeightColumn() { shutdown(); }
 	
-	virtual void Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) override;
+	virtual void Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation) override;
 	
 protected:
 	virtual void initializeDecode(TimeBlockBuffer<data_t>* buffer, const float* metaBuffer, size_t nRow, size_t nAntennae) override;

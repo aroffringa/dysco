@@ -229,7 +229,7 @@ void ThreadedDyscoColumn<DataType>::putValues(casacore::uInt rowNr, const casaco
 }
 
 template<typename DataType>
-void ThreadedDyscoColumn<DataType>::Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
+void ThreadedDyscoColumn<DataType>::Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation)
 {
 	stopThreads();
 	casacore::Table &table = storageManager().table();
