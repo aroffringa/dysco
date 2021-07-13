@@ -17,11 +17,11 @@ std::unique_ptr<TimeBlockEncoder> CreateEncoder(Normalization blockNormalization
 	switch(blockNormalization)
 	{
 		default:
-		case RFNormalization:
+    case Normalization::RF:
 			return std::unique_ptr<TimeBlockEncoder>(new RFTimeBlockEncoder(nPol, nChan));
-		case AFNormalization:
+		case Normalization::AF:
 			return std::unique_ptr<TimeBlockEncoder>(new AFTimeBlockEncoder(nPol, nChan, true));
-		case RowNormalization:
+		case Normalization::Row:
 			return std::unique_ptr<TimeBlockEncoder>(new RowTimeBlockEncoder(nPol, nChan));
 	}
 }
@@ -81,11 +81,11 @@ void TestSimpleExample(Normalization blockNormalization)
 		// skip auto-correlations of AF, since these are not saved.
 		out.GetData(row, dataFromOut);
 		input.GetData(row, dataFromIn);
-		if(blockNormalization!=AFNormalization || (row != 0 && row != 4 && row != 7 && row != 9))
+		if(blockNormalization!=Normalization::AF || (row != 0 && row != 4 && row != 7 && row != 9))
 		{
 			for(size_t ch=0; ch!=nChan; ++ch)
 			{
-				BOOST_CHECK_MESSAGE(std::norm(dataFromOut[ch]-dataFromIn[ch]) < 0.1, "Output{" << dataFromOut[ch] << "} is close to input{" << dataFromIn[ch] << "} of row " << row << " with normalization " << blockNormalization);
+				BOOST_CHECK_MESSAGE(std::norm(dataFromOut[ch]-dataFromIn[ch]) < 0.1, "Output{" << dataFromOut[ch] << "} is close to input{" << dataFromIn[ch] << "} of row " << row << " with normalization " << int(blockNormalization));
 			}
 		}
 	}
@@ -195,32 +195,32 @@ void TestTimeBlockEncoder(Normalization blockNormalization)
 
 BOOST_AUTO_TEST_CASE( row_normalization_per_row_accuracy )
 {
-	TestSimpleExample(RowNormalization);
+	TestSimpleExample(Normalization::Row);
 }
 
 BOOST_AUTO_TEST_CASE( row_normalization_global_rms_accuracy )
 {
-	TestTimeBlockEncoder(RowNormalization);
+	TestTimeBlockEncoder(Normalization::Row);
 }
 
 BOOST_AUTO_TEST_CASE( af_normalization_per_row_accuracy )
 {
-	TestSimpleExample(AFNormalization);
+	TestSimpleExample(Normalization::AF);
 }
 
 BOOST_AUTO_TEST_CASE( af_normalization_global_rms_accuracy )
 {
-	TestTimeBlockEncoder(AFNormalization);
+	TestTimeBlockEncoder(Normalization::AF);
 }
 
 BOOST_AUTO_TEST_CASE( rf_normalization_per_row_accuracy )
 {
-	TestSimpleExample(RFNormalization);
+	TestSimpleExample(Normalization::RF);
 }
 
 BOOST_AUTO_TEST_CASE( rf_normalization_global_rms_accuracy )
 {
-	TestTimeBlockEncoder(RFNormalization);
+	TestTimeBlockEncoder(Normalization::RF);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
