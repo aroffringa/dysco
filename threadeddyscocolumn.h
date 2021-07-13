@@ -14,8 +14,11 @@
 #include "dyscostmancol.h"
 #include "serializable.h"
 #include "stochasticencoder.h"
-#include "thread.h"
 #include "timeblockbuffer.h"
+
+#ifdef ENABLE_THREADS
+#include "thread.h"
+#endif
 
 namespace dyscostman {
 
@@ -24,6 +27,13 @@ class DyscoStMan;
 /**
  * A column for storing compressed values in a threaded way, tailered for the
  * data and weight columns that use a threaded approach for encoding.
+ * 
+ * This class not only performs the multi-threading: it also implements caching
+ * of one block that will be stored in memory. When some part of a block is read,
+ * that block will be decompressed into memory and kept into memory, so that
+ * consecutive reads don't require another decompression. The same holds for
+ * writing.
+ * 
  * @author André Offringa
  */
 template<typename DataType>
@@ -107,6 +117,7 @@ public:
 	virtual void SerializeExtraHeader(std::ostream& stream) const final override;
 	
 	virtual void UnserializeExtraHeader(std::istream& stream) final override;
+	
 protected:
 	typedef typename TimeBlockBuffer<data_t>::symbol_t symbol_t;
 	
@@ -133,21 +144,7 @@ protected:
 	const casacore::IPosition& shape() const { return _shape; }
 	
 private:
-	struct CacheItem
-	{
-		CacheItem(std::unique_ptr<TimeBlockBuffer<data_t>>&& encoder_) :
-			encoder(std::move(encoder_)), isBeingWritten(false)
-		{ }
-		
-		std::unique_ptr<TimeBlockBuffer<data_t>> encoder;
-		bool isBeingWritten;
-	};
-	
-	struct EncodingThreadFunctor
-	{
-		void operator()();
-		ThreadedDyscoColumn *parent;
-	};
+
 	struct Header : public Serializable
 	{
 		uint32_t blockSize;
@@ -168,17 +165,52 @@ private:
 		}
 	};
 	
+	struct CacheItem
+	{
+		CacheItem(std::unique_ptr<TimeBlockBuffer<data_t>>&& encoder_) :
+			encoder(std::move(encoder_)), isBeingWritten(false)
+		{ }
+		
+		std::unique_ptr<TimeBlockBuffer<data_t>> encoder;
+		bool isBeingWritten;
+	};
+	
+#ifdef ENABLE_THREADS
+	struct EncodingThreadFunctor
+	{
+		void operator()();
+		ThreadedDyscoColumn *parent;
+	};
+
 	typedef std::map<size_t, CacheItem*> cache_t;
+
+	void stopThreads();
+	
+	cache_t _cache;
+	
+	altthread::mutex _mutex;
+	altthread::threadgroup _threadGroup;
+	altthread::condition _cacheChangedCondition;
+	
+	bool isWriteItemAvailable(typename cache_t::iterator &i);
+	
+	size_t maxCacheSize() const
+	{
+		return ThreadedDyscoColumn::defaultThreadCount()*12/10+1;
+	}
+	
+#else
+	void *_threadUserData;
+	bool _userDataInitialized;
+#endif // ENABLE_THREADS
+	
+	void encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, void* threadUserData);
 	
 	void getValues(casacore::uInt rowNr, casacore::Array<data_t>* dataPtr);
 	void putValues(casacore::uInt rowNr, const casacore::Array<data_t>* dataPtr);
 	
-	void stopThreads();
-	void encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, void* threadUserData);
-	bool isWriteItemAvailable(typename cache_t::iterator &i);
 	void loadBlock(size_t blockIndex);
 	void storeBlock();
-	size_t maxCacheSize() const { return ThreadedDyscoColumn::defaultThreadCount()*12/10+1; }
 	
 	unsigned _bitsPerSymbol;
 	casacore::IPosition _shape;
@@ -188,15 +220,14 @@ private:
 	int _lastWrittenField, _lastWrittenDataDescId;
 	ao::uvector<unsigned char> _packedBlockReadBuffer;
 	ao::uvector<unsigned int> _unpackedSymbolReadBuffer;
-	cache_t _cache;
-	bool _stopThreads;
-	altthread::mutex _mutex;
-	altthread::threadgroup _threadGroup;
-	altthread::condition _cacheChangedCondition;
 	size_t _currentBlock;
 	bool _isCurrentBlockChanged;
 	size_t _blockSize;
 	size_t _antennaCount;
+	
+#ifdef ENABLE_THREADS
+	bool _stopThreads;
+#endif // ENABLE_THREADS
 	
 	std::unique_ptr<TimeBlockBuffer<data_t>> _timeBlockBuffer;
 };
