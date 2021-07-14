@@ -11,8 +11,7 @@ if(Git_FOUND)
     COMMAND bash -c "${GIT_EXECUTABLE} describe --tags --dirty"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_VARIABLE VERSION_STRING
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET)
+    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
   # Strip leading non-numeric characters, like "v"
   string(REGEX REPLACE "^[^[0-9]]*" "" VERSION_STRING ${VERSION_STRING})
 endif()
@@ -42,7 +41,7 @@ set(CPACK_PACKAGE_VERSION "${VERSION_STRING}")
 
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-"Dysco: A compressing storage manager for Casacore mearement sets")
+    "Dysco: A compressing storage manager for Casacore mearement sets")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/aroffringa/dysco")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
 
@@ -59,4 +58,3 @@ include(CPack)
 
 message(STATUS "Package name: ${CPACK_PACKAGE_NAME}")
 message(STATUS "Package version: ${CPACK_PACKAGE_VERSION}")
-
