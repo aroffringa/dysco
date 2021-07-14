@@ -1,5 +1,5 @@
-#ifndef WEIGHT_ENCODER_H
-#define WEIGHT_ENCODER_H
+#ifndef DYSCO_WEIGHT_ENCODER_H
+#define DYSCO_WEIGHT_ENCODER_H
 
 #include <vector>
 #include <cmath>

@@ -3,7 +3,7 @@
 
 namespace dyscostman {
 	enum class Normalization {
-    AF, RF, Row
+    kAF, kRF, kRow
 	};
 }
 

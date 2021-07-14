@@ -1,5 +1,5 @@
-#ifndef CUSTOM_THREAD_H
-#define CUSTOM_THREAD_H
+#ifndef DYSCO_THREADGROUP_H
+#define DYSCO_THREADGROUP_H
 
 #include <stdexcept>
 #include <thread>
@@ -19,7 +19,7 @@ class threadgroup
 		~threadgroup() { join_all(); }
 		
 		/**
-		 * Create a new thread that will exeute the given functor. The new thread
+		 * Create a new thread that will execute the given functor. The new thread
 		 * will be added to the group.
 		 * @param threadFunc The functor to be called.
 		 */

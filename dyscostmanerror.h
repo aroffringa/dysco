@@ -1,5 +1,5 @@
-#ifndef DYNSTACOM_STMAN_ERROR_H
-#define DYNSTACOM_STMAN_ERROR_H
+#ifndef DYSCO_STMAN_ERROR_H
+#define DYSCO_STMAN_ERROR_H
 
 #include <casacore/tables/DataMan/DataManError.h>
 

@@ -1,5 +1,5 @@
-#ifndef STMAN_MODIFIER_H
-#define STMAN_MODIFIER_H
+#ifndef DYSCO_STMAN_MODIFIER_H
+#define DYSCO_STMAN_MODIFIER_H
 
 #include "dyscostman.h"
 

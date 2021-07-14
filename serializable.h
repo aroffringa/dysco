@@ -1,5 +1,5 @@
-#ifndef SERIALIZABLE_H
-#define SERIALIZABLE_H
+#ifndef DYSCO_SERIALIZABLE_H
+#define DYSCO_SERIALIZABLE_H
 
 #include <iostream>
 #include <complex>

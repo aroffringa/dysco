@@ -26,7 +26,7 @@ public:
 		_rnd(std::random_device{}()),
 		_gausEncoder(),
 		_distribution(GaussianDistribution),
-		_normalization(Normalization::RF),
+		_normalization(Normalization::kRF),
 		_randomize(true)
 	{ }
   
@@ -63,8 +63,8 @@ protected:
 private:
 	struct ThreadData final : public ThreadDataBase
 	{
-		ThreadData(std::unique_ptr<TimeBlockEncoder> encoder_) :
-			encoder(std::move(encoder_))
+		ThreadData(std::unique_ptr<TimeBlockEncoder> timeBlockEncoder) :
+			encoder(std::move(timeBlockEncoder))
 			{ }
 		std::unique_ptr<TimeBlockEncoder> encoder;
 		std::mt19937 rnd;

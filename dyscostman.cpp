@@ -30,7 +30,7 @@ DyscoStMan::DyscoStMan(unsigned dataBitCount, unsigned weightBitCount, const cas
 	_dataBitCount(dataBitCount),
 	_weightBitCount(weightBitCount),
 	_distribution(TruncatedGaussianDistribution),
-	_normalization(Normalization::AF),
+	_normalization(Normalization::kAF),
 	_studentTNu(0.0),
 	_distributionTruncation(2.5),
 	_staticSeed(false)
@@ -49,7 +49,7 @@ DyscoStMan::DyscoStMan(const casacore::String& name, const casacore::Record& spe
 	_dataBitCount(0),
 	_weightBitCount(0),
 	_distribution(GaussianDistribution),
-	_normalization(Normalization::AF),
+	_normalization(Normalization::kAF),
 	_studentTNu(0.0),
 	_distributionTruncation(0.0),
 	_staticSeed(false)
@@ -102,11 +102,11 @@ void DyscoStMan::setFromSpec(const casacore::Record& spec)
 		else throw DyscoStManError("Unsupported distribution specified");
 		str = spec.asString("normalization");
 		if(str == "RF")
-			_normalization = Normalization::RF;
+			_normalization = Normalization::kRF;
 		else if(str == "AF")
-			_normalization = Normalization::AF;
+			_normalization = Normalization::kAF;
 		else if(str == "Row")
-			_normalization = Normalization::Row;
+			_normalization = Normalization::kRow;
 		else throw DyscoStManError("Unsupported normalization specified");
 		if(spec.description().fieldNumber("studentTNu") >= 0)
 			_studentTNu = spec.asDouble("studentTNu");
@@ -145,9 +145,9 @@ casacore::Record DyscoStMan::dataManagerSpec() const
   spec.define("distribution", distStr);
   std::string normStr;
   switch(_normalization) {
-    case Normalization::AF: normStr = "AF"; break;
-    case Normalization::RF: normStr = "RF"; break;
-    case Normalization::Row: normStr = "Row"; break;
+    case Normalization::kAF: normStr = "AF"; break;
+    case Normalization::kRF: normStr = "RF"; break;
+    case Normalization::kRow: normStr = "Row"; break;
   }
   spec.define("normalization", normStr);
   spec.define("studentTNu", _studentTNu);
@@ -322,7 +322,7 @@ casacore::DataManagerColumn* DyscoStMan::makeDirArrColumn(const casacore::String
 	{
 		col.reset(new DyscoDataColumn(this, dataType));
 		if(_staticSeed)
-			static_cast<DyscoDataColumn*>(col.get())->SetStaticRandomizationSeed();
+			static_cast<DyscoDataColumn&>(*col).SetStaticRandomizationSeed();
 	} else
 		throw DyscoStManError("Trying to create a Dysco data column with wrong type");
 	_columns.push_back(std::move(col));

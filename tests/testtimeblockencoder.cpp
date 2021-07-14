@@ -17,11 +17,11 @@ std::unique_ptr<TimeBlockEncoder> CreateEncoder(Normalization blockNormalization
 	switch(blockNormalization)
 	{
 		default:
-    case Normalization::RF:
+    case Normalization::kRF:
 			return std::unique_ptr<TimeBlockEncoder>(new RFTimeBlockEncoder(nPol, nChan));
-		case Normalization::AF:
+		case Normalization::kAF:
 			return std::unique_ptr<TimeBlockEncoder>(new AFTimeBlockEncoder(nPol, nChan, true));
-		case Normalization::Row:
+		case Normalization::kRow:
 			return std::unique_ptr<TimeBlockEncoder>(new RowTimeBlockEncoder(nPol, nChan));
 	}
 }
@@ -81,7 +81,7 @@ void TestSimpleExample(Normalization blockNormalization)
 		// skip auto-correlations of AF, since these are not saved.
 		out.GetData(row, dataFromOut);
 		input.GetData(row, dataFromIn);
-		if(blockNormalization!=Normalization::AF || (row != 0 && row != 4 && row != 7 && row != 9))
+		if(blockNormalization!=Normalization::kAF || (row != 0 && row != 4 && row != 7 && row != 9))
 		{
 			for(size_t ch=0; ch!=nChan; ++ch)
 			{
@@ -195,32 +195,32 @@ void TestTimeBlockEncoder(Normalization blockNormalization)
 
 BOOST_AUTO_TEST_CASE( row_normalization_per_row_accuracy )
 {
-	TestSimpleExample(Normalization::Row);
+	TestSimpleExample(Normalization::kRow);
 }
 
 BOOST_AUTO_TEST_CASE( row_normalization_global_rms_accuracy )
 {
-	TestTimeBlockEncoder(Normalization::Row);
+	TestTimeBlockEncoder(Normalization::kRow);
 }
 
 BOOST_AUTO_TEST_CASE( af_normalization_per_row_accuracy )
 {
-	TestSimpleExample(Normalization::AF);
+	TestSimpleExample(Normalization::kAF);
 }
 
 BOOST_AUTO_TEST_CASE( af_normalization_global_rms_accuracy )
 {
-	TestTimeBlockEncoder(Normalization::AF);
+	TestTimeBlockEncoder(Normalization::kAF);
 }
 
 BOOST_AUTO_TEST_CASE( rf_normalization_per_row_accuracy )
 {
-	TestSimpleExample(Normalization::RF);
+	TestSimpleExample(Normalization::kRF);
 }
 
 BOOST_AUTO_TEST_CASE( rf_normalization_global_rms_accuracy )
 {
-	TestTimeBlockEncoder(Normalization::RF);
+	TestTimeBlockEncoder(Normalization::kRF);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

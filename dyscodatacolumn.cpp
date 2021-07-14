@@ -14,13 +14,13 @@ void DyscoDataColumn::Prepare(DyscoDistribution distribution, Normalization norm
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
 	
 	switch(normalization) {
-		case Normalization::AF:
+		case Normalization::kAF:
 			_decoder.reset(new AFTimeBlockEncoder(nPolarizations, nChannels, true));
 			break;
-		case Normalization::RF:
+		case Normalization::kRF:
 			_decoder.reset(new RFTimeBlockEncoder(nPolarizations, nChannels));
 			break;
-		case Normalization::Row:
+		case Normalization::kRow:
 			_decoder.reset(new RowTimeBlockEncoder(nPolarizations, nChannels));
 			break;
 	}
@@ -56,13 +56,13 @@ std::unique_ptr<ThreadedDyscoColumn<std::complex<float>>::ThreadDataBase> DyscoD
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
 	std::unique_ptr<TimeBlockEncoder> encoder;
 	switch(_normalization) {
-		case Normalization::AF:
+		case Normalization::kAF:
 			encoder.reset(new AFTimeBlockEncoder(nPolarizations, nChannels, true));
 			break;
-		case Normalization::RF:
+		case Normalization::kRF:
 			encoder.reset(new RFTimeBlockEncoder(nPolarizations, nChannels));
 			break;
-		case Normalization::Row:
+		case Normalization::kRow:
 			encoder.reset(new RowTimeBlockEncoder(nPolarizations, nChannels));
 			break;
 	}
@@ -77,7 +77,7 @@ std::unique_ptr<ThreadedDyscoColumn<std::complex<float>>::ThreadDataBase> DyscoD
 
 void DyscoDataColumn::encode(ThreadDataBase* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae)
 {
-	ThreadData& data = *static_cast<ThreadData*>(threadData);
+	ThreadData& data = static_cast<ThreadData&>(*threadData);
 	data.encoder->EncodeWithDithering(*_gausEncoder, *buffer, metaBuffer, symbolBuffer, nAntennae, data.rnd);
 }
 

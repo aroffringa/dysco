@@ -1,5 +1,5 @@
-#ifndef THREADED_DYSCO_COLUMN_H
-#define THREADED_DYSCO_COLUMN_H
+#ifndef DYSCO_THREADED_DYSCO_COLUMN_H
+#define DYSCO_THREADED_DYSCO_COLUMN_H
 
 #include <casacore/tables/DataMan/DataManError.h>
 

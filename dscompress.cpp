@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 	}
 	
 	DyscoDistribution distribution = TruncatedGaussianDistribution;
-	   Normalization normalization = Normalization::AF;
+	   Normalization normalization = Normalization::kAF;
 	bool reorder = false, doCheckMSFormat = true;
 	unsigned bitsPerFloat=8, bitsPerWeight=12;
 	double distributionTruncation = 2.5;
@@ -167,15 +167,15 @@ int main(int argc, char *argv[])
 		}
 		else if(p == "rfnormalization")
 		{
-			normalization = Normalization::RF;
+			normalization = Normalization::kRF;
 		}
 		else if(p == "afnormalization")
 		{
-			normalization = Normalization::AF;
+			normalization = Normalization::kAF;
 		}
 		else if(p == "rownormalization")
 		{
-			normalization = Normalization::Row;
+			normalization = Normalization::kRow;
 		}
 		else if(p == "static-seed")
 		{
@@ -216,13 +216,13 @@ int main(int argc, char *argv[])
 		"\tnormalization = ";
 	switch(normalization)
 	{
-		case Normalization::AF:
+		case Normalization::kAF:
 			std::cout << "AF";
 			break;
-		case Normalization::RF:
+		case Normalization::kRF:
 			std::cout << "RF";
 			break;
-		case Normalization::Row:
+		case Normalization::kRow:
 			std::cout << "Row";
 			break;
 		default:
