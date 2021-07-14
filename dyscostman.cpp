@@ -6,8 +6,6 @@
 
 #include "header.h"
 
-using namespace altthread;
-
 void register_dyscostman()
 {
 	dyscostman::DyscoStMan::registerClass();
@@ -32,7 +30,7 @@ DyscoStMan::DyscoStMan(unsigned dataBitCount, unsigned weightBitCount, const cas
 	_dataBitCount(dataBitCount),
 	_weightBitCount(weightBitCount),
 	_distribution(TruncatedGaussianDistribution),
-	_normalization(AFNormalization),
+	_normalization(Normalization::kAF),
 	_studentTNu(0.0),
 	_distributionTruncation(2.5),
 	_staticSeed(false)
@@ -51,7 +49,7 @@ DyscoStMan::DyscoStMan(const casacore::String& name, const casacore::Record& spe
 	_dataBitCount(0),
 	_weightBitCount(0),
 	_distribution(GaussianDistribution),
-	_normalization(AFNormalization),
+	_normalization(Normalization::kAF),
 	_studentTNu(0.0),
 	_distributionTruncation(0.0),
 	_staticSeed(false)
@@ -104,11 +102,11 @@ void DyscoStMan::setFromSpec(const casacore::Record& spec)
 		else throw DyscoStManError("Unsupported distribution specified");
 		str = spec.asString("normalization");
 		if(str == "RF")
-			_normalization = RFNormalization;
+			_normalization = Normalization::kRF;
 		else if(str == "AF")
-			_normalization = AFNormalization;
+			_normalization = Normalization::kAF;
 		else if(str == "Row")
-			_normalization = RowNormalization;
+			_normalization = Normalization::kRow;
 		else throw DyscoStManError("Unsupported normalization specified");
 		if(spec.description().fieldNumber("studentTNu") >= 0)
 			_studentTNu = spec.asDouble("studentTNu");
@@ -120,10 +118,9 @@ void DyscoStMan::setFromSpec(const casacore::Record& spec)
 
 void DyscoStMan::makeEmpty()
 {
-	for(std::vector<DyscoStManColumn*>::iterator i = _columns.begin(); i!=_columns.end(); ++i)
+	for(std::unique_ptr<DyscoStManColumn>& col : _columns)
 	{
-		(*i)->shutdown();
-		delete *i;
+		col->shutdown();
 	}
 	_columns.clear();
 }
@@ -148,9 +145,9 @@ casacore::Record DyscoStMan::dataManagerSpec() const
   spec.define("distribution", distStr);
   std::string normStr;
   switch(_normalization) {
-    case AFNormalization: normStr = "AF"; break;
-    case RFNormalization: normStr = "RF"; break;
-    case RowNormalization: normStr = "Row"; break;
+    case Normalization::kAF: normStr = "AF"; break;
+    case Normalization::kRF: normStr = "RF"; break;
+    case Normalization::kRow: normStr = "Row"; break;
   }
   spec.define("normalization", normStr);
   spec.define("studentTNu", _studentTNu);
@@ -191,19 +188,19 @@ void DyscoStMan::writeHeader()
 	header.dataBitCount = _dataBitCount;
 	header.weightBitCount = _weightBitCount;
 	header.distribution = _distribution;
-	header.normalization = _normalization;
+	header.normalization = static_cast<uint8_t>(_normalization);
 	header.studentTNu = _studentTNu;
 	header.distributionTruncation = _distributionTruncation;
 	
 	header.columnHeaderOffset = header.calculateColumnHeaderOffset();
 	_headerSize = header.columnHeaderOffset;
-	for(DyscoStManColumn* col : _columns)
+	for(std::unique_ptr<DyscoStManColumn>& col : _columns)
 		_headerSize += sizeof(GenericColumnHeader) + col->ExtraHeaderSize();
 	header.headerSize = _headerSize;
 	
 	header.Serialize(*_fStream);
 	
-	for(DyscoStManColumn* col : _columns)
+	for(std::unique_ptr<DyscoStManColumn>& col : _columns)
 	{
 		GenericColumnHeader cHeader;
 		cHeader.columnHeaderSize = cHeader.calculateSize() + col->ExtraHeaderSize();
@@ -228,7 +225,7 @@ void DyscoStMan::readHeader()
 	_dataBitCount = header.dataBitCount;
 	_weightBitCount = header.weightBitCount;
 	_distribution = (enum DyscoDistribution) header.distribution;
-	_normalization = (enum DyscoNormalization) header.normalization;
+	_normalization = (enum Normalization) header.normalization;
 	_studentTNu = header.studentTNu;
 	_distributionTruncation = header.distributionTruncation;
 	_rowsPerBlock = header.rowsPerBlock;
@@ -268,7 +265,7 @@ void DyscoStMan::initializeRowsPerBlock(size_t rowsPerBlock, size_t antennaCount
 	_rowsPerBlock = rowsPerBlock;
 	_antennaCount = antennaCount;
 	_blockSize = 0;
-	for(DyscoStManColumn* col : _columns)
+	for(std::unique_ptr<DyscoStManColumn>& col : _columns)
 	{
 		size_t columnBlockSize = col->CalculateBlockSize(rowsPerBlock, antennaCount);
 		col->SetOffsetInBlock(_blockSize);
@@ -312,24 +309,24 @@ casacore::DataManagerColumn* DyscoStMan::makeScalarColumn(const casacore::String
 
 casacore::DataManagerColumn* DyscoStMan::makeDirArrColumn(const casacore::String& name, int dataType, const casacore::String& dataTypeID)
 {
-	DyscoStManColumn *col = 0;
+	std::unique_ptr<DyscoStManColumn> col;
 	
 	if(name == "WEIGHT_SPECTRUM")
 	{
 		if(dataType == casacore::TpFloat)
-			col = new DyscoWeightColumn(this, dataType);
+			col.reset(new DyscoWeightColumn(this, dataType));
 		else
 			throw DyscoStManError("Trying to create a Dysco weight column with wrong type");
 	}
 	else if(dataType == casacore::TpComplex)
 	{
-		col = new DyscoDataColumn(this, dataType);
+		col.reset(new DyscoDataColumn(this, dataType));
 		if(_staticSeed)
-			static_cast<DyscoDataColumn*>(col)->SetStaticRandomizationSeed();
+			static_cast<DyscoDataColumn&>(*col).SetStaticRandomizationSeed();
 	} else
 		throw DyscoStManError("Trying to create a Dysco data column with wrong type");
-	_columns.push_back(col);
-	return col;
+	_columns.push_back(std::move(col));
+	return _columns.back().get();
 }
 
 casacore::DataManagerColumn* DyscoStMan::makeIndArrColumn(const casacore::String& name, int dataType, const casacore::String& dataTypeID)
@@ -348,19 +345,19 @@ void DyscoStMan::deleteManager()
 
 void DyscoStMan::prepare()
 {
-	mutex::scoped_lock lock(_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	
 	if(_dataBitCount == 0 || _weightBitCount == 0)
 		throw DyscoStManError("One of the required parameters of the DyscoStMan was not set!\nDyscoStMan was not correctly initialized by your program.");
 	
-	for(DyscoStManColumn* col : _columns)
+	for(std::unique_ptr<DyscoStManColumn>& col : _columns)
 	{
-		DyscoDataColumn* dataCol = dynamic_cast<DyscoDataColumn*>(col);
-		if(dataCol != 0)
+		DyscoDataColumn* dataCol = dynamic_cast<DyscoDataColumn*>(col.get());
+		if(dataCol)
 			dataCol->SetBitsPerSymbol(_dataBitCount);
 		else {
-			DyscoWeightColumn* wghtCol = dynamic_cast<DyscoWeightColumn*>(col);
-			if(wghtCol != 0)
+			DyscoWeightColumn* wghtCol = dynamic_cast<DyscoWeightColumn*>(col.get());
+			if(wghtCol)
 				wghtCol->SetBitsPerSymbol(_weightBitCount);
 		}
 		col->Prepare(_distribution, _normalization, _studentTNu, _distributionTruncation);
@@ -400,11 +397,10 @@ void DyscoStMan::addColumn(casacore::DataManagerColumn* /*column*/)
 
 void DyscoStMan::removeColumn(casacore::DataManagerColumn* column)
 {
-	for(std::vector<DyscoStManColumn*>::iterator i=_columns.begin(); i!=_columns.end(); ++i)
+	for(std::vector<std::unique_ptr<DyscoStManColumn>>::iterator i=_columns.begin(); i!=_columns.end(); ++i)
 	{
-		if(*i == column)
+		if(i->get() == column)
 		{
-			delete *i;
 			_columns.erase(i);
 			writeHeader();
 			return;
@@ -415,7 +411,7 @@ void DyscoStMan::removeColumn(casacore::DataManagerColumn* column)
 
 void DyscoStMan::readCompressedData(size_t blockIndex, const DyscoStManColumn *column, unsigned char* dest, size_t size)
 {
-	mutex::scoped_lock lock(_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	size_t fileOffset = getFileOffset(blockIndex);
 	
 	size_t columnOffset = column->OffsetInBlock();
@@ -433,7 +429,7 @@ void DyscoStMan::readCompressedData(size_t blockIndex, const DyscoStManColumn *c
 
 void DyscoStMan::writeCompressedData(size_t blockIndex, const DyscoStManColumn *column, const unsigned char *data, size_t size)
 {
-	mutex::scoped_lock lock(_mutex);
+	std::lock_guard<std::mutex> lock(_mutex);
 	if(_nBlocksInFile <= blockIndex)
 	{
 		_nBlocksInFile = blockIndex + 1;

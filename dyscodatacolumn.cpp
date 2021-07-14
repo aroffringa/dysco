@@ -5,7 +5,7 @@
 
 namespace dyscostman {
 
-void DyscoDataColumn::Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
+void DyscoDataColumn::Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation)
 {
 	_distribution = distribution;
 	_studentsTNu = studentsTNu;
@@ -14,13 +14,13 @@ void DyscoDataColumn::Prepare(DyscoDistribution distribution, DyscoNormalization
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
 	
 	switch(normalization) {
-		case AFNormalization:
+		case Normalization::kAF:
 			_decoder.reset(new AFTimeBlockEncoder(nPolarizations, nChannels, true));
 			break;
-		case RFNormalization:
+		case Normalization::kRF:
 			_decoder.reset(new RFTimeBlockEncoder(nPolarizations, nChannels));
 			break;
-		case RowNormalization:
+		case Normalization::kRow:
 			_decoder.reset(new RowTimeBlockEncoder(nPolarizations, nChannels));
 			break;
 	}
@@ -51,39 +51,33 @@ void DyscoDataColumn::decode(TimeBlockBuffer<data_t>* buffer, const unsigned int
 	_decoder->Decode(*_gausEncoder, *buffer, data, blockRow, a1, a2);
 }
 
-void DyscoDataColumn::initializeEncodeThread(void** threadData)
+std::unique_ptr<ThreadedDyscoColumn<std::complex<float>>::ThreadDataBase> DyscoDataColumn::initializeEncodeThread()
 {
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
-	TimeBlockEncoder* encoder = 0;
+	std::unique_ptr<TimeBlockEncoder> encoder;
 	switch(_normalization) {
-		case AFNormalization:
-			encoder = new AFTimeBlockEncoder(nPolarizations, nChannels, true);
+		case Normalization::kAF:
+			encoder.reset(new AFTimeBlockEncoder(nPolarizations, nChannels, true));
 			break;
-		case RFNormalization:
-			encoder = new RFTimeBlockEncoder(nPolarizations, nChannels);
+		case Normalization::kRF:
+			encoder.reset(new RFTimeBlockEncoder(nPolarizations, nChannels));
 			break;
-		case RowNormalization:
-			encoder = new RowTimeBlockEncoder(nPolarizations, nChannels);
+		case Normalization::kRow:
+			encoder.reset(new RowTimeBlockEncoder(nPolarizations, nChannels));
 			break;
 	}
-	ThreadData* newThreadData = new ThreadData(encoder);
+	std::unique_ptr<ThreadData> newThreadData(new ThreadData(std::move(encoder)));
 	// Seed every thread from a random number
 	if(_randomize)
 		newThreadData->rnd.seed(_rnd());
 	else
 		std::cout << "Warning: New thread NOT seeded.\n";
-	*reinterpret_cast<ThreadData**>(threadData) = newThreadData;
+	return newThreadData;
 }
 
-void DyscoDataColumn::destructEncodeThread(void* threadData)
+void DyscoDataColumn::encode(ThreadDataBase* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae)
 {
-	ThreadData* data = reinterpret_cast<ThreadData*>(threadData);
-	delete data;
-}
-
-void DyscoDataColumn::encode(void* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae)
-{
-	ThreadData& data = *reinterpret_cast<ThreadData*>(threadData);
+	ThreadData& data = static_cast<ThreadData&>(*threadData);
 	data.encoder->EncodeWithDithering(*_gausEncoder, *buffer, metaBuffer, symbolBuffer, nAntennae, data.rnd);
 }
 

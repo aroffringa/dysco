@@ -1,5 +1,5 @@
-#ifndef TIME_BLOCK_ENCODER_H
-#define TIME_BLOCK_ENCODER_H
+#ifndef DYSCO_TIME_BLOCK_ENCODER_H
+#define DYSCO_TIME_BLOCK_ENCODER_H
 
 #include "stochasticencoder.h"
 #include "timeblockbuffer.h"

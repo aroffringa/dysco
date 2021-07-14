@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef STOPWATCH_H
-#define STOPWATCH_H
+#ifndef DYSCO_STOPWATCH_H
+#define DYSCO_STOPWATCH_H
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 

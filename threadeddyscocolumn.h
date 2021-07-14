@@ -1,20 +1,20 @@
-#ifndef THREADED_DYSCO_COLUMN_H
-#define THREADED_DYSCO_COLUMN_H
+#ifndef DYSCO_THREADED_DYSCO_COLUMN_H
+#define DYSCO_THREADED_DYSCO_COLUMN_H
 
 #include <casacore/tables/DataMan/DataManError.h>
 
 #include <casacore/casa/Arrays/IPosition.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
 
+#include <condition_variable>
+#include <cstdint>
 #include <map>
 #include <random>
-
-#include <stdint.h>
 
 #include "dyscostmancol.h"
 #include "serializable.h"
 #include "stochasticencoder.h"
-#include "thread.h"
+#include "threadgroup.h"
 #include "timeblockbuffer.h"
 
 namespace dyscostman {
@@ -87,7 +87,7 @@ public:
 		return DyscoStManColumn::putArrayfloatV(rowNr, dataPtr);
 	}
 	
-	virtual void Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) override;
+	virtual void Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation) override;
 	
 	/**
 	 * Prepare this column for reading/writing. Used internally by the stman.
@@ -108,17 +108,21 @@ public:
 	
 	virtual void UnserializeExtraHeader(std::istream& stream) final override;
 protected:
+  class ThreadDataBase
+  {
+  public:
+    virtual ~ThreadDataBase() { };
+  };
+  
 	typedef typename TimeBlockBuffer<data_t>::symbol_t symbol_t;
 	
 	virtual void initializeDecode(TimeBlockBuffer<data_t>* buffer, const float* metaBuffer, size_t nRow, size_t nAntennae) = 0;
 	
 	virtual void decode(TimeBlockBuffer<data_t>* buffer, const symbol_t* data, size_t blockRow, size_t a1, size_t a2) = 0;
 	
-	virtual void initializeEncodeThread(void** threadData) = 0;
+	virtual std::unique_ptr<ThreadDataBase> initializeEncodeThread() = 0;
 	
-	virtual void destructEncodeThread(void* threadData) = 0;
-	
-	virtual void encode(void* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae) = 0;
+	virtual void encode(ThreadDataBase* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae) = 0;
 	
 	virtual size_t metaDataFloatCount(size_t nRow, size_t nPolarizations, size_t nChannels, size_t nAntennae) const = 0;
 	
@@ -174,7 +178,7 @@ private:
 	void putValues(casacore::uInt rowNr, const casacore::Array<data_t>* dataPtr);
 	
 	void stopThreads();
-	void encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, void* threadUserData);
+	void encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, ThreadDataBase* threadUserData);
 	bool isWriteItemAvailable(typename cache_t::iterator &i);
 	void loadBlock(size_t blockIndex);
 	void storeBlock();
@@ -190,9 +194,9 @@ private:
 	ao::uvector<unsigned int> _unpackedSymbolReadBuffer;
 	cache_t _cache;
 	bool _stopThreads;
-	altthread::mutex _mutex;
-	altthread::threadgroup _threadGroup;
-	altthread::condition _cacheChangedCondition;
+	std::mutex _mutex;
+	threadgroup _threadGroup;
+	std::condition_variable _cacheChangedCondition;
 	size_t _currentBlock;
 	bool _isCurrentBlockChanged;
 	size_t _blockSize;

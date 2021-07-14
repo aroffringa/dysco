@@ -3,7 +3,7 @@
 #include "dyscostman.h"
 #include "dyscostmanerror.h"
 
-#include "thread.h"
+#include "threadgroup.h"
 #include "bytepacker.h"
 
 #include <casacore/tables/Tables/ScalarColumn.h>
@@ -11,8 +11,6 @@
 
 #include <algorithm>
 #include <limits>
-
-using namespace altthread;
 
 namespace dyscostman {
 
@@ -55,7 +53,7 @@ ThreadedDyscoColumn<DataType>::~ThreadedDyscoColumn()
 template<typename DataType>
 void ThreadedDyscoColumn<DataType>::stopThreads()
 {
-	mutex::scoped_lock lock(_mutex);
+	std::unique_lock<std::mutex> lock(_mutex);
 	
 	if(_threadGroup.empty())
 	{
@@ -128,7 +126,7 @@ void ThreadedDyscoColumn<DataType>::getValues(casacore::uInt rowNr, casacore::Ar
 				*i = DataType();
 		}
 		else {
-			mutex::scoped_lock lock(_mutex);
+			std::unique_lock<std::mutex> lock(_mutex);
 			// Wait until the block to be read is not in the write cache
 			typename cache_t::const_iterator cacheItemPtr = _cache.find(blockIndex);
 			while(cacheItemPtr != _cache.end())
@@ -155,7 +153,7 @@ template<typename DataType>
 void ThreadedDyscoColumn<DataType>::storeBlock()
 {
 	// Put the data of the current block into the cache so that the parallell threads can write them
-	mutex::scoped_lock lock(_mutex);
+	std::unique_lock<std::mutex> lock(_mutex);
 	CacheItem *item = new CacheItem(std::move(_timeBlockBuffer));
 	// Wait until there is space available AND the row to be written is not in the cache
 	typename cache_t::iterator cacheItemPtr = _cache.find(_currentBlock);
@@ -231,7 +229,7 @@ void ThreadedDyscoColumn<DataType>::putValues(casacore::uInt rowNr, const casaco
 }
 
 template<typename DataType>
-void ThreadedDyscoColumn<DataType>::Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
+void ThreadedDyscoColumn<DataType>::Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation)
 {
 	stopThreads();
 	casacore::Table &table = storageManager().table();
@@ -281,7 +279,7 @@ void ThreadedDyscoColumn<DataType>::InitializeAfterNRowsPerBlockIsKnown()
 }
 
 template<typename DataType>
-void ThreadedDyscoColumn<DataType>::encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, void* threadUserData)
+void ThreadedDyscoColumn<DataType>::encodeAndWrite(size_t blockIndex, const CacheItem &item, unsigned char* packedSymbolBuffer, unsigned int* unpackedSymbolBuffer, ThreadDataBase* threadUserData)
 {
 	const size_t nPolarizations = _shape[0], nChannels = _shape[1];
 	const size_t metaDataSize = sizeof(float) * metaDataFloatCount(nRowsInBlock(), nPolarizations, nChannels, _antennaCount);
@@ -306,13 +304,12 @@ void ThreadedDyscoColumn<DataType>::EncodingThreadFunctor::operator()()
 	const size_t nPolarizations = parent->_shape[0], nChannels = parent->_shape[1];
 	const size_t nSymbols = parent->symbolCount(parent->nRowsInBlock(), nPolarizations, nChannels);
 	
-	mutex::scoped_lock lock(parent->_mutex);
+	std::unique_lock<std::mutex> lock(parent->_mutex);
 	ao::uvector<unsigned char> packedSymbolBuffer(parent->_blockSize);
 	ao::uvector<unsigned> unpackedSymbolBuffer(nSymbols);
 	cache_t &cache = parent->_cache;
 	
-	void* threadUserData;
-	parent->initializeEncodeThread(&threadUserData);
+	std::unique_ptr<ThreadDataBase> threadUserData = parent->initializeEncodeThread();
 	
 	while(!parent->_stopThreads)
 	{
@@ -331,7 +328,7 @@ void ThreadedDyscoColumn<DataType>::EncodingThreadFunctor::operator()()
 			item.isBeingWritten = true;
 			
 			lock.unlock();
-			parent->encodeAndWrite(blockIndex, item, &packedSymbolBuffer[0], &unpackedSymbolBuffer[0], threadUserData);
+			parent->encodeAndWrite(blockIndex, item, &packedSymbolBuffer[0], &unpackedSymbolBuffer[0], threadUserData.get());
 			
 			lock.lock();
 			delete &item;
@@ -339,7 +336,6 @@ void ThreadedDyscoColumn<DataType>::EncodingThreadFunctor::operator()()
 			parent->_cacheChangedCondition.notify_all();
 		}
 	}
-	parent->destructEncodeThread(threadUserData);
 }
 
 // This function should only be called with a locked mutex

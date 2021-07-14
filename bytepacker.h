@@ -1,5 +1,5 @@
-#ifndef BYTE_PACKER_H
-#define BYTE_PACKER_H
+#ifndef DYSCO_BYTE_PACKER_H
+#define DYSCO_BYTE_PACKER_H
 
 #include <stdexcept>
 

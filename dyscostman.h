@@ -11,7 +11,7 @@
 #include "uvector.h"
 #include "dyscodistribution.h"
 #include "dysconormalization.h"
-#include "thread.h"
+#include "threadgroup.h"
 
 /**
 * @file
@@ -121,7 +121,7 @@ public:
 	 * This method should only be called directly after creating DyscoStMan, before adding
 	 * columns, and reading/writing data.
 	 */
-	void SetNormalization(DyscoNormalization normalization)
+	void SetNormalization(Normalization normalization)
 	{
 		_normalization = normalization;
 	}
@@ -239,7 +239,7 @@ protected:
 	*/
 	uint64_t nBlocksInFile() const
 	{
-		altthread::mutex::scoped_lock lock(_mutex);
+		std::lock_guard<std::mutex> lock(_mutex);
 		return _nBlocksInFile;
 	}
 	
@@ -380,18 +380,18 @@ private:
 	uint32_t _blockSize;
 	
 	unsigned _headerSize;
-	mutable altthread::mutex _mutex;
+	mutable std::mutex _mutex;
 	std::unique_ptr<std::fstream> _fStream;
 	
 	std::string _name;
 	unsigned _dataBitCount;
 	unsigned _weightBitCount;
 	DyscoDistribution _distribution;
-	DyscoNormalization _normalization;
+	   Normalization _normalization;
 	double _studentTNu, _distributionTruncation;
 	bool _staticSeed;
 
-	std::vector<DyscoStManColumn*> _columns;
+	std::vector<std::unique_ptr<DyscoStManColumn>> _columns;
 };
 
 } // end of namespace

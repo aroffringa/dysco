@@ -2,7 +2,7 @@
 
 namespace dyscostman {
 
-void DyscoWeightColumn::Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation)
+void DyscoWeightColumn::Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation)
 {
 	ThreadedDyscoColumn::Prepare(distribution, normalization, studentsTNu, distributionTruncation);
 	const size_t nPolarizations = shape()[0], nChannels = shape()[1];
@@ -19,7 +19,7 @@ void DyscoWeightColumn::decode(TimeBlockBuffer<data_t>* buffer, const unsigned i
 	_encoder->Decode(*buffer, data, blockRow);
 }
 
-void DyscoWeightColumn::encode(void* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae)
+void DyscoWeightColumn::encode(ThreadDataBase* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae)
 {
 	_encoder->Encode(*buffer, metaBuffer, symbolBuffer);
 }

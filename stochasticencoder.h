@@ -1,5 +1,5 @@
-#ifndef STOCHASTIC_ENCODER_H
-#define STOCHASTIC_ENCODER_H
+#ifndef DYSCO_STOCHASTIC_ENCODER_H
+#define DYSCO_STOCHASTIC_ENCODER_H
 
 #include "uvector.h"
 

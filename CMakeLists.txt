@@ -15,7 +15,10 @@ find_package(Threads REQUIRED)
 include_directories(${CASACORE_INCLUDE_DIRS})
 include_directories(${GSL_INCLUDE_DIRS})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -DNDEBUG --std=c++11")
+add_compile_options(-O3 -Wall -DNDEBUG)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(PORTABLE "Generate portable code" OFF)
 option(BUILD_PACKAGES "Build Debian packages" OFF)

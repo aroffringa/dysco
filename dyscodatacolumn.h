@@ -14,7 +14,7 @@ class DyscoStMan;
  * A column for storing compressed complex values with an approximate Gaussian distribution.
  * @author André Offringa
  */
-class DyscoDataColumn : public ThreadedDyscoColumn<std::complex<float>>
+class DyscoDataColumn final : public ThreadedDyscoColumn<std::complex<float>>
 {
 public:
 	/**
@@ -26,7 +26,7 @@ public:
 		_rnd(std::random_device{}()),
 		_gausEncoder(),
 		_distribution(GaussianDistribution),
-		_normalization(RFNormalization),
+		_normalization(Normalization::kRF),
 		_randomize(true)
 	{ }
   
@@ -37,7 +37,7 @@ public:
   /** Destructor. */
   virtual ~DyscoDataColumn() { shutdown(); }
 	
-	virtual void Prepare(DyscoDistribution distribution, DyscoNormalization normalization, double studentsTNu, double distributionTruncation) override;
+	virtual void Prepare(DyscoDistribution distribution, Normalization normalization, double studentsTNu, double distributionTruncation) override;
 	
 	void SetStaticRandomizationSeed()
 	{
@@ -47,26 +47,24 @@ public:
 	}
 	
 protected:
-	virtual void initializeDecode(TimeBlockBuffer<data_t>* buffer, const float* metaBuffer, size_t nRow, size_t nAntennae) final override;
+	virtual void initializeDecode(TimeBlockBuffer<data_t>* buffer, const float* metaBuffer, size_t nRow, size_t nAntennae) override;
 	
-	virtual void decode(TimeBlockBuffer<data_t>* buffer, const symbol_t* data, size_t blockRow, size_t a1, size_t a2) final override;
+	virtual void decode(TimeBlockBuffer<data_t>* buffer, const symbol_t* data, size_t blockRow, size_t a1, size_t a2) override;
 	
-	virtual void initializeEncodeThread(void** threadData) final override;
+	virtual std::unique_ptr<ThreadDataBase> initializeEncodeThread() override;
 	
-	virtual void destructEncodeThread(void* threadData) final override;
+	virtual void encode(ThreadDataBase* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae) override;
 	
-	virtual void encode(void* threadData, TimeBlockBuffer<data_t>* buffer, float* metaBuffer, symbol_t* symbolBuffer, size_t nAntennae) final override;
+	virtual size_t metaDataFloatCount(size_t nRow, size_t nPolarizations, size_t nChannels, size_t nAntennae) const override;
 	
-	virtual size_t metaDataFloatCount(size_t nRow, size_t nPolarizations, size_t nChannels, size_t nAntennae) const final override;
+	virtual size_t symbolCount(size_t nRowsInBlock, size_t nPolarizations, size_t nChannels) const override;
 	
-	virtual size_t symbolCount(size_t nRowsInBlock, size_t nPolarizations, size_t nChannels) const final override;
-	
-	virtual size_t defaultThreadCount() const final override;
+	virtual size_t defaultThreadCount() const override;
 private:
-	struct ThreadData
+	struct ThreadData final : public ThreadDataBase
 	{
-		ThreadData(TimeBlockEncoder* encoder_) :
-			encoder(encoder_)
+		ThreadData(std::unique_ptr<TimeBlockEncoder> timeBlockEncoder) :
+			encoder(std::move(timeBlockEncoder))
 			{ }
 		std::unique_ptr<TimeBlockEncoder> encoder;
 		std::mt19937 rnd;
@@ -76,7 +74,7 @@ private:
 	std::unique_ptr<StochasticEncoder<float>> _gausEncoder;
 	std::unique_ptr<TimeBlockEncoder> _decoder;
 	DyscoDistribution _distribution;
-	DyscoNormalization _normalization;
+	   Normalization _normalization;
 	double _studentsTNu;
 	bool _randomize;
 };

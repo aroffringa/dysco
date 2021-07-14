@@ -12,21 +12,21 @@ using namespace dyscostman;
 
 BOOST_AUTO_TEST_SUITE(timeblock_encoder)
 
-std::unique_ptr<TimeBlockEncoder> CreateEncoder(DyscoNormalization blockNormalization, size_t nPol, size_t nChan)
+std::unique_ptr<TimeBlockEncoder> CreateEncoder(Normalization blockNormalization, size_t nPol, size_t nChan)
 {
 	switch(blockNormalization)
 	{
 		default:
-		case RFNormalization:
+    case Normalization::kRF:
 			return std::unique_ptr<TimeBlockEncoder>(new RFTimeBlockEncoder(nPol, nChan));
-		case AFNormalization:
+		case Normalization::kAF:
 			return std::unique_ptr<TimeBlockEncoder>(new AFTimeBlockEncoder(nPol, nChan, true));
-		case RowNormalization:
+		case Normalization::kRow:
 			return std::unique_ptr<TimeBlockEncoder>(new RowTimeBlockEncoder(nPol, nChan));
 	}
 }
 
-void TestSimpleExample(DyscoNormalization blockNormalization)
+void TestSimpleExample(Normalization blockNormalization)
 {
 	const size_t nAnt = 4, nChan = 1, nPol = 2, nRow = (nAnt*(nAnt+1)/2);
 	
@@ -81,17 +81,17 @@ void TestSimpleExample(DyscoNormalization blockNormalization)
 		// skip auto-correlations of AF, since these are not saved.
 		out.GetData(row, dataFromOut);
 		input.GetData(row, dataFromIn);
-		if(blockNormalization!=AFNormalization || (row != 0 && row != 4 && row != 7 && row != 9))
+		if(blockNormalization!=Normalization::kAF || (row != 0 && row != 4 && row != 7 && row != 9))
 		{
 			for(size_t ch=0; ch!=nChan; ++ch)
 			{
-				BOOST_CHECK_MESSAGE(std::norm(dataFromOut[ch]-dataFromIn[ch]) < 0.1, "Output{" << dataFromOut[ch] << "} is close to input{" << dataFromIn[ch] << "} of row " << row << " with normalization " << blockNormalization);
+				BOOST_CHECK_MESSAGE(std::norm(dataFromOut[ch]-dataFromIn[ch]) < 0.1, "Output{" << dataFromOut[ch] << "} is close to input{" << dataFromIn[ch] << "} of row " << row << " with normalization " << int(blockNormalization));
 			}
 		}
 	}
 }
 
-void TestTimeBlockEncoder(DyscoNormalization blockNormalization)
+void TestTimeBlockEncoder(Normalization blockNormalization)
 {
 	const size_t nAnt = 50, nChan = 64, nPol = 4, nRow = (nAnt*(nAnt+1)/2);
 	
@@ -195,32 +195,32 @@ void TestTimeBlockEncoder(DyscoNormalization blockNormalization)
 
 BOOST_AUTO_TEST_CASE( row_normalization_per_row_accuracy )
 {
-	TestSimpleExample(RowNormalization);
+	TestSimpleExample(Normalization::kRow);
 }
 
 BOOST_AUTO_TEST_CASE( row_normalization_global_rms_accuracy )
 {
-	TestTimeBlockEncoder(RowNormalization);
+	TestTimeBlockEncoder(Normalization::kRow);
 }
 
 BOOST_AUTO_TEST_CASE( af_normalization_per_row_accuracy )
 {
-	TestSimpleExample(AFNormalization);
+	TestSimpleExample(Normalization::kAF);
 }
 
 BOOST_AUTO_TEST_CASE( af_normalization_global_rms_accuracy )
 {
-	TestTimeBlockEncoder(AFNormalization);
+	TestTimeBlockEncoder(Normalization::kAF);
 }
 
 BOOST_AUTO_TEST_CASE( rf_normalization_per_row_accuracy )
 {
-	TestSimpleExample(RFNormalization);
+	TestSimpleExample(Normalization::kRF);
 }
 
 BOOST_AUTO_TEST_CASE( rf_normalization_global_rms_accuracy )
 {
-	TestTimeBlockEncoder(RFNormalization);
+	TestTimeBlockEncoder(Normalization::kRF);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

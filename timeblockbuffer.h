@@ -1,5 +1,5 @@
-#ifndef TIME_BLOCK_BUFFER_H
-#define TIME_BLOCK_BUFFER_H
+#ifndef DYSCO_TIME_BLOCK_BUFFER_H
+#define DYSCO_TIME_BLOCK_BUFFER_H
 
 #include "uvector.h"
 
