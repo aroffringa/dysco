@@ -233,11 +233,11 @@ void ThreadedDyscoColumn<DataType>::Prepare(DyscoDistribution distribution, Norm
 {
 	stopThreads();
 	casacore::Table &table = storageManager().table();
-	_ant1Col.reset( new casacore::ScalarColumn<int>(table, casacore::MeasurementSet::columnName(casacore::MSMainEnums::ANTENNA1)) );
-	_ant2Col.reset( new casacore::ScalarColumn<int>(table, casacore::MeasurementSet::columnName(casacore::MSMainEnums::ANTENNA2)) ); 
-	_fieldCol.reset( new casacore::ScalarColumn<int>(table, casacore::MeasurementSet::columnName(casacore::MSMainEnums::FIELD_ID)) );
-	_dataDescIdCol.reset( new casacore::ScalarColumn<int>(table, casacore::MeasurementSet::columnName(casacore::MSMainEnums::DATA_DESC_ID)) );
-	_timeCol.reset( new casacore::ScalarColumn<double>(table, casacore::MeasurementSet::columnName(casacore::MSMainEnums::TIME)) );
+	_ant1Col.reset( new casacore::ScalarColumn<int>(table, "ANTENNA1"));
+	_ant2Col.reset( new casacore::ScalarColumn<int>(table, "ANTENNA2")); 
+	_fieldCol.reset( new casacore::ScalarColumn<int>(table, "FIELD_ID"));
+	_dataDescIdCol.reset( new casacore::ScalarColumn<int>(table, "DATA_DESC_ID"));
+	_timeCol.reset( new casacore::ScalarColumn<double>(table, "TIME"));
 	
 	size_t nPolarizations = _shape[0], nChannels = _shape[1];
 	_timeBlockBuffer.reset(new TimeBlockBuffer<data_t>(nPolarizations, nChannels));

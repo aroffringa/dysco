@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 		std::cerr << "Usage: decompress <ms>\n";
 		return 0;
 	}
-	std::unique_ptr<casacore::MeasurementSet> ms(new casacore::MeasurementSet(argv[1], casacore::Table::Update));
+	std::unique_ptr<casacore::Table> ms(new casacore::Table(argv[1], casacore::Table::Update));
 	StManModifier modifier(*ms);
 	
 	bool isDataReplaced = modifier.InitColumnWithDefaultStMan("DATA", false);

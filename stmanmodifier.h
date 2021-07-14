@@ -24,7 +24,7 @@ public:
 	 * Constructor.
 	 * @param ms Measurement set on which to operate.
 	 */
-	explicit StManModifier(casacore::MeasurementSet& ms) : _ms(ms)
+	explicit StManModifier(casacore::Table& ms) : _ms(ms)
 	{	}
 	
 	/**
@@ -141,7 +141,7 @@ public:
 	 * @param ms Pointer to old measurement set
 	 * @param msLocation Path of the measurent set.
 	 */
-	static void Reorder(std::unique_ptr<casacore::MeasurementSet>& ms, const std::string& msLocation)
+	static void Reorder(std::unique_ptr<casacore::Table>& ms, const std::string& msLocation)
 	{
 		std::cout << "Reordering ms...\n";
 		std::string tempName = msLocation;
@@ -151,12 +151,12 @@ public:
 		ms->markForDelete();
 
 		// Destruct the old measurement set, and load new one
-		ms.reset(new casacore::MeasurementSet(tempName, casacore::Table::Update));
+		ms.reset(new casacore::Table(tempName, casacore::Table::Update));
 		ms->rename(std::string(msLocation), casacore::Table::New);
 	}
 	
 private:
-	casacore::MeasurementSet &_ms;
+	casacore::Table &_ms;
 
 	template<typename T>
 	void copyValues(casacore::ArrayColumn<T>& newColumn, casacore::ArrayColumn<T>& oldColumn, size_t nrow)
