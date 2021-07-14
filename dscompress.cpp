@@ -6,8 +6,6 @@
 #include "stopwatch.h"
 #include "weightencoder.h"
 
-#include <casacore/ms/MeasurementSets/MeasurementSet.h>
-
 #include <casacore/tables/Tables/ArrColDesc.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
@@ -15,7 +13,7 @@
 using namespace dyscostman;
 
 template<typename T>
-void createDyscoStManColumn(casacore::MeasurementSet& ms, const std::string& name, const casacore::IPosition& shape, unsigned bitsPerComplex, unsigned bitsPerWeight, Normalization normalization, DyscoDistribution distribution, double studentsTNu, double distributionTruncation, bool staticSeed)
+void createDyscoStManColumn(casacore::Table& ms, const std::string& name, const casacore::IPosition& shape, unsigned bitsPerComplex, unsigned bitsPerWeight, Normalization normalization, DyscoDistribution distribution, double studentsTNu, double distributionTruncation, bool staticSeed)
 {
 	std::cout << "Constructing new column '" << name << "'...\n";
 	casacore::ArrayColumnDesc<T> columnDesc(name, "", "DyscoStMan", "DyscoStMan", shape);
@@ -232,7 +230,7 @@ int main(int argc, char *argv[])
 	std::cout << "\n\n";
 	
 	std::cout << "Opening ms...\n";
-	std::unique_ptr<casacore::MeasurementSet> ms(new casacore::MeasurementSet(msPath, casacore::Table::Update));
+	std::unique_ptr<casacore::Table> ms(new casacore::Table(msPath, casacore::Table::Update));
 	
 	Stopwatch watch(true);
 	std::cout << "Replacing flagged values by NaNs...\n";
@@ -241,7 +239,7 @@ int main(int argc, char *argv[])
 		if(columnName != "WEIGHT_SPECTRUM")
 		{
 			casacore::ArrayColumn<std::complex<float>> dataCol(*ms, columnName);
-			casacore::ArrayColumn<bool> flagCol(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::FLAG));
+			casacore::ArrayColumn<bool> flagCol(*ms, "FLAG");
 			casacore::Array<std::complex<float>> dataArr(dataCol.shape(0));
 			casacore::Array<bool> flagArr(flagCol.shape(0));
 			for(size_t row=0; row!=ms->nrow(); ++row)
@@ -271,11 +269,11 @@ int main(int argc, char *argv[])
 		watch.Reset();
 		watch.Start();
 		
-		casacore::ScalarColumn<int> antenna1Col(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::ANTENNA1));
-		casacore::ScalarColumn<int> antenna2Col(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::ANTENNA2));
-		casacore::ScalarColumn<int> fieldIdCol(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::FIELD_ID));
-		casacore::ScalarColumn<int> dataDescIdCol(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::DATA_DESC_ID));
-		casacore::ScalarColumn<double> timeCol(*ms, casacore::MeasurementSet::columnName(casacore::MSMainEnums::TIME));
+		casacore::ScalarColumn<int> antenna1Col(*ms, "ANTENNA1");
+		casacore::ScalarColumn<int> antenna2Col(*ms, "ANTENNA2");
+		casacore::ScalarColumn<int> fieldIdCol(*ms, "FIELD_ID");
+		casacore::ScalarColumn<int> dataDescIdCol(*ms, "DATA_DESC_ID");
+		casacore::ScalarColumn<double> timeCol(*ms, "TIME");
 		
 		int lastFieldId = fieldIdCol(0), lastDataDescId = dataDescIdCol(0);
 		double lastTime = timeCol(0);
