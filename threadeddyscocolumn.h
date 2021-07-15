@@ -51,7 +51,7 @@ public:
 
   /** Get the dimensions of the values in a particular row.
    * @param rownr The row to get the shape for. */
-  virtual casacore::IPosition shape(casacore::uInt rownr) override {
+  virtual casacore::IPosition shape(casacore::uInt /*rownr*/) override {
     return _shape;
   }
 

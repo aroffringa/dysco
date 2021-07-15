@@ -55,7 +55,7 @@ public:
     return _nChannels * _nPol * 2 /*complex*/;
   }
 
-  virtual size_t MetaDataCount(size_t nRow, size_t nPol, size_t nChannels,
+  virtual size_t MetaDataCount(size_t /*nRow*/, size_t nPol, size_t nChannels,
                                size_t nAntennae) const final override {
     return nPol * (nChannels + nAntennae);
   }
