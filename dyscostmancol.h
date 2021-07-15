@@ -8,9 +8,8 @@
 
 #include <casa/Arrays/IPosition.h>
 
+#include <cstdint>
 #include <map>
-
-#include <stdint.h>
 
 namespace dyscostman {
 
