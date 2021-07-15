@@ -46,7 +46,7 @@ class DyscoStManColumn;
 class DyscoStMan : public casacore::DataManager {
 public:
   /**
-   * Convience constructor to create a new storage manager with some settings
+   * Convenience constructor to create a new storage manager with some settings
    * without having to fill a 'spec' Record. The storage manager will be
    * initialized to AF normalization with a truncated Gaussian distribution for
    * the quantization, and a truncation of sigma = 2.5. To change the settings,

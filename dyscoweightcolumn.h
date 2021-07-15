@@ -50,14 +50,14 @@ protected:
                       TimeBlockBuffer<data_t> *buffer, float *metaBuffer,
                       symbol_t *symbolBuffer, size_t nAntennae) override;
 
-  virtual size_t metaDataFloatCount(size_t nRows, size_t nPolarizations,
-                                    size_t nChannels,
-                                    size_t nAntennae) const override {
+  virtual size_t metaDataFloatCount(size_t /*nRows*/, size_t /*nPolarizations*/,
+                                    size_t /*nChannels*/,
+                                    size_t /*nAntennae*/) const override {
     return _encoder->MetaDataFloatCount();
   }
 
-  virtual size_t symbolCount(size_t nRowsInBlock, size_t nPolarizations,
-                             size_t nChannels) const override {
+  virtual size_t symbolCount(size_t nRowsInBlock, size_t /*nPolarizations*/,
+                             size_t /*nChannels*/) const override {
     return _encoder->SymbolCount(nRowsInBlock);
   }
 
