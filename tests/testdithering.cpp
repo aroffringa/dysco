@@ -1,6 +1,4 @@
 #include <cmath>
-#include <iostream>
-#include <fstream>
 #include <random>
 
 #include "../stochasticencoder.h"

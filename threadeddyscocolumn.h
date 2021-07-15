@@ -9,6 +9,8 @@
 #include <condition_variable>
 #include <cstdint>
 #include <map>
+#include <memory>
+#include <mutex>
 #include <random>
 
 #include "dyscostmancol.h"

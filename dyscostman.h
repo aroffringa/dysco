@@ -5,7 +5,10 @@
 
 #include <casacore/casa/Containers/Record.h>
 
+#include <cstdint>
 #include <fstream>
+#include <memory>
+#include <mutex>
 #include <vector>
 
 #include "dyscodistribution.h"
