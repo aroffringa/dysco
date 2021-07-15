@@ -12,7 +12,7 @@ else
 	     dyscoweightcolumn.cpp  rftimeblockencoder.cpp rowtimeblockencoder.cpp
 	     stochasticencoder.cpp threadeddyscocolumn.cpp weightencoder.cpp
 	     tests/runtests.cpp tests/testbytepacking.cpp
-	     tests/testdithering.cpp tests/testdyscostman.cpp
+	     tests/testdyscostman.cpp
 	     tests/testtimeblockencoder.cpp"
     other_files="
 	   aftimeblockencoder.h
