@@ -265,7 +265,7 @@ void TestZeroEncoding(Normalization blockNormalization)
 	{
 		// skip auto-correlations of AF, since these are not saved.
 		out.GetData(row, dataFromOut);
-		if(row != 0 && row != 4 && row != 7 && row != 9)
+		if(blockNormalization!=Normalization::kAF || (row != 0 && row != 4 && row != 7 && row != 9))
 		{
 			for(size_t ch=0; ch!=nChan; ++ch)
 			{
