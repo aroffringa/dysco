@@ -26,6 +26,22 @@ std::unique_ptr<TimeBlockEncoder> CreateEncoder(Normalization blockNormalization
 	}
 }
 
+TimeBlockBuffer<std::complex<float>> Decode(Normalization blockNormalization, StochasticEncoder<float>& gausEncoder, size_t nAnt, size_t nChan, size_t nPol, size_t nRow, const float* metaBuffer, const TimeBlockEncoder::symbol_t* symbolBuffer)
+{
+  TimeBlockBuffer<std::complex<float>> out(nPol, nChan);
+	out.resize(nRow);
+	std::unique_ptr<TimeBlockEncoder> decoder = CreateEncoder(blockNormalization, nPol, nChan);
+	decoder->InitializeDecode(metaBuffer, nRow, nAnt);
+	size_t rIndex = 0;
+	for(size_t ant1=0; ant1!=nAnt; ++ant1) {
+		for(size_t ant2=ant1; ant2!=nAnt; ++ant2) {
+			decoder->Decode(gausEncoder, out, symbolBuffer, rIndex, ant1, ant2);
+			++rIndex;
+		}
+	}
+	return out;
+}
+
 void TestSimpleExample(Normalization blockNormalization)
 {
 	const size_t nAnt = 4, nChan = 1, nPol = 2, nRow = (nAnt*(nAnt+1)/2);
@@ -64,17 +80,7 @@ void TestSimpleExample(Normalization blockNormalization)
 	ao::uvector<TimeBlockEncoder::symbol_t> symbolBuffer(symbolCount);
 	
 	encoder->EncodeWithoutDithering(gausEncoder, buffer, metaBuffer.data(), symbolBuffer.data(), nAnt);
-	TimeBlockBuffer<std::complex<float>> out(nPol, nChan);
-	out.resize(nRow);
-	std::unique_ptr<TimeBlockEncoder> decoder = CreateEncoder(blockNormalization, nPol, nChan);
-	decoder->InitializeDecode(metaBuffer.data(), nRow, nAnt);
-	size_t rIndex = 0;
-	for(size_t ant1=0; ant1!=nAnt; ++ant1) {
-		for(size_t ant2=ant1; ant2!=nAnt; ++ant2) {
-			decoder->Decode(gausEncoder, out, symbolBuffer.data(), rIndex, ant1, ant2);
-			++rIndex;
-		}
-	}
+	TimeBlockBuffer<std::complex<float>> out = Decode(blockNormalization, gausEncoder, nAnt, nChan, nPol, nRow, metaBuffer.data(), symbolBuffer.data());
 	std::complex<float> dataFromOut[nChan*nPol], dataFromIn[nChan*nPol];
 	for(size_t row=0; row!=nRow; row++)
 	{
@@ -232,7 +238,7 @@ void TestZeroEncoding(Normalization blockNormalization)
 	std::vector<std::complex<float>> data(nChan*nPol, 0.0);
   size_t index = 0;
   for(size_t a1=0; a1!=nAnt; ++a1) {
-    for(size_t a2=0; a2!=nAnt; ++a2) {
+		for(size_t a2=a1; a2!=nAnt; ++a2) {
       buffer.SetData(index, a1, a2, data.data());
       ++index;
     }
@@ -241,7 +247,6 @@ void TestZeroEncoding(Normalization blockNormalization)
 	const TimeBlockBuffer<std::complex<float>> input(buffer);
 	StochasticEncoder<float> gausEncoder(256, 1.0, false);
 	std::unique_ptr<TimeBlockEncoder> encoder = CreateEncoder(blockNormalization, nPol, nChan);
-	
 	size_t metaDataCount = encoder->MetaDataCount(nRow, nPol, nChan, nAnt);
 	size_t symbolCount = encoder->SymbolCount(nRow);
 	ao::uvector<float> metaBuffer(metaDataCount);
@@ -249,17 +254,8 @@ void TestZeroEncoding(Normalization blockNormalization)
 	
   std::mt19937 mt;
 	encoder->EncodeWithDithering(gausEncoder, buffer, metaBuffer.data(), symbolBuffer.data(), nAnt, mt);
-	TimeBlockBuffer<std::complex<float>> out(nPol, nChan);
-	out.resize(nRow);
-	std::unique_ptr<TimeBlockEncoder> decoder = CreateEncoder(blockNormalization, nPol, nChan);
-	decoder->InitializeDecode(metaBuffer.data(), nRow, nAnt);
-	size_t rIndex = 0;
-	for(size_t ant1=0; ant1!=nAnt; ++ant1) {
-		for(size_t ant2=ant1; ant2!=nAnt; ++ant2) {
-			decoder->Decode(gausEncoder, out, symbolBuffer.data(), rIndex, ant1, ant2);
-			++rIndex;
-		}
-	}
+	TimeBlockBuffer<std::complex<float>> out = Decode(blockNormalization, gausEncoder, nAnt, nChan, nPol, nRow, metaBuffer.data(), symbolBuffer.data());
+  
 	std::complex<float> dataFromOut[nChan*nPol];
 	for(size_t row=0; row!=nRow; row++)
 	{
@@ -271,14 +267,26 @@ void TestZeroEncoding(Normalization blockNormalization)
 			{
 				BOOST_CHECK_MESSAGE(std::isfinite(dataFromOut[ch].real()), "Real output{" << dataFromOut[ch] << "} is finite, row " << row << " with normalization " << int(blockNormalization));
 				BOOST_CHECK_MESSAGE(std::isfinite(dataFromOut[ch].imag()), "Imaginary output{" << dataFromOut[ch] << "} is finite, row " << row << " with normalization " << int(blockNormalization));
+				BOOST_CHECK_EQUAL(dataFromOut[ch].real(), 0.0);
+				BOOST_CHECK_EQUAL(dataFromOut[ch].imag(), 0.0);
 			}
 		}
 	}
 }
 
-BOOST_AUTO_TEST_CASE( af_normalization_with_zeros )
+BOOST_AUTO_TEST_CASE(af_normalization_with_zeros)
 {
 	TestZeroEncoding(Normalization::kAF);
+}
+
+BOOST_AUTO_TEST_CASE(rf_normalization_with_zeros)
+{
+	TestZeroEncoding(Normalization::kRF);
+}
+
+BOOST_AUTO_TEST_CASE(row_normalization_with_zeros)
+{
+	TestZeroEncoding(Normalization::kRow);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

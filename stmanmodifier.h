@@ -92,7 +92,8 @@ public:
   template <typename T>
   bool PrepareReplacingColumn(const std::string &columnName,
                               const std::string &newDataManager,
-                              unsigned /*bitsPerComplex*/, unsigned /*bitsPerWeight*/,
+                              unsigned /*bitsPerComplex*/,
+                              unsigned /*bitsPerWeight*/,
                               casacore::IPosition &shape) {
     const std::string dataManager = GetStorageManager<T>(columnName);
     std::cout << "Current data manager of " + columnName + " column: "

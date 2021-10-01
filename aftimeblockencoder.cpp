@@ -126,8 +126,7 @@ void AFTimeBlockEncoder::fitToMaximum(
     const dyscostman::StochasticEncoder<float> &gausEncoder,
     size_t antennaCount) {
   // First, the channels and polarizations are scaled such that the maximum
-  // value
-  // equals the maximum encodable value
+  // value equals the maximum encodable value
   const size_t visPerRow = _nPol * _nChannels;
   for (size_t visIndex = 0; visIndex != visPerRow; ++visIndex) {
     double largestComp = 0.0;
@@ -141,7 +140,9 @@ void AFTimeBlockEncoder::fitToMaximum(
       }
     }
     double factor =
-        (largestComp == 0.0) ? 0.0 : gausEncoder.MaxQuantity() / largestComp;
+        (largestComp == 0.0) ? 1.0 : gausEncoder.MaxQuantity() / largestComp;
+    if (factor == 0.0)
+      factor = 1.0;
     changeChannelFactor(data, metaBuffer, visIndex, factor);
   }
 
@@ -238,16 +239,20 @@ void AFTimeBlockEncoder::fitToMaximum(
         }
       }
       // The benefit was calculated for increasing an antenna and increasing a
-      // channel Select which of those two has the largest benefit and apply:
+      // channel. Select which of those two has the largest benefit and apply:
       if (bestAntennaIncrease > bestChannelIncrease) {
         double factor =
             (maxCompPerAntenna[bestAntenna] == 0.0)
-                ? 0.0
+                ? 1.0
                 : (gausEncoder.MaxQuantity() / maxCompPerAntenna[bestAntenna]);
+        if (factor < 1.0)
+          factor = 1.0;
         isProgressing = factor > 1.01;
         changeAntennaFactor(data, metaBuffer, bestAntenna, antennaCount,
                             polIndex, factor);
       } else {
+        if (channelFactor < 1.0)
+          channelFactor = 1.0;
         changeChannelFactor(data, metaBuffer, bestChannel * _nPol + polIndex,
                             channelFactor);
         isProgressing = channelFactor > 1.001;
@@ -278,7 +283,9 @@ void AFTimeBlockEncoder::encode(
   for (DBufferRow &row : data) {
     for (size_t i = 0; i != visPerRow; ++i) {
       double rms = channelRMSes[i].RMS();
-      row.visibilities[i] /= rms;
+      if (rms != 0.0) {
+        row.visibilities[i] /= rms;
+      }
       metaBuffer[i] = rms;
     }
   }
@@ -394,8 +401,8 @@ void AFTimeBlockEncoder::calculateAntennaeRMS(
   }
 }
 
-void AFTimeBlockEncoder::InitializeDecode(const float *metaBuffer, size_t /*nRow*/,
-                                          size_t nAntennae) {
+void AFTimeBlockEncoder::InitializeDecode(const float *metaBuffer,
+                                          size_t /*nRow*/, size_t nAntennae) {
   if (_rmsPerAntenna.size() < nAntennae * _nPol)
     _rmsPerAntenna.resize(nAntennae * _nPol);
   const size_t visPerRow = _nPol * _nChannels;

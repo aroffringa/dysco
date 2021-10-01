@@ -133,7 +133,8 @@ void DyscoStMan::registerClass() {
   DataManager::registerCtor("DyscoStMan", makeObject);
 }
 
-casacore::Bool DyscoStMan::flush(casacore::AipsIO &, casacore::Bool /*doFsync*/) {
+casacore::Bool DyscoStMan::flush(casacore::AipsIO &,
+                                 casacore::Bool /*doFsync*/) {
   return false;
 }
 
@@ -278,7 +279,7 @@ void DyscoStMan::open(casacore::uInt nRow, casacore::AipsIO &) {
 }
 
 casacore::DataManagerColumn *
-DyscoStMan::makeScalarColumn(const casacore::String &/*name*/, int dataType,
+DyscoStMan::makeScalarColumn(const casacore::String & /*name*/, int dataType,
                              const casacore::String &dataTypeID) {
   std::ostringstream s;
   s << "Can not create scalar columns with DyscoStMan! (requested datatype: '"
@@ -288,7 +289,7 @@ DyscoStMan::makeScalarColumn(const casacore::String &/*name*/, int dataType,
 
 casacore::DataManagerColumn *
 DyscoStMan::makeDirArrColumn(const casacore::String &name, int dataType,
-                             const casacore::String &/*dataTypeID*/) {
+                             const casacore::String & /*dataTypeID*/) {
   std::unique_ptr<DyscoStManColumn> col;
 
   if (name == "WEIGHT_SPECTRUM") {
@@ -309,8 +310,9 @@ DyscoStMan::makeDirArrColumn(const casacore::String &name, int dataType,
 }
 
 casacore::DataManagerColumn *
-DyscoStMan::makeIndArrColumn(const casacore::String &/*name*/, int /*dataType*/,
-                             const casacore::String &/*dataTypeID*/) {
+DyscoStMan::makeIndArrColumn(const casacore::String & /*name*/,
+                             int /*dataType*/,
+                             const casacore::String & /*dataTypeID*/) {
   throw DyscoStManError(
       "makeIndArrColumn() called on DyscoStMan. DyscoStMan can only created "
       "direct columns!\nUse casacore::ColumnDesc::Direct as option in your "
