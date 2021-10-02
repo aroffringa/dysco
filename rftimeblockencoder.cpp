@@ -71,9 +71,8 @@ void RFTimeBlockEncoder::encode(
   }
   // Convert the maxima to factors
   for (size_t i = 0; i != visPerRow; ++i) {
-    maxima[i] = (maxima[i] == 0.0) ? 1.0 : maxLevel / maxima[i];
-    metaBuffer[i] =
-        (maxima[i] == 0.0) ? 0.0 : channelRMSes[i].RMS() / maxima[i];
+    maxima[i] = (maxima[i] == 0.0 || maxLevel == 0.0) ? 1.0 : maxLevel / maxima[i];
+    metaBuffer[i] = channelRMSes[i].RMS() / maxima[i];
   }
   for (DBufferRow &row : data) {
     for (size_t i = 0; i != visPerRow; ++i)

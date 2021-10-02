@@ -139,10 +139,9 @@ void AFTimeBlockEncoder::fitToMaximum(
           largestComp = complMax;
       }
     }
-    double factor =
-        (largestComp == 0.0) ? 1.0 : gausEncoder.MaxQuantity() / largestComp;
-    if (factor == 0.0)
-      factor = 1.0;
+    const double factor =
+        (gausEncoder.MaxQuantity() == 0.0 || largestComp == 0.0) ?
+        1.0 : gausEncoder.MaxQuantity() / largestComp;
     changeChannelFactor(data, metaBuffer, visIndex, factor);
   }
 
