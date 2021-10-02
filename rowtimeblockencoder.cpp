@@ -37,8 +37,8 @@ void RowTimeBlockEncoder::Decode(const StochasticEncoder<float> &gausEncoder,
 template <bool UseDithering>
 void RowTimeBlockEncoder::encode(const StochasticEncoder<float> &gausEncoder,
                                  const FBuffer &buffer, float *metaBuffer,
-                                 symbol_t *symbolBuffer,
-                                 size_t /*antennaCount*/, std::mt19937 *rnd) {
+                                 symbol_t *symbolBuffer, size_t /*antennaCount*/,
+                                 std::mt19937 *rnd) {
   // Note that encoding is performed with doubles
   std::vector<DBufferRow> data;
   buffer.ConvertVector<std::complex<double>>(data);

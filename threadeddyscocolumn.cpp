@@ -209,7 +209,8 @@ void ThreadedDyscoColumn<DataType>::putValues(
 }
 
 template <typename DataType>
-void ThreadedDyscoColumn<DataType>::Prepare(DyscoDistribution, Normalization,
+void ThreadedDyscoColumn<DataType>::Prepare(DyscoDistribution,
+                                            Normalization,
                                             double /*studentsTNu*/,
                                             double /*distributionTruncation*/) {
   stopThreads();
