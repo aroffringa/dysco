@@ -148,11 +148,11 @@ void AFTimeBlockEncoder::fitToMaximum(
   for (size_t polIndex = 0; polIndex != _nPol; ++polIndex) {
     bool isProgressing;
     do {
-      // Find the factor that increasest the sum of values the most
+      // Find the factor that increasest the sum of absolute values the most
       double bestChannelIncrease = 0.0, channelFactor = 1.0;
       size_t bestChannel = 0;
       for (size_t channel = 0; channel != _nChannels; ++channel) {
-        // by how much can we increase this channel?
+        // By how much can we increase this channel?
         double largestComp = 0.0;
         for (const DBufferRow &row : data) {
           if (row.antenna1 != row.antenna2) {
@@ -167,15 +167,15 @@ void AFTimeBlockEncoder::fitToMaximum(
         double factor = (largestComp == 0.0)
                             ? 0.0
                             : (gausEncoder.MaxQuantity() / largestComp - 1.0);
-        // how much does this increase the total?
+        // How much does this increase the total?
         double thisIncrease = 0.0;
         for (DBufferRow &row : data) {
           if (row.antenna1 != row.antenna2) {
             std::complex<double> v =
                 row.visibilities[channel * _nPol + polIndex] * double(factor);
-            double av = std::fabs(v.real()) + std::fabs(v.imag());
-            if (std::isfinite(av))
-              thisIncrease += av;
+            const double absoluteValue = std::fabs(v.real()) + std::fabs(v.imag());
+            if (std::isfinite(absoluteValue))
+              thisIncrease += absoluteValue;
           }
         }
         if (thisIncrease > bestChannelIncrease) {
@@ -245,16 +245,21 @@ void AFTimeBlockEncoder::fitToMaximum(
                 ? 1.0
                 : (gausEncoder.MaxQuantity() / maxCompPerAntenna[bestAntenna]);
         if (factor < 1.0)
-          factor = 1.0;
-        isProgressing = factor > 1.01;
-        changeAntennaFactor(data, metaBuffer, bestAntenna, antennaCount,
-                            polIndex, factor);
+          isProgressing = false;
+        else {
+          isProgressing = factor > 1.01;
+          changeAntennaFactor(data, metaBuffer, bestAntenna, antennaCount,
+                              polIndex, factor);
+        }
       } else {
-        if (channelFactor < 1.0)
-          channelFactor = 1.0;
-        changeChannelFactor(data, metaBuffer, bestChannel * _nPol + polIndex,
-                            channelFactor);
-        isProgressing = channelFactor > 1.001;
+        if (channelFactor < 1.0) {
+          isProgressing = false;
+        }
+        else {
+          isProgressing = channelFactor > 1.001;
+          changeChannelFactor(data, metaBuffer, bestChannel * _nPol + polIndex,
+                              channelFactor);
+        }
       }
     } while (isProgressing);
   }
