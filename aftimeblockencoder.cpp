@@ -4,7 +4,9 @@
 
 AFTimeBlockEncoder::AFTimeBlockEncoder(size_t nPol, size_t nChannels,
                                        bool fitToMaximum)
-    : _nPol(nPol), _nChannels(nChannels), _fitToMaximum(fitToMaximum),
+    : _nPol(nPol),
+      _nChannels(nChannels),
+      _fitToMaximum(fitToMaximum),
       _rmsPerChannel(_nChannels * nPol),
       _ditherDist(
           dyscostman::StochasticEncoder<double>::GetDitherDistribution()) {}
@@ -14,8 +16,7 @@ AFTimeBlockEncoder::~AFTimeBlockEncoder() {}
 void AFTimeBlockEncoder::Normalize(
     const dyscostman::StochasticEncoder<float> &gausEncoder,
     TimeBlockBuffer<std::complex<float>> &buffer, size_t antennaCount) {
-  if (_rmsPerAntenna.size() < antennaCount)
-    _rmsPerAntenna.resize(antennaCount);
+  if (_rmsPerAntenna.size() < antennaCount) _rmsPerAntenna.resize(antennaCount);
   std::vector<DBufferRow> data;
   buffer.ConvertVector<std::complex<double>>(data);
   const size_t visPerRow = _nPol * _nChannels;
@@ -63,8 +64,7 @@ void AFTimeBlockEncoder::Normalize(
           }
         }
       }
-      for (DBufferRow &row : data)
-        row.visibilities[visIndex] *= factor;
+      for (DBufferRow &row : data) row.visibilities[visIndex] *= factor;
     }
   }
 }
@@ -79,10 +79,8 @@ void AFTimeBlockEncoder::changeAntennaFactor(std::vector<DBufferRow> &data,
   metaBuffer[metaIndex + antennaIndex] /= factor;
   for (DBufferRow &row : data) {
     unsigned count = 0;
-    if (row.antenna1 == antennaIndex)
-      ++count;
-    if (row.antenna2 == antennaIndex)
-      ++count;
+    if (row.antenna1 == antennaIndex) ++count;
+    if (row.antenna2 == antennaIndex) ++count;
     for (unsigned repeat = 0; repeat != count; ++repeat) {
       for (size_t i = 0; i != _nChannels; ++i)
         row.visibilities[i * _nPol + polIndex] *= factor;
@@ -94,8 +92,7 @@ void AFTimeBlockEncoder::changeChannelFactor(std::vector<DBufferRow> &data,
                                              float *metaBuffer, size_t visIndex,
                                              double factor) {
   metaBuffer[visIndex] /= factor;
-  for (DBufferRow &row : data)
-    row.visibilities[visIndex] *= factor;
+  for (DBufferRow &row : data) row.visibilities[visIndex] *= factor;
 }
 
 //
@@ -140,8 +137,9 @@ void AFTimeBlockEncoder::fitToMaximum(
       }
     }
     const double factor =
-        (gausEncoder.MaxQuantity() == 0.0 || largestComp == 0.0) ?
-        1.0 : gausEncoder.MaxQuantity() / largestComp;
+        (gausEncoder.MaxQuantity() == 0.0 || largestComp == 0.0)
+            ? 1.0
+            : gausEncoder.MaxQuantity() / largestComp;
     changeChannelFactor(data, metaBuffer, visIndex, factor);
   }
 
@@ -173,9 +171,9 @@ void AFTimeBlockEncoder::fitToMaximum(
           if (row.antenna1 != row.antenna2) {
             std::complex<double> v =
                 row.visibilities[channel * _nPol + polIndex] * double(factor);
-            const double absoluteValue = std::fabs(v.real()) + std::fabs(v.imag());
-            if (std::isfinite(absoluteValue))
-              thisIncrease += absoluteValue;
+            const double absoluteValue =
+                std::fabs(v.real()) + std::fabs(v.imag());
+            if (std::isfinite(absoluteValue)) thisIncrease += absoluteValue;
           }
         }
         if (thisIncrease > bestChannelIncrease) {
@@ -219,13 +217,11 @@ void AFTimeBlockEncoder::fitToMaximum(
             std::complex<double> v1 =
                 row.visibilities[channel * _nPol + polIndex] * factor1;
             double av1 = std::fabs(v1.real()) + std::fabs(v1.imag());
-            if (std::isfinite(av1))
-              increasePerAntenna[row.antenna1] += av1;
+            if (std::isfinite(av1)) increasePerAntenna[row.antenna1] += av1;
             std::complex<double> v2 =
                 row.visibilities[channel * _nPol + polIndex] * factor2;
             double av2 = std::fabs(v2.real()) + std::fabs(v2.imag());
-            if (std::isfinite(av2))
-              increasePerAntenna[row.antenna2] += av2;
+            if (std::isfinite(av2)) increasePerAntenna[row.antenna2] += av2;
           }
         }
       }
@@ -254,8 +250,7 @@ void AFTimeBlockEncoder::fitToMaximum(
       } else {
         if (channelFactor < 1.0) {
           isProgressing = false;
-        }
-        else {
+        } else {
           isProgressing = channelFactor > 1.001;
           changeChannelFactor(data, metaBuffer, bestChannel * _nPol + polIndex,
                               channelFactor);
@@ -270,8 +265,7 @@ void AFTimeBlockEncoder::encode(
     const dyscostman::StochasticEncoder<float> &gausEncoder,
     const TimeBlockBuffer<std::complex<float>> &buffer, float *metaBuffer,
     symbol_t *symbolBuffer, size_t antennaCount, std::mt19937 *rnd) {
-  if (_rmsPerAntenna.size() < antennaCount)
-    _rmsPerAntenna.resize(antennaCount);
+  if (_rmsPerAntenna.size() < antennaCount) _rmsPerAntenna.resize(antennaCount);
   // Note that encoding is performed with doubles
   std::vector<DBufferRow> data;
   buffer.ConvertVector<std::complex<double>>(data);
@@ -348,8 +342,7 @@ void AFTimeBlockEncoder::calculateAntennaeRMS(
   for (const DBufferRow &row : data) {
     size_t a1 = row.antenna1, a2 = row.antenna2;
     if (a1 != a2) {
-      if (a1 > a2)
-        std::swap(a1, a2);
+      if (a1 > a2) std::swap(a1, a2);
       size_t index = row.antenna1 * antennaCount + row.antenna2;
       for (size_t ch = 0; ch != _nChannels; ++ch)
         matrixMeas[index].Include(row.visibilities[ch * _nPol + polIndex]);
@@ -365,8 +358,7 @@ void AFTimeBlockEncoder::calculateAntennaeRMS(
   }
 
   // (note that _rmsPerAntenna is larger, so don't use assign())
-  for (size_t i = 0; i != antennaCount; ++i)
-    _rmsPerAntenna[i] = 1.0;
+  for (size_t i = 0; i != antennaCount; ++i) _rmsPerAntenna[i] = 1.0;
 
   double precision = 1.0;
   for (size_t iteration = 0; iteration != 100 && precision > 1e-6;
@@ -397,21 +389,19 @@ void AFTimeBlockEncoder::calculateAntennaeRMS(
     }
     precision = 0.0;
     for (size_t i = 0; i != antennaCount; ++i) {
-      if (_rmsPerAntenna[i] < maxVal * 1e-5)
-        _rmsPerAntenna[i] = 0.0;
+      if (_rmsPerAntenna[i] < maxVal * 1e-5) _rmsPerAntenna[i] = 0.0;
       precision = std::max(precision,
                            std::fabs(_rmsPerAntenna[i] - nextRMS[i]) / maxVal);
     }
   }
 }
 
-void AFTimeBlockEncoder::InitializeDecode(const float *metaBuffer, size_t /*nRow*/,
-                                          size_t nAntennae) {
+void AFTimeBlockEncoder::InitializeDecode(const float *metaBuffer,
+                                          size_t /*nRow*/, size_t nAntennae) {
   if (_rmsPerAntenna.size() < nAntennae * _nPol)
     _rmsPerAntenna.resize(nAntennae * _nPol);
   const size_t visPerRow = _nPol * _nChannels;
-  for (size_t i = 0; i != visPerRow; ++i)
-    _rmsPerChannel[i] = metaBuffer[i];
+  for (size_t i = 0; i != visPerRow; ++i) _rmsPerChannel[i] = metaBuffer[i];
   metaBuffer += visPerRow;
   for (size_t p = 0; p != _nPol; ++p) {
     for (size_t a = 0; a != nAntennae; ++a)

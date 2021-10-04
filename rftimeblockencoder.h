@@ -12,16 +12,15 @@
 #include "timeblockencoder.h"
 
 class RFTimeBlockEncoder : public TimeBlockEncoder {
-public:
+ public:
   RFTimeBlockEncoder(size_t nPol, size_t nChannels);
 
   virtual ~RFTimeBlockEncoder() override;
 
-  virtual void
-  EncodeWithDithering(const dyscostman::StochasticEncoder<float> &gausEncoder,
-                      FBuffer &buffer, float *metaBuffer,
-                      symbol_t *symbolBuffer, size_t antennaCount,
-                      std::mt19937 &rnd) final override {
+  virtual void EncodeWithDithering(
+      const dyscostman::StochasticEncoder<float> &gausEncoder, FBuffer &buffer,
+      float *metaBuffer, symbol_t *symbolBuffer, size_t antennaCount,
+      std::mt19937 &rnd) final override {
     encode<true>(gausEncoder, buffer, metaBuffer, symbolBuffer, antennaCount,
                  &rnd);
   }
@@ -64,7 +63,7 @@ public:
                  TimeBlockBuffer<std::complex<float>> &buffer,
                  size_t antennaCount);
 
-private:
+ private:
   void calculateAntennaeRMS(const std::vector<DBufferRow> &data,
                             size_t polIndex, size_t antennaCount);
 

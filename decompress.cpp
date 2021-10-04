@@ -18,10 +18,8 @@ int main(int argc, char *argv[]) {
   bool isWeightReplaced =
       modifier.InitColumnWithDefaultStMan("WEIGHT_SPECTRUM", true);
 
-  if (isDataReplaced)
-    modifier.MoveColumnData<casacore::Complex>("DATA");
-  if (isWeightReplaced)
-    modifier.MoveColumnData<float>("WEIGHT_SPECTRUM");
+  if (isDataReplaced) modifier.MoveColumnData<casacore::Complex>("DATA");
+  if (isWeightReplaced) modifier.MoveColumnData<float>("WEIGHT_SPECTRUM");
 
   if (isDataReplaced || isWeightReplaced) {
     StManModifier::Reorder(ms, argv[1]);
