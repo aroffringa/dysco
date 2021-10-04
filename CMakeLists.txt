@@ -44,14 +44,14 @@ endif()
 
 add_library(
   dyscostman-object OBJECT
-  aftimeblockencoder.cpp
-  dyscostman.cpp
-  dyscodatacolumn.cpp
-  dyscoweightcolumn.cpp
-  stochasticencoder.cpp
-  threadeddyscocolumn.cpp
-  rftimeblockencoder.cpp
-  rowtimeblockencoder.cpp)
+  aftimeblockencoder.cc
+  dyscostman.cc
+  dyscodatacolumn.cc
+  dyscoweightcolumn.cc
+  stochasticencoder.cc
+  threadeddyscocolumn.cc
+  rftimeblockencoder.cc
+  rowtimeblockencoder.cc)
 set_property(TARGET dyscostman-object PROPERTY POSITION_INDEPENDENT_CODE 1)
 
 # Note: casapy fails if Casa is linked in the storage manager, so we have to
@@ -62,11 +62,11 @@ set_target_properties(dyscostman PROPERTIES SOVERSION 0)
 target_link_libraries(dyscostman ${GSL_LIBRARIES} ${CASACORE_LIBRARIES}
                       ${CMAKE_THREAD_LIBS_INIT})
 
-add_executable(dscompress dscompress.cpp stopwatch.cpp)
+add_executable(dscompress dscompress.cc stopwatch.cc)
 target_link_libraries(dscompress dyscostman ${GSL_LIBRARIES}
                       ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
-add_executable(decompress decompress.cpp)
+add_executable(decompress decompress.cc)
 target_link_libraries(decompress dyscostman ${GSL_LIBRARIES}
                       ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
@@ -89,12 +89,12 @@ if(Boost_FOUND)
   add_executable(
     runtests EXCLUDE_FROM_ALL
     $<TARGET_OBJECTS:dyscostman-object>
-    tests/runtests.cpp
-    tests/encodeexample.cpp
-    tests/testbytepacking.cpp
-    tests/testdithering.cpp
-    tests/testdyscostman.cpp
-    tests/testtimeblockencoder.cpp)
+    tests/runtests.cc
+    tests/encodeexample.cc
+    tests/testbytepacking.cc
+    tests/testdithering.cc
+    tests/testdyscostman.cc
+    tests/testtimeblockencoder.cc)
   target_link_libraries(
     runtests ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY}
     ${GSL_LIBRARIES} ${CASACORE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
