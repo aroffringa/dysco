@@ -31,7 +31,8 @@ void RFTimeBlockEncoder::encode(
   for (DBufferRow &row : data) {
     for (size_t i = 0; i != visPerRow; ++i) {
       double rms = channelRMSes[i].RMS();
-      row.visibilities[i] /= rms;
+      if (rms != 0.0)
+        row.visibilities[i] /= rms;
     }
   }
 
@@ -52,9 +53,10 @@ void RFTimeBlockEncoder::encode(
                                 : maxLevel / maxValPerPol[i % _nPol];
       row.visibilities[i] *= factor;
     }
-    for (size_t polIndex = 0; polIndex != _nPol; ++polIndex)
+    for (size_t polIndex = 0; polIndex != _nPol; ++polIndex) {
       metaBuffer[visPerRow + rowIndex * _nPol + polIndex] =
-          maxValPerPol[polIndex] / maxLevel;
+          (maxLevel == 0.0) ? 1.0 : maxValPerPol[polIndex] / maxLevel;
+    }
   }
 
   // Maximize channels
@@ -69,10 +71,7 @@ void RFTimeBlockEncoder::encode(
   }
   // Convert the maxima to factors
   for (size_t i = 0; i != visPerRow; ++i) {
-    if (maxima[i] == 0.0)
-      maxima[i] = 1.0;
-    else
-      maxima[i] = maxLevel / maxima[i];
+    maxima[i] = (maxima[i] == 0.0 || maxLevel == 0.0) ? 1.0 : maxLevel / maxima[i];
     metaBuffer[i] = channelRMSes[i].RMS() / maxima[i];
   }
   for (DBufferRow &row : data) {

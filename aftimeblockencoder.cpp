@@ -126,8 +126,7 @@ void AFTimeBlockEncoder::fitToMaximum(
     const dyscostman::StochasticEncoder<float> &gausEncoder,
     size_t antennaCount) {
   // First, the channels and polarizations are scaled such that the maximum
-  // value
-  // equals the maximum encodable value
+  // value equals the maximum encodable value
   const size_t visPerRow = _nPol * _nChannels;
   for (size_t visIndex = 0; visIndex != visPerRow; ++visIndex) {
     double largestComp = 0.0;
@@ -140,19 +139,20 @@ void AFTimeBlockEncoder::fitToMaximum(
           largestComp = complMax;
       }
     }
-    double factor =
-        (largestComp == 0.0) ? 0.0 : gausEncoder.MaxQuantity() / largestComp;
+    const double factor =
+        (gausEncoder.MaxQuantity() == 0.0 || largestComp == 0.0) ?
+        1.0 : gausEncoder.MaxQuantity() / largestComp;
     changeChannelFactor(data, metaBuffer, visIndex, factor);
   }
 
   for (size_t polIndex = 0; polIndex != _nPol; ++polIndex) {
     bool isProgressing;
     do {
-      // Find the factor that increasest the sum of values the most
+      // Find the factor that increasest the sum of absolute values the most
       double bestChannelIncrease = 0.0, channelFactor = 1.0;
       size_t bestChannel = 0;
       for (size_t channel = 0; channel != _nChannels; ++channel) {
-        // by how much can we increase this channel?
+        // By how much can we increase this channel?
         double largestComp = 0.0;
         for (const DBufferRow &row : data) {
           if (row.antenna1 != row.antenna2) {
@@ -167,15 +167,15 @@ void AFTimeBlockEncoder::fitToMaximum(
         double factor = (largestComp == 0.0)
                             ? 0.0
                             : (gausEncoder.MaxQuantity() / largestComp - 1.0);
-        // how much does this increase the total?
+        // How much does this increase the total?
         double thisIncrease = 0.0;
         for (DBufferRow &row : data) {
           if (row.antenna1 != row.antenna2) {
             std::complex<double> v =
                 row.visibilities[channel * _nPol + polIndex] * double(factor);
-            double av = std::fabs(v.real()) + std::fabs(v.imag());
-            if (std::isfinite(av))
-              thisIncrease += av;
+            const double absoluteValue = std::fabs(v.real()) + std::fabs(v.imag());
+            if (std::isfinite(absoluteValue))
+              thisIncrease += absoluteValue;
           }
         }
         if (thisIncrease > bestChannelIncrease) {
@@ -238,19 +238,28 @@ void AFTimeBlockEncoder::fitToMaximum(
         }
       }
       // The benefit was calculated for increasing an antenna and increasing a
-      // channel Select which of those two has the largest benefit and apply:
+      // channel. Select which of those two has the largest benefit and apply:
       if (bestAntennaIncrease > bestChannelIncrease) {
         double factor =
             (maxCompPerAntenna[bestAntenna] == 0.0)
-                ? 0.0
+                ? 1.0
                 : (gausEncoder.MaxQuantity() / maxCompPerAntenna[bestAntenna]);
-        isProgressing = factor > 1.01;
-        changeAntennaFactor(data, metaBuffer, bestAntenna, antennaCount,
-                            polIndex, factor);
+        if (factor < 1.0)
+          isProgressing = false;
+        else {
+          isProgressing = factor > 1.01;
+          changeAntennaFactor(data, metaBuffer, bestAntenna, antennaCount,
+                              polIndex, factor);
+        }
       } else {
-        changeChannelFactor(data, metaBuffer, bestChannel * _nPol + polIndex,
-                            channelFactor);
-        isProgressing = channelFactor > 1.001;
+        if (channelFactor < 1.0) {
+          isProgressing = false;
+        }
+        else {
+          isProgressing = channelFactor > 1.001;
+          changeChannelFactor(data, metaBuffer, bestChannel * _nPol + polIndex,
+                              channelFactor);
+        }
       }
     } while (isProgressing);
   }
@@ -278,7 +287,9 @@ void AFTimeBlockEncoder::encode(
   for (DBufferRow &row : data) {
     for (size_t i = 0; i != visPerRow; ++i) {
       double rms = channelRMSes[i].RMS();
-      row.visibilities[i] /= rms;
+      if (rms != 0.0) {
+        row.visibilities[i] /= rms;
+      }
       metaBuffer[i] = rms;
     }
   }
