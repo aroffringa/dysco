@@ -34,18 +34,18 @@ void createDyscoStManColumn(casacore::Table &ms, const std::string &name,
     std::cout << "Constructing storage manager...\n";
     DyscoStMan dataManager(bitsPerComplex, bitsPerWeight);
     switch (distribution) {
-    case GaussianDistribution:
-      dataManager.SetGaussianDistribution();
-      break;
-    case UniformDistribution:
-      dataManager.SetUniformDistribution();
-      break;
-    case StudentsTDistribution:
-      dataManager.SetStudentsTDistribution(studentsTNu);
-      break;
-    case TruncatedGaussianDistribution:
-      dataManager.SetTruncatedGaussianDistribution(distributionTruncation);
-      break;
+      case GaussianDistribution:
+        dataManager.SetGaussianDistribution();
+        break;
+      case UniformDistribution:
+        dataManager.SetUniformDistribution();
+        break;
+      case StudentsTDistribution:
+        dataManager.SetStudentsTDistribution(studentsTNu);
+        break;
+      case TruncatedGaussianDistribution:
+        dataManager.SetTruncatedGaussianDistribution(distributionTruncation);
+        break;
     }
     dataManager.SetNormalization(normalization);
     if (staticSeed) {
@@ -178,8 +178,7 @@ int main(int argc, char *argv[]) {
     ++argi;
   }
 
-  if (columnNames.empty())
-    columnNames.push_back("DATA");
+  if (columnNames.empty()) columnNames.push_back("DATA");
   std::string msPath = argv[argi];
 
   std::cout << "\tbits per data val = " << bitsPerFloat
@@ -189,37 +188,37 @@ int main(int argc, char *argv[]) {
             << "\n"
                "\tdistribution = ";
   switch (distribution) {
-  case UniformDistribution:
-    std::cout << "Uniform";
-    break;
-  case GaussianDistribution:
-    std::cout << "Gaussian";
-    break;
-  case TruncatedGaussianDistribution:
-    std::cout << "Truncated Gaussian with sigma=" << distributionTruncation;
-    break;
-  case StudentsTDistribution:
-    std::cout << "Student T";
-    break;
-  default:
-    std::cout << "?";
-    break;
+    case UniformDistribution:
+      std::cout << "Uniform";
+      break;
+    case GaussianDistribution:
+      std::cout << "Gaussian";
+      break;
+    case TruncatedGaussianDistribution:
+      std::cout << "Truncated Gaussian with sigma=" << distributionTruncation;
+      break;
+    case StudentsTDistribution:
+      std::cout << "Student T";
+      break;
+    default:
+      std::cout << "?";
+      break;
   }
   std::cout << "\n"
                "\tnormalization = ";
   switch (normalization) {
-  case Normalization::kAF:
-    std::cout << "AF";
-    break;
-  case Normalization::kRF:
-    std::cout << "RF";
-    break;
-  case Normalization::kRow:
-    std::cout << "Row";
-    break;
-  default:
-    std::cout << "?";
-    break;
+    case Normalization::kAF:
+      std::cout << "AF";
+      break;
+    case Normalization::kRF:
+      std::cout << "RF";
+      break;
+    case Normalization::kRow:
+      std::cout << "Row";
+      break;
+    default:
+      std::cout << "?";
+      break;
   }
   std::cout << "\n\n";
 
@@ -250,8 +249,7 @@ int main(int argc, char *argv[]) {
           }
           ++f;
         }
-        if (isChanged)
-          dataCol.put(row, dataArr);
+        if (isChanged) dataCol.put(row, dataArr);
       }
     }
   }

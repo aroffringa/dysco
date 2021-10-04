@@ -30,7 +30,7 @@
         @author A.R. Offringa <offringa@astro.rug.nl>
 */
 class Stopwatch {
-public:
+ public:
   Stopwatch();
   explicit Stopwatch(bool start);
   ~Stopwatch();
@@ -50,7 +50,7 @@ public:
   std::string ToMicroSecondsString() const;
   std::string ToNanoSecondsString() const;
 
-private:
+ private:
   bool _running;
   boost::posix_time::ptime _startTime;
   boost::posix_time::time_duration _sum;

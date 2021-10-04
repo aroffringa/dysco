@@ -18,7 +18,7 @@ namespace dyscostman {
  * @author André Offringa
  */
 class StManModifier {
-public:
+ public:
   /**
    * Constructor.
    * @param ms Measurement set on which to operate.
@@ -92,7 +92,8 @@ public:
   template <typename T>
   bool PrepareReplacingColumn(const std::string &columnName,
                               const std::string &newDataManager,
-                              unsigned /*bitsPerComplex*/, unsigned /*bitsPerWeight*/,
+                              unsigned /*bitsPerComplex*/,
+                              unsigned /*bitsPerWeight*/,
                               casacore::IPosition &shape) {
     const std::string dataManager = GetStorageManager<T>(columnName);
     std::cout << "Current data manager of " + columnName + " column: "
@@ -119,7 +120,8 @@ public:
    * @tparam T Type of array column
    * @param columnName Name of column.
    */
-  template <typename T> void MoveColumnData(const std::string &columnName) {
+  template <typename T>
+  void MoveColumnData(const std::string &columnName) {
     std::cout << "Copying values for " << columnName << " ...\n";
     std::string tempName = std::string("TEMP_") + columnName;
     std::unique_ptr<casacore::ArrayColumn<T>> oldColumn(
@@ -145,8 +147,7 @@ public:
                       const std::string &msLocation) {
     std::cout << "Reordering ms...\n";
     std::string tempName = msLocation;
-    while (*tempName.rbegin() == '/')
-      tempName.resize(tempName.size() - 1);
+    while (*tempName.rbegin() == '/') tempName.resize(tempName.size() - 1);
     tempName += "temp";
     ms->deepCopy(tempName, casacore::Table::New, true);
     ms->markForDelete();
@@ -156,7 +157,7 @@ public:
     ms->rename(std::string(msLocation), casacore::Table::New);
   }
 
-private:
+ private:
   casacore::Table &_ms;
 
   template <typename T>
@@ -170,6 +171,6 @@ private:
   }
 };
 
-} // namespace dyscostman
+}  // namespace dyscostman
 
 #endif
