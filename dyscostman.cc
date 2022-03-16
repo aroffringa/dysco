@@ -164,7 +164,7 @@ casacore::Bool DyscoStMan::flush(casacore::AipsIO &,
   return false;
 }
 
-void DyscoStMan::create64(casacore::rownr_t nRow) {
+void DyscoStMan::create(casacore::uInt nRow) {
   _nRow = nRow;
   _fStream.reset(new std::fstream(
       fileName().c_str(),
@@ -281,7 +281,7 @@ void DyscoStMan::initializeRowsPerBlock(size_t rowsPerBlock,
   if (writeToHeader) writeHeader();
 }
 
-casacore::rownr_t DyscoStMan::open64(casacore::rownr_t nRow, casacore::AipsIO &) {
+void DyscoStMan::open(casacore::uInt nRow, casacore::AipsIO &) {
   _nRow = nRow;
   _fStream.reset(new std::fstream(fileName().c_str(),
                                   std::ios_base::in | std::ios_base::out));
@@ -302,7 +302,6 @@ casacore::rownr_t DyscoStMan::open64(casacore::rownr_t nRow, casacore::AipsIO &)
     _nBlocksInFile = (size_t(size) - _headerSize) / _blockSize;
   else
     _nBlocksInFile = 0;
-  return nRow;
 }
 
 casacore::DataManagerColumn *DyscoStMan::makeScalarColumn(
@@ -345,10 +344,7 @@ casacore::DataManagerColumn *DyscoStMan::makeIndArrColumn(
       "column desc constructor");
 }
 
-casacore::rownr_t DyscoStMan::resync64(casacore::rownr_t nRow)
-{
-  return nRow;
-}
+void DyscoStMan::resync(casacore::uInt /*nRow*/) {}
 
 void DyscoStMan::deleteManager() { unlink(fileName().c_str()); }
 
@@ -381,9 +377,9 @@ void DyscoStMan::prepare() {
 
 void DyscoStMan::reopenRW() {}
 
-void DyscoStMan::addRow64(casacore::rownr_t nrrow) { _nRow += nrrow; }
+void DyscoStMan::addRow(casacore::uInt nrrow) { _nRow += nrrow; }
 
-void DyscoStMan::removeRow64(casacore::rownr_t rowNr) {
+void DyscoStMan::removeRow(casacore::uInt rowNr) {
   if (rowNr != _nRow - 1)
     throw DyscoStManError(
         "Trying to remove a row in the middle of the file: "

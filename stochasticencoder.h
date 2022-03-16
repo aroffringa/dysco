@@ -98,7 +98,6 @@ class StochasticEncoder {
    * Use Decode() on the returned symbol to get
    * the decoded value.
    * @param value Floating point value to be encoded.
-   * @param ditherValue The dithering value to apply.
    */
   symbol_t EncodeWithDithering(ValueType value, unsigned ditherValue) const {
     if (std::isfinite(value)) {
