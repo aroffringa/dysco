@@ -24,7 +24,7 @@ namespace dyscostman {
 class DyscoStMan;
 
 /**
- * A column for storing compressed values in a threaded way, tailored for the
+ * A column for storing compressed values in a threaded way, tailered for the
  * data and weight columns that use a threaded approach for encoding.
  * @author André Offringa
  */
@@ -50,8 +50,8 @@ class ThreadedDyscoColumn : public DyscoStManColumn {
   virtual void setShapeColumn(const casacore::IPosition &shape) override;
 
   /** Get the dimensions of the values in a particular row.
-   * The rownr parameter is not used as the shape is the same for all rows. */
-  virtual casacore::IPosition shape(casacore::rownr_t /*rownr*/) override {
+   * @param rownr The row to get the shape for. */
+  virtual casacore::IPosition shape(casacore::uInt /*rownr*/) override {
     return _shape;
   }
 
@@ -61,10 +61,18 @@ class ThreadedDyscoColumn : public DyscoStManColumn {
    * @param rowNr The row number to get the values for.
    * @param dataPtr The array of values, which should be a contiguous array.
    */
-  virtual void getArrayV(
-      casacore::rownr_t rowNr,
-      casacore::ArrayBase &dataPtr) override {
-      return DyscoStManColumn::getArrayV(rowNr, dataPtr);
+  virtual void getArrayComplexV(
+      casacore::uInt rowNr,
+      casacore::Array<casacore::Complex> *dataPtr) override {
+    // Note that this method is specialized for std::complex<float> -- the
+    // generic method won't do anything
+    return DyscoStManColumn::getArrayComplexV(rowNr, dataPtr);
+  }
+  virtual void getArrayfloatV(casacore::uInt rowNr,
+                              casacore::Array<float> *dataPtr) override {
+    // Note that this method is specialized for float -- the generic method
+    // won't do anything
+    return DyscoStManColumn::getArrayfloatV(rowNr, dataPtr);
   }
 
   /**
@@ -74,10 +82,18 @@ class ThreadedDyscoColumn : public DyscoStManColumn {
    * @param rowNr The row number to write the values to.
    * @param dataPtr The data pointer, which should be a contiguous array.
    */
-  virtual void putArrayV(
-      casacore::rownr_t rowNr,
-      const casacore::ArrayBase &dataPtr) override {
-    return DyscoStManColumn::putArrayV(rowNr, dataPtr);
+  virtual void putArrayComplexV(
+      casacore::uInt rowNr,
+      const casacore::Array<casacore::Complex> *dataPtr) override {
+    // Note that this method is specialized for std::complex<float> -- the
+    // generic method won't do anything
+    return DyscoStManColumn::putArrayComplexV(rowNr, dataPtr);
+  }
+  virtual void putArrayfloatV(casacore::uInt rowNr,
+                              const casacore::Array<float> *dataPtr) override {
+    // Note that this method is specialized for float -- the generic method
+    // won't do anything
+    return DyscoStManColumn::putArrayfloatV(rowNr, dataPtr);
   }
 
   virtual void Prepare(DyscoDistribution distribution,
@@ -174,8 +190,8 @@ class ThreadedDyscoColumn : public DyscoStManColumn {
 
   typedef std::map<size_t, CacheItem *> cache_t;
 
-  void getValues(casacore::rownr_t rowNr, casacore::Array<data_t> *dataPtr);
-  void putValues(casacore::rownr_t rowNr, const casacore::Array<data_t> *dataPtr);
+  void getValues(casacore::uInt rowNr, casacore::Array<data_t> *dataPtr);
+  void putValues(casacore::uInt rowNr, const casacore::Array<data_t> *dataPtr);
 
   void stopThreads();
   void encodeAndWrite(size_t blockIndex, const CacheItem &item,
@@ -212,24 +228,24 @@ class ThreadedDyscoColumn : public DyscoStManColumn {
 };
 
 template <>
-inline void ThreadedDyscoColumn<std::complex<float>>::getArrayV(
-    casacore::rownr_t rowNr, casacore::ArrayBase &dataPtr) {
-  getValues(rowNr, static_cast<casacore::Array<std::complex<float>>*>(&dataPtr));
+inline void ThreadedDyscoColumn<std::complex<float>>::getArrayComplexV(
+    casacore::uInt rowNr, casacore::Array<casacore::Complex> *dataPtr) {
+  getValues(rowNr, dataPtr);
 }
 template <>
-inline void ThreadedDyscoColumn<std::complex<float>>::putArrayV(
-    casacore::rownr_t rowNr, const casacore::ArrayBase &dataPtr) {
-  putValues(rowNr, static_cast<const casacore::Array<std::complex<float>>*>(&dataPtr));
+inline void ThreadedDyscoColumn<std::complex<float>>::putArrayComplexV(
+    casacore::uInt rowNr, const casacore::Array<casacore::Complex> *dataPtr) {
+  putValues(rowNr, dataPtr);
 }
 template <>
-inline void ThreadedDyscoColumn<float>::getArrayV(
-    casacore::rownr_t rowNr, casacore::ArrayBase &dataPtr) {
-  getValues(rowNr, static_cast<casacore::Array<float>*>(&dataPtr));
+inline void ThreadedDyscoColumn<float>::getArrayfloatV(
+    casacore::uInt rowNr, casacore::Array<float> *dataPtr) {
+  getValues(rowNr, dataPtr);
 }
 template <>
-inline void ThreadedDyscoColumn<float>::putArrayV(
-    casacore::rownr_t rowNr, const casacore::ArrayBase &dataPtr) {
-  putValues(rowNr, static_cast<const casacore::Array<float>*>(&dataPtr));
+inline void ThreadedDyscoColumn<float>::putArrayfloatV(
+    casacore::uInt rowNr, const casacore::Array<float> *dataPtr) {
+  putValues(rowNr, dataPtr);
 }
 
 extern template class ThreadedDyscoColumn<std::complex<float>>;
