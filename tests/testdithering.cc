@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(avg_deviation) {
             BOOST_CHECK_LE(ditheredError, 1e-9);
           } else {
             BOOST_CHECK_LT(ditheredError, unditheredError);
-            BOOST_CHECK(ditheredError <= previousError[j] || ditheredError < 1e5);
+            BOOST_CHECK_LE(ditheredError, previousError[j]*10.0);
           }
           previousError[j] = ditheredError;
         }
