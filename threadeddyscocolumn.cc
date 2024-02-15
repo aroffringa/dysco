@@ -105,22 +105,21 @@ void ThreadedDyscoColumn<DataType>::loadBlock(size_t blockIndex) {
 
 template <typename DataType>
 void ThreadedDyscoColumn<DataType>::getValues(
-    casacore::uInt rowNr, casacore::Array<DataType> *dataPtr) {
+    casacore::uInt rowNr, casacore::Array<DataType> *dataArr) {
   if (!areOffsetsInitialized()) {
     // Trying to read before first block was written -- return zero
     // TODO if a few rows were written of the first block, those are
     // incorrectly returned. This is a rare case but can be fixed.
-    for (typename casacore::Array<DataType>::contiter i = dataPtr->cbegin();
-         i != dataPtr->cend(); ++i)
-      *i = DataType();
+    *dataArr = DataType();
   } else {
     size_t blockIndex = getBlockIndex(rowNr);
     if (blockIndex >= nBlocksInFile()) {
       // Trying to read a row that was not stored yet -- return zero
-      for (typename casacore::Array<DataType>::contiter i = dataPtr->cbegin();
-           i != dataPtr->cend(); ++i)
-        *i = DataType();
+     *dataArr = DataType();
     } else {
+      // Make sure array storage is contiguous.
+      casacore::Bool deleteIt;
+      DataType* dataPtr = dataArr->getStorage (deleteIt);
       std::unique_lock<std::mutex> lock(_mutex);
       // Wait until the block to be read is not in the write cache
       typename cache_t::const_iterator cacheItemPtr = _cache.find(blockIndex);
@@ -137,7 +136,8 @@ void ThreadedDyscoColumn<DataType>::getValues(
 
       // The time block encoder is now initialized and contains the unpacked
       // block.
-      _timeBlockBuffer->GetData(getRowWithinBlock(rowNr), dataPtr->data());
+      _timeBlockBuffer->GetData(getRowWithinBlock(rowNr), dataPtr);
+      dataArr->putStorage (dataPtr, deleteIt);
     }
   }
 }
