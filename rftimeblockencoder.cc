@@ -41,14 +41,12 @@ void RFTimeBlockEncoder::getBestChannelIncrease(const std::vector<DBufferRow> &d
     // By how much can we increase this channel?
     double largest_component = 0.0;
     for (const DBufferRow &row : data) {
-      if (row.antenna1 != row.antenna2) {
-        const std::complex<double> *ptr =
-            &row.visibilities[channel];
-        double local_max = std::max(std::max(ptr->real(), ptr->imag()),
-                                    -std::min(ptr->real(), ptr->imag()));
-        if (std::isfinite(local_max) && local_max > largest_component)
-          largest_component = local_max;
-      }
+      const std::complex<double> *ptr =
+          &row.visibilities[channel];
+      double local_max = std::max(std::max(ptr->real(), ptr->imag()),
+                                  -std::min(ptr->real(), ptr->imag()));
+      if (std::isfinite(local_max) && local_max > largest_component)
+        largest_component = local_max;
     }
     double factor = (largest_component == 0.0)
                         ? 0.0
@@ -56,13 +54,11 @@ void RFTimeBlockEncoder::getBestChannelIncrease(const std::vector<DBufferRow> &d
     // How much does this increase the total?
     double thisIncrease = 0.0;
     for (const DBufferRow &row : data) {
-      if (row.antenna1 != row.antenna2) {
-        std::complex<double> v =
-            row.visibilities[channel * _nPol + polIndex] * double(factor);
-        const double absoluteValue =
-            std::fabs(v.real()) + std::fabs(v.imag());
-        if (std::isfinite(absoluteValue)) thisIncrease += absoluteValue;
-      }
+      std::complex<double> v =
+          row.visibilities[channel * _nPol + polIndex] * double(factor);
+      const double absoluteValue =
+          std::fabs(v.real()) + std::fabs(v.imag());
+      if (std::isfinite(absoluteValue)) thisIncrease += absoluteValue;
     }
     if (thisIncrease > bestChannelIncrease) {
       bestChannelIncrease = thisIncrease;
@@ -152,15 +148,15 @@ void RFTimeBlockEncoder::fitToMaximum(std::vector<DBufferRow> &data, float *meta
       // The benefit was calculated for increasing the row factor and for increasing the
       // channel factor. Select which of those two has the largest benefit and apply:
       if (bestRowIncrease > bestChannelIncrease) {
-        double factor =
+        double rowFactor =
             (maxCompPerRow[bestRow] == 0.0)
                 ? 1.0
                 : (gausEncoder.MaxQuantity() / maxCompPerRow[bestRow]);
-        if (factor < 1.0)
+        if (rowFactor < 1.0)
           isProgressing = false;
         else {
-          isProgressing = factor > 1.01;
-          changeRowFactor(data, metaBuffer, bestRow, factor);
+          isProgressing = rowFactor > 1.01;
+          changeRowFactor(data, metaBuffer, bestRow, rowFactor);
         }
       } else {
         if (channelFactor < 1.0) {
