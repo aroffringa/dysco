@@ -24,7 +24,7 @@ namespace dyscostman {
 class DyscoStMan;
 
 /**
- * A column for storing compressed values in a threaded way, tailered for the
+ * A column for storing compressed values in a threaded way, tailored for the
  * data and weight columns that use a threaded approach for encoding.
  * @author André Offringa
  */

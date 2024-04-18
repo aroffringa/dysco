@@ -168,7 +168,10 @@ void ThreadedDyscoColumn<DataType>::storeBlock() {
 
 template <typename DataType>
 void ThreadedDyscoColumn<DataType>::putValues(
-    casacore::uInt rowNr, const casacore::Array<DataType> *dataPtr) {
+    casacore::uInt rowNr, const casacore::Array<DataType> *dataArr) {
+  // Make sure array storage is contiguous.
+  casacore::Bool deleteIt;
+  const DataType* dataPtr = dataArr->getStorage (deleteIt);
   if (!areOffsetsInitialized()) {
     // If the manager did not initialize its offsets yet, then it is determined
     // from the first "time block" (a block with the same time, field and spw)
@@ -207,11 +210,12 @@ void ThreadedDyscoColumn<DataType>::putValues(
       // Load new block
       loadBlock(blockIndex);
     }
-    _timeBlockBuffer->SetData(blockRow, ant1, ant2, dataPtr->data());
+    _timeBlockBuffer->SetData(blockRow, ant1, ant2, dataPtr);
   } else {
-    _timeBlockBuffer->SetData(rowNr, ant1, ant2, dataPtr->data());
+    _timeBlockBuffer->SetData(rowNr, ant1, ant2, dataPtr);
   }
   _isCurrentBlockChanged = true;
+  dataArr->freeStorage (dataPtr, deleteIt);
 }
 
 template <typename DataType>
