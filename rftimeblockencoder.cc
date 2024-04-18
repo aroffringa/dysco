@@ -3,16 +3,6 @@
 
 #include <random>
 
-namespace {
-void changeChannelFactor(std::vector<RFTimeBlockEncoder::DBufferRow> &data,
-                                            float *metaBuffer, size_t visIndex,
-                                            double factor) {
-  metaBuffer[visIndex] /= factor;
-  for (RFTimeBlockEncoder::DBufferRow &row : data) row.visibilities[visIndex] *= factor;
-}
-
-}
-
 RFTimeBlockEncoder::RFTimeBlockEncoder(size_t nPol, size_t nChannels)
     : _nPol(nPol),
       _nChannels(nChannels),
@@ -23,51 +13,13 @@ RFTimeBlockEncoder::RFTimeBlockEncoder(size_t nPol, size_t nChannels)
 
 RFTimeBlockEncoder::~RFTimeBlockEncoder() = default;
 
-void RFTimeBlockEncoder::fitToMaximum(std::vector<DBufferRow> &data, float *metaBuffer,
+void RFTimeBlockEncoder::maximizeRows(std::vector<DBufferRow> &data, float *metaBuffer,
     const dyscostman::StochasticEncoder<float> &gausEncoder) {
-  const size_t visPerRow = _nPol * _nChannels;
-  // Scale channels: channels are scaled such that the maximum
-  // value equals the maximum encodable value
-  for (size_t visIndex = 0; visIndex != visPerRow; ++visIndex) {
-    double largest_component = 0.0;
-    for (const DBufferRow &row : data) {
-      const std::complex<double> *ptr = &row.visibilities[visIndex];
-      double local_max = std::max(std::max(ptr->real(), ptr->imag()),
-                                  -std::min(ptr->real(), ptr->imag()));
-      if (std::isfinite(local_max) && local_max > largest_component)
-        largest_component = local_max;
-    }
-    const double factor =
-        (gausEncoder.MaxQuantity() == 0.0 || largest_component == 0.0)
-            ? 1.0
-            : gausEncoder.MaxQuantity() / largest_component;
-    changeChannelFactor(data, metaBuffer, visIndex, factor);
-  }
-}
-
-template <bool UseDithering>
-void RFTimeBlockEncoder::encode(
-    const dyscostman::StochasticEncoder<float> &gausEncoder,
-    const TimeBlockEncoder::FBuffer &buffer, float *metaBuffer,
-    TimeBlockEncoder::symbol_t *symbolBuffer, size_t /*antennaCount*/,
-    std::mt19937 *rnd) {
-  // Note that encoding is performed with doubles
-  std::vector<DBufferRow> data;
-  buffer.ConvertVector<std::complex<double>>(data);
-  const size_t visPerRow = _nPol * _nChannels;
-
-  for (size_t i = 0; i != visPerRow; ++i) {
-    metaBuffer[i] = 1.0;
-  }
-
   // Scale rows: Scale every row maximum to the max level.
   // Polarizations are processed separately: every polarization
-  // has its own row-scaling factor. Rows are processed before
-  // channels, because auto-correlations might have much
-  // higher values compared to cross-correlations. By first
-  // scaling the rows, the auto-correlations and cross-correlations
-  // are brought to the same level.
+  // has its own row-scaling factor.
   const double maxLevel = gausEncoder.MaxQuantity();
+  const size_t visPerRow = _nPol * _nChannels;
   for (size_t rowIndex = 0; rowIndex != data.size(); ++rowIndex) {
     DBufferRow &row = data[rowIndex];
     for (size_t polIndex = 0; polIndex != _nPol; ++polIndex) {
@@ -89,8 +41,52 @@ void RFTimeBlockEncoder::encode(
           (maxLevel == 0.0) ? 1.0 : max_val / maxLevel;
     }
   }
+}
 
-  fitToMaximum(data, metaBuffer, gausEncoder);
+void RFTimeBlockEncoder::maximizeChannels(std::vector<DBufferRow> &data, float *metaBuffer,
+    const dyscostman::StochasticEncoder<float> &gausEncoder) {
+  const size_t visPerRow = _nPol * _nChannels;
+  // Scale channels: channels are scaled such that the maximum
+  // value equals the maximum encodable value
+  for (size_t visIndex = 0; visIndex != visPerRow; ++visIndex) {
+    double largest_component = 0.0;
+    for (const DBufferRow &row : data) {
+      const std::complex<double> *ptr = &row.visibilities[visIndex];
+      double local_max = std::max(std::max(ptr->real(), ptr->imag()),
+                                  -std::min(ptr->real(), ptr->imag()));
+      if (std::isfinite(local_max) && local_max > largest_component)
+        largest_component = local_max;
+    }
+    const double factor =
+        (gausEncoder.MaxQuantity() == 0.0 || largest_component == 0.0)
+            ? 1.0
+            : gausEncoder.MaxQuantity() / largest_component;
+    metaBuffer[visIndex] = 1.0 / factor;
+    for (RFTimeBlockEncoder::DBufferRow &row : data) {
+      row.visibilities[visIndex] *= factor;
+    }
+  }
+}
+
+template <bool UseDithering>
+void RFTimeBlockEncoder::encode(
+    const dyscostman::StochasticEncoder<float> &gausEncoder,
+    const TimeBlockEncoder::FBuffer &buffer, float *metaBuffer,
+    TimeBlockEncoder::symbol_t *symbolBuffer, size_t /*antennaCount*/,
+    std::mt19937 *rnd) {
+  // Note that encoding is performed with doubles
+  std::vector<DBufferRow> data;
+  buffer.ConvertVector<std::complex<double>>(data);
+  const size_t visPerRow = _nPol * _nChannels;
+
+  // Rows are processed before
+  // channels, because auto-correlations might have much
+  // higher values compared to cross-correlations. By first
+  // scaling the rows, the auto-correlations and cross-correlations
+  // are brought to the same level.
+  maximizeRows(data, metaBuffer, gausEncoder);
+
+  maximizeChannels(data, metaBuffer, gausEncoder);
 
   symbol_t *symbolBufferPtr = symbolBuffer;
   for (const DBufferRow &row : data) {

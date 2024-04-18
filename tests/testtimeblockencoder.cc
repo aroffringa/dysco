@@ -353,9 +353,15 @@ BOOST_AUTO_TEST_CASE(rf_dynamic_range) {
                             "Imaginary output{" << out_data[ch]
                                                 << "} is finite, row " << row);
         if(a1 != weird_antenna || a2 != weird_antenna) {
-          const double expected = (ch == 0.0) ? 0.1 : 1.0;
+          const double expected = (ch == 0) ? 0.1 : 1.0;
           BOOST_CHECK_CLOSE_FRACTION(out_data[ch].real(), expected, 1e-4);
           BOOST_CHECK_CLOSE_FRACTION(out_data[ch].imag(), expected, 1e-4);
+        }
+        else if(ch != 0) {
+          // We don't test channel 0 because it can (and may) have a large error, because
+          // it is the only low value in this row.
+          BOOST_CHECK_CLOSE_FRACTION(out_data[ch].real(), 1e8, 1e-4);
+          BOOST_CHECK_CLOSE_FRACTION(out_data[ch].imag(), 1e8, 1e-4);
         }
       }
       ++row;
