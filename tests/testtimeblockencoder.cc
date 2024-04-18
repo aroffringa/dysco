@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(rf_dynamic_range) {
 
   TimeBlockBuffer<std::complex<float>> buffer(n_pol, n_chan);
   // row, ant1, ant2
-  constexpr std::complex<float> normal_row_values[n_chan] = {{1.0, 1.0}, {1.0, 1.0}, {1.0, 1.0}};
+  constexpr std::complex<float> normal_row_values[n_chan] = {{0.1, 0.1}, {1.0, 1.0}, {1.0, 1.0}};
   constexpr std::complex<float> weird_row_values[n_chan] = {{1.0, 1.0}, {1e8, 1e8}, {1e8, 1e8}};
   constexpr size_t weird_antenna = 1;
   size_t row = 0;
@@ -353,8 +353,9 @@ BOOST_AUTO_TEST_CASE(rf_dynamic_range) {
                             "Imaginary output{" << out_data[ch]
                                                 << "} is finite, row " << row);
         if(a1 != weird_antenna || a2 != weird_antenna) {
-          BOOST_CHECK_CLOSE_FRACTION(out_data[ch].real(), 1.0, 1e-4);
-          BOOST_CHECK_CLOSE_FRACTION(out_data[ch].imag(), 1.0, 1e-4);
+          const double expected = (ch == 0.0) ? 0.1 : 1.0;
+          BOOST_CHECK_CLOSE_FRACTION(out_data[ch].real(), expected, 1e-4);
+          BOOST_CHECK_CLOSE_FRACTION(out_data[ch].imag(), expected, 1e-4);
         }
       }
       ++row;
