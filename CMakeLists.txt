@@ -20,10 +20,25 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(PORTABLE "Generate portable code" OFF)
 option(BUILD_PACKAGES "Build Debian packages" OFF)
+option(PORTABLE "Build portable binaries (with slightly decreased performance)"
+       OFF)
+option(USE_AVX512F "Enable AVX-512F (AVX-512 Foundation) Extensions" OFF)
+option(USE_AVX2 "Enable AVX2 (Advanced Vector Extensions 2)" OFF)
+option(USE_AVX "Enable AVX (Advanced Vector Extensions)" OFF)
 
-if(NOT PORTABLE)
+if(PORTABLE)
+  if(USE_AVX512F
+     OR USE_AVX2
+     OR USE_AVX)
+    message(
+      FATAL_ERROR "Cannot enable AVX features when building portable binaries.")
+  endif()
+  message(
+    STATUS
+      "Portable build requested; a generic build will be created with slightly decreased performance."
+  )
+else()
   if(USE_AVX512F)
     add_compile_options(-mavx512f)
   elseif(USE_AVX2)
@@ -32,13 +47,6 @@ if(NOT PORTABLE)
     add_compile_options(-mavx)
   else()
     add_compile_options(-march=native)
-  endif()
-else()
-  if(USE_AVX512F
-     OR USE_AVX2
-     OR USE_AVX)
-    message(
-      FATAL_ERROR "Cannot enable AVX features when building portable code.")
   endif()
 endif()
 
