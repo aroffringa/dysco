@@ -23,30 +23,36 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(BUILD_PACKAGES "Build Debian packages" OFF)
 option(PORTABLE "Build portable binaries (with slightly decreased performance)"
        OFF)
-option(USE_AVX512F "Enable AVX-512F (AVX-512 Foundation) Extensions" OFF)
 option(USE_AVX2 "Enable AVX2 (Advanced Vector Extensions 2)" OFF)
-option(USE_AVX "Enable AVX (Advanced Vector Extensions)" OFF)
+option(USE_AVX512F "Enable AVX-512F (AVX-512 Foundation) Extensions" OFF)
+option(USE_FMA "Enable FMA (Fused Multiply Add) - implies use of AVX" OFF)
 
 if(PORTABLE)
-  if(USE_AVX512F
-     OR USE_AVX2
-     OR USE_AVX)
+  if(USE_AVX2
+     OR USE_AVX512F
+     OR USE_FMA)
     message(
-      FATAL_ERROR "Cannot enable AVX features when building portable binaries.")
+      FATAL_ERROR
+        "Cannot enable AVX/FMA features when building portable binaries.")
   endif()
   message(
     STATUS
       "Portable build requested; a generic build will be created with slightly decreased performance."
   )
 else()
-  if(USE_AVX512F)
-    add_compile_options(-mavx512f)
-  elseif(USE_AVX2)
-    add_compile_options(-mavx2)
-  elseif(USE_AVX)
-    add_compile_options(-mavx)
-  else()
+  if(NOT USE_AVX2
+     AND NOT USE_AVX512F
+     AND NOT USE_FMA)
     add_compile_options(-march=native)
+  else()
+    if(USE_AVX512F)
+      add_compile_options(-mavx512f)
+    elseif(USE_AVX2)
+      add_compile_options(-mavx2)
+    endif()
+    if(USE_FMA)
+      add_compile_options(-mfma)
+    endif()
   endif()
 endif()
 
