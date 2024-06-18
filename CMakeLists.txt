@@ -21,6 +21,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_PACKAGES "Build Debian packages" OFF)
+
+# User may optionally set `TARGET_CPU` if `PORTABLE=OFF`
 option(PORTABLE "Build portable binaries (with slightly decreased performance)"
        OFF)
 include(CMake/SetTargetCPU.cmake)
