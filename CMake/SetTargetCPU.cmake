@@ -7,7 +7,13 @@
 
 include(CheckCXXCompilerFlag)
 if(PORTABLE)
-  if(DEFINED TARGET_CPU)
+  # Empty by default, will be overridden when given on the command-line
+  set(TARGET_CPU
+      CACHE
+        STRING
+        "Tell the compiler to build code for the given CPU, e.g. for building containers for a different platform"
+  )
+  if(TARGET_CPU)
     message(
       FATAL_ERROR
         "You cannot specify a target CPU when building portable binaries. "
@@ -15,14 +21,19 @@ if(PORTABLE)
   endif()
   message(
     WARNING
-      "Building portable binaries, which will have slightly decreased performance."
+      "Building portable binaries, which will have slighly decreased performance."
   )
 else()
-  if(NOT DEFINED TARGET_CPU)
-    set(TARGET_CPU native)
+  if(NOT TARGET_CPU)
+    # If not set, force it to use native CPU by default
+    set(TARGET_CPU
+        native
+        CACHE
+          STRING
+          "Tell the compiler to build code for the given CPU, e.g. for building containers for a different platform"
+          FORCE)
   endif()
-  # Unset cached variable to force a check; the user may have given a different
-  # value for TARGET_CPU.
+  # Unset cached variable to force a check; value of TARGET_CPU may have changed
   unset(COMPILER_SUPPORTS_TARGET_CPU CACHE)
   check_cxx_compiler_flag("-march=${TARGET_CPU}" COMPILER_SUPPORTS_TARGET_CPU)
   if(COMPILER_SUPPORTS_TARGET_CPU)
