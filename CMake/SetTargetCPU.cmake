@@ -21,7 +21,7 @@ if(PORTABLE)
   endif()
   message(
     WARNING
-      "Building portable binaries, which will have slighly decreased performance."
+      "Building portable binaries, which will have slightly decreased performance."
   )
 else()
   if(NOT TARGET_CPU)
