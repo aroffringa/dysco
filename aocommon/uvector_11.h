@@ -1,24 +1,24 @@
-#ifndef AO_UVECTOR_H
-#define AO_UVECTOR_H
+#ifndef AOCOMMON_UVECTOR_11_H_
+#define AOCOMMON_UVECTOR_11_H_
 
 #include <algorithm>
 #include <cstring>
 #include <iterator>
 #include <memory>
-#include <utility>
 #include <stdexcept>
+#include <utility>
 
 /**
  * @file uvector.h
- * Header file for uvector and its relational and swap functions.
+ * Header file for UVector and its relational and swap functions.
  * @author André Offringa
  * @copyright André Offringa, 2013, distributed under the GPL license version 3.
  */
 
-namespace ao {
+namespace aocommon {
 
 /**
- * @defgroup uvector Class uvector and related functions.
+ * @defgroup UVector Class UVector and related functions.
  * @{
  */
 
@@ -27,7 +27,7 @@ namespace ao {
  * without initializing its elements.
  * @details This container is similar to a std::vector, except that it can be
  * constructed without initializing its elements. This saves the overhead of
- * initialization, hence the constructor @ref uvector(size_t) is significantly
+ * initialization, hence the constructor @ref UVector(size_t) is significantly
  * faster than the corresponding std::vector constructor, and has no overhead
  * compared to a manually allocated array.
  *
@@ -40,7 +40,7 @@ namespace ao {
  * ifstream file("myfile.bin");
  *
  * // Construct a buffer for this file
- * uvector<char> buffer(buffer_size);
+ * UVector<char> buffer(buffer_size);
  *
  * // Read some data into the buffer
  * file.read(&buffer[0], buffer_size);
@@ -54,7 +54,7 @@ namespace ao {
  * for almost all non-trivial types.
  *
  * The methods with different semantics compared to std::vector are:
- * * @ref uvector(size_t n)
+ * * @ref UVector(size_t n)
  * * @ref resize(size_t n)
  *
  * Also the following new members are introduced:
@@ -73,18 +73,11 @@ namespace ao {
  * @author André Offringa
  * @copyright André Offringa, 2013, distributed under the GPL license version 3.
  */
-template <typename Tp, typename Alloc = std::allocator<Tp> >
-class uvector : private Alloc {
+template <typename Tp, typename Alloc = std::allocator<Tp>>
+class UVector : private Alloc {
   static_assert(std::is_standard_layout<Tp>(),
-                "A uvector can only hold classes with standard layout");
+                "A UVector can only hold classes with standard layout");
 
- private:
-#if __cplusplus > 201402L
-  typedef std::allocator_traits<allocator_type>::is_always_equal
-      allocator_is_always_equal;
-#else
-  typedef std::false_type allocator_is_always_equal;
-#endif
  public:
   /// Element type
   typedef Tp value_type;
@@ -114,13 +107,19 @@ class uvector : private Alloc {
   typedef std::size_t size_type;
 
  private:
+#if __cplusplus > 201402L
+  typedef typename std::allocator_traits<allocator_type>::is_always_equal
+      allocator_is_always_equal;
+#else
+  typedef std::false_type allocator_is_always_equal;
+#endif
   pointer _begin, _end, _endOfStorage;
 
  public:
-  /** @brief Construct an empty uvector.
+  /** @brief Construct an empty UVector.
    * @param allocator Allocator used for allocating and deallocating memory.
    */
-  explicit uvector(const allocator_type& allocator = Alloc()) noexcept
+  explicit UVector(const allocator_type& allocator = Alloc()) noexcept
       : Alloc(allocator),
         _begin(nullptr),
         _end(nullptr),
@@ -131,19 +130,19 @@ class uvector : private Alloc {
    * @details This constructor deviates from std::vector's behaviour, because it
    * will not value construct its elements. It is therefore faster than the
    * corresponding constructor of std::vector.
-   * @param n Number of elements that the uvector will be initialized with.
+   * @param n Number of elements that the UVector will be initialized with.
    */
-  explicit uvector(size_t n)
+  explicit UVector(size_t n)
       : _begin(allocate(n)), _end(_begin + n), _endOfStorage(_end) {}
 
   /** @brief Construct a vector with given amount of elements and set these to a
    * specific value.
    * @details This constructor will initialize its members with the given value.
-   * @param n Number of elements that the uvector will be initialized with.
+   * @param n Number of elements that the UVector will be initialized with.
    * @param val Value to initialize all elements with
    * @param allocator Allocator used for allocating and deallocating memory.
    */
-  uvector(size_t n, const value_type& val,
+  UVector(size_t n, const value_type& val,
           const allocator_type& allocator = Alloc())
       : Alloc(allocator),
         _begin(allocate(n)),
@@ -158,20 +157,20 @@ class uvector : private Alloc {
    * @param allocator Allocator used for allocating and deallocating memory.
    */
   template <class InputIterator>
-  uvector(InputIterator first, InputIterator last,
+  UVector(InputIterator first, InputIterator last,
           const allocator_type& allocator = Alloc())
       : Alloc(allocator) {
     construct_from_range<InputIterator>(first, last,
                                         std::is_integral<InputIterator>());
   }
 
-  /** @brief Copy construct a uvector.
-   * @details The allocator of the new uvector will be initialized from
+  /** @brief Copy construct a UVector.
+   * @details The allocator of the new UVector will be initialized from
    * @c
    * std::allocator_traits<Alloc>::select_on_container_copy_construction(other).
-   * @param other Source uvector to be copied from.
+   * @param other Source UVector to be copied from.
    */
-  uvector(const uvector<Tp, Alloc>& other)
+  UVector(const UVector<Tp, Alloc>& other)
       : Alloc(
             std::allocator_traits<Alloc>::select_on_container_copy_construction(
                 static_cast<allocator_type>(other))),
@@ -181,11 +180,11 @@ class uvector : private Alloc {
     std::copy(other._begin, other._end, _begin);
   }
 
-  /** @brief Copy construct a uvector with custom allocator.
-   * @param other Source uvector to be copied from.
+  /** @brief Copy construct a UVector with custom allocator.
+   * @param other Source UVector to be copied from.
    * @param allocator Allocator used for allocating and deallocating memory.
    */
-  uvector(const uvector<Tp, Alloc>& other, const allocator_type& allocator)
+  UVector(const UVector<Tp, Alloc>& other, const allocator_type& allocator)
       : Alloc(allocator),
         _begin(allocate(other.size())),
         _end(_begin + other.size()),
@@ -193,10 +192,10 @@ class uvector : private Alloc {
     std::copy(other._begin, other._end, _begin);
   }
 
-  /** @brief Move construct a uvector.
-   * @param other Source uvector to be moved from.
+  /** @brief Move construct a UVector.
+   * @param other Source UVector to be moved from.
    */
-  uvector(uvector<Tp, Alloc>&& other) noexcept
+  UVector(UVector<Tp, Alloc>&& other) noexcept
       : Alloc(std::move(other)),
         _begin(other._begin),
         _end(other._end),
@@ -206,11 +205,11 @@ class uvector : private Alloc {
     other._endOfStorage = nullptr;
   }
 
-  /** @brief Move construct a uvector with custom allocator.
-   * @param other Source uvector to be moved from.
+  /** @brief Move construct a UVector with custom allocator.
+   * @param other Source UVector to be moved from.
    * @param allocator Allocator used for allocating and deallocating memory.
    */
-  uvector(uvector<Tp, Alloc>&& other, const allocator_type& allocator) noexcept
+  UVector(UVector<Tp, Alloc>&& other, const allocator_type& allocator) noexcept
       : Alloc(allocator),
         _begin(other._begin),
         _end(other._end),
@@ -220,11 +219,11 @@ class uvector : private Alloc {
     other._endOfStorage = nullptr;
   }
 
-  /** @brief Construct a uvector from a initializer list.
-   * @param initlist Initializer list used for initializing the new uvector.
+  /** @brief Construct a UVector from a initializer list.
+   * @param initlist Initializer list used for initializing the new UVector.
    * @param allocator Allocator used for allocating and deallocating memory.
    */
-  uvector(std::initializer_list<Tp> initlist,
+  UVector(std::initializer_list<Tp> initlist,
           const allocator_type& allocator = Alloc())
       : Alloc(allocator),
         _begin(allocate(initlist.size())),
@@ -240,25 +239,25 @@ class uvector : private Alloc {
   }
 
   /** @brief Destructor. */
-  ~uvector() noexcept { deallocate(); }
+  ~UVector() noexcept { deallocate(); }
 
-  /** @brief Assign another uvector to this uvector.
-   * @details The allocator of the uvector will be assigned to @p other when
+  /** @brief Assign another UVector to this UVector.
+   * @details The allocator of the UVector will be assigned to @p other when
    * std::allocator_traits<Alloc>::propagate_on_container_copy_assignment() is
    * of true_type.
    */
-  uvector& operator=(const uvector<Tp, Alloc>& other) {
+  UVector& operator=(const UVector<Tp, Alloc>& other) {
     return assign_copy_from(
         other, typename std::allocator_traits<
                    Alloc>::propagate_on_container_copy_assignment());
   }
 
-  /** @brief Assign another uvector to this uvector.
-   * @details The allocator of the uvector will be assigned to @p other when
+  /** @brief Assign another UVector to this UVector.
+   * @details The allocator of the UVector will be assigned to @p other when
    * std::allocator_traits<Alloc>::propagate_on_container_move_assignment() is
    * of true_type.
    */
-  uvector& operator=(uvector<Tp, Alloc>&& other) noexcept(
+  UVector& operator=(UVector<Tp, Alloc>&& other) noexcept(
       std::allocator_traits<
           Alloc>::propagate_on_container_move_assignment::value ||
       allocator_is_always_equal::value) {
@@ -357,8 +356,7 @@ class uvector : private Alloc {
       _endOfStorage = _begin + n;
     }
     _end = _begin + n;
-    if (oldSize < n)
-      std::uninitialized_fill<Tp*, size_t>(_begin + oldSize, _end, val);
+    if (oldSize < n) std::uninitialized_fill<Tp*>(_begin + oldSize, _end, val);
   }
 
   /** @brief Get the number of elements the container can currently hold without
@@ -371,7 +369,7 @@ class uvector : private Alloc {
 
   /** @brief Reserve space for a number of elements, to prevent the overhead of
    * extra reallocations.
-   * @details This has no effect on the working of the uvector, except that it
+   * @details This has no effect on the working of the UVector, except that it
    * might change the current capacity. This can enhance performance when a
    * large number of elements are added, and an approximate size is known a
    * priori.
@@ -394,7 +392,7 @@ class uvector : private Alloc {
 
   /** @brief Change the capacity of the container such that no extra space is
    * hold.
-   * @details This has no effect on the working of the uvector, except that it
+   * @details This has no effect on the working of the UVector, except that it
    * might change the current capacity. This can reduce the current memory usage
    * of the container.
    *
@@ -680,7 +678,7 @@ class uvector : private Alloc {
     return const_cast<iterator>(first);
   }
 
-  /** @brief Swap the contents of this uvector with the given uvector.
+  /** @brief Swap the contents of this UVector with the given UVector.
    * @details Iterators to both vectors will remain valid and will point into
    * to the swapped container afterwards. This function will never reallocate
    * space.
@@ -689,9 +687,9 @@ class uvector : private Alloc {
    * of the respective @c allocator_trait is @c true_type.
    * Its behaviour is undefined when the allocators do not compare equal and
    * @c propagate_on_container_swap is false.
-   * @param other Other uvector whose contents it to be swapped with this.
+   * @param other Other UVector whose contents it to be swapped with this.
    */
-  void swap(uvector<Tp, Alloc>& other) noexcept {
+  void swap(UVector<Tp, Alloc>& other) noexcept {
     swap(other,
          typename std::allocator_traits<Alloc>::propagate_on_container_swap());
   }
@@ -748,6 +746,7 @@ class uvector : private Alloc {
    * @param position Position of the new elements. The new elements will be
    * added before the old element at that position.
    * @param n Number of elements to add.
+   * @returns Iterator pointing to the start position of the written sequence
    */
   iterator insert_uninitialized(const_iterator position, size_t n) {
     if (capacity() < size() + n) {
@@ -943,7 +942,7 @@ class uvector : private Alloc {
 
   void check_bounds(size_t index) const {
     if (index >= size())
-      throw std::out_of_range("Access to element in uvector past end");
+      throw std::out_of_range("Access to element in UVector past end");
   }
 
   size_t enlarge_size(size_t extra_space_needed) const noexcept {
@@ -973,7 +972,7 @@ class uvector : private Alloc {
 
   // implementation of operator=(const&) without
   // propagate_on_container_copy_assignment
-  uvector& assign_copy_from(const uvector<Tp, Alloc>& other, std::false_type) {
+  UVector& assign_copy_from(const UVector<Tp, Alloc>& other, std::false_type) {
     const size_t n = other.size();
     if (n > capacity()) {
       iterator newStorage = allocate(n);
@@ -988,7 +987,7 @@ class uvector : private Alloc {
 
   // implementation of operator=(const&) with
   // propagate_on_container_copy_assignment
-  uvector& assign_copy_from(const uvector<Tp, Alloc>& other, std::true_type) {
+  UVector& assign_copy_from(const UVector<Tp, Alloc>& other, std::true_type) {
     if (allocator_is_always_equal() ||
         static_cast<Alloc&>(other) == static_cast<Alloc&>(*this)) {
       assign_copy_from(other, std::false_type());
@@ -1007,8 +1006,8 @@ class uvector : private Alloc {
 
   // implementation of operator=() without
   // propagate_on_container_move_assignment
-  uvector& assign_move_from(
-      uvector<Tp, Alloc>&& other,
+  UVector& assign_move_from(
+      UVector<Tp, Alloc>&& other,
       std::false_type) noexcept(allocator_is_always_equal::value) {
     if (allocator_is_always_equal::value ||
         static_cast<Alloc&>(other) == static_cast<Alloc&>(*this)) {
@@ -1030,7 +1029,7 @@ class uvector : private Alloc {
   }
 
   // implementation of operator=() with propagate_on_container_move_assignment
-  uvector& assign_move_from(uvector<Tp, Alloc>&& other,
+  UVector& assign_move_from(UVector<Tp, Alloc>&& other,
                             std::true_type) noexcept {
     deallocate();
     Alloc::operator=(std::move(static_cast<Alloc&>(other)));
@@ -1044,7 +1043,7 @@ class uvector : private Alloc {
   }
 
   // implementation of swap with propagate_on_container_swap
-  void swap(uvector<Tp, Alloc>& other, std::true_type) noexcept {
+  void swap(UVector<Tp, Alloc>& other, std::true_type) noexcept {
     std::swap(_begin, other._begin);
     std::swap(_end, other._end);
     std::swap(_endOfStorage, other._endOfStorage);
@@ -1052,7 +1051,7 @@ class uvector : private Alloc {
   }
 
   // implementation of swap without propagate_on_container_swap
-  void swap(uvector<Tp, Alloc>& other, std::false_type) noexcept {
+  void swap(UVector<Tp, Alloc>& other, std::false_type) noexcept {
     std::swap(_begin, other._begin);
     std::swap(_end, other._end);
     std::swap(_endOfStorage, other._endOfStorage);
@@ -1116,28 +1115,28 @@ class uvector : private Alloc {
   }
 };
 
-/** @brief Compare two uvectors for equality. */
+/** @brief Compare two UVectors for equality. */
 template <class Tp, class Alloc>
-inline bool operator==(const uvector<Tp, Alloc>& lhs,
-                       const uvector<Tp, Alloc>& rhs) noexcept {
+inline bool operator==(const UVector<Tp, Alloc>& lhs,
+                       const UVector<Tp, Alloc>& rhs) noexcept {
   return lhs.size() == rhs.size() &&
          std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-/** @brief Compare two uvectors for inequality. */
+/** @brief Compare two UVectors for inequality. */
 template <class Tp, class Alloc>
-inline bool operator!=(const uvector<Tp, Alloc>& lhs,
-                       const uvector<Tp, Alloc>& rhs) noexcept {
+inline bool operator!=(const UVector<Tp, Alloc>& lhs,
+                       const UVector<Tp, Alloc>& rhs) noexcept {
   return !(lhs == rhs);
 }
 
-/** @brief Compare two uvectors for smaller than.
- * @details If two uvectors compare equal up to the length of one, the uvector
+/** @brief Compare two UVectors for smaller than.
+ * @details If two UVectors compare equal up to the length of one, the UVector
  * with the smallest size is consider to be smaller.
  */
 template <class Tp, class Alloc>
-inline bool operator<(const uvector<Tp, Alloc>& lhs,
-                      const uvector<Tp, Alloc>& rhs) noexcept {
+inline bool operator<(const UVector<Tp, Alloc>& lhs,
+                      const UVector<Tp, Alloc>& rhs) noexcept {
   const size_t minSize = std::min(lhs.size(), rhs.size());
   for (size_t i = 0; i != minSize; ++i) {
     if (lhs[i] < rhs[i])
@@ -1148,13 +1147,13 @@ inline bool operator<(const uvector<Tp, Alloc>& lhs,
   return lhs.size() < rhs.size();
 }
 
-/** @brief Compare two uvectors for smaller than or equal.
- * @details If two uvectors compare equal up to the length of one, the uvector
+/** @brief Compare two UVectors for smaller than or equal.
+ * @details If two UVectors compare equal up to the length of one, the UVector
  * with the smallest size is consider to be smaller.
  */
 template <class Tp, class Alloc>
-inline bool operator<=(const uvector<Tp, Alloc>& lhs,
-                       const uvector<Tp, Alloc>& rhs) noexcept {
+inline bool operator<=(const UVector<Tp, Alloc>& lhs,
+                       const UVector<Tp, Alloc>& rhs) noexcept {
   const size_t minSize = std::min(lhs.size(), rhs.size());
   for (size_t i = 0; i != minSize; ++i) {
     if (lhs[i] < rhs[i])
@@ -1165,27 +1164,27 @@ inline bool operator<=(const uvector<Tp, Alloc>& lhs,
   return lhs.size() <= rhs.size();
 }
 
-/** @brief Compare two uvectors for larger than.
- * @details If two uvectors compare equal up to the length of one, the uvector
+/** @brief Compare two UVectors for larger than.
+ * @details If two UVectors compare equal up to the length of one, the UVector
  * with the smallest size is consider to be smaller.
  */
 template <class Tp, class Alloc>
-inline bool operator>(const uvector<Tp, Alloc>& lhs,
-                      const uvector<Tp, Alloc>& rhs) noexcept {
+inline bool operator>(const UVector<Tp, Alloc>& lhs,
+                      const UVector<Tp, Alloc>& rhs) noexcept {
   return rhs < lhs;
 }
 
-/** @brief Compare two uvectors for larger than or equal.
- * @details If two uvectors compare equal up to the length of one, the uvector
+/** @brief Compare two UVectors for larger than or equal.
+ * @details If two UVectors compare equal up to the length of one, the UVector
  * with the smallest size is consider to be smaller.
  */
 template <class Tp, class Alloc>
-inline bool operator>=(const uvector<Tp, Alloc>& lhs,
-                       const uvector<Tp, Alloc>& rhs) noexcept {
+inline bool operator>=(const UVector<Tp, Alloc>& lhs,
+                       const UVector<Tp, Alloc>& rhs) noexcept {
   return rhs <= lhs;
 }
 
-/** @brief Swap the contents of the two uvectors.
+/** @brief Swap the contents of the two UVectors.
  * @details Iterators to both vectors will remain valid and will point into
  * to the swapped container afterwards. This function will never reallocate
  * space.
@@ -1196,12 +1195,12 @@ inline bool operator>=(const uvector<Tp, Alloc>& lhs,
  * @c propagate_on_container_swap is false.
  */
 template <class Tp, class Alloc>
-inline void swap(uvector<Tp, Alloc>& x, uvector<Tp, Alloc>& y) {
+inline void swap(UVector<Tp, Alloc>& x, UVector<Tp, Alloc>& y) {
   x.swap(y);
 }
 
 /** @} */
 
-}  // end of namespace ao
+}  // namespace aocommon
 
-#endif  // AO_UVECTOR_H
+#endif  // AO_UVECTOR_11_H

@@ -13,7 +13,7 @@ const bool useUniform = false;
 
 BOOST_AUTO_TEST_SUITE(encode_example)
 
-void make(const std::string& filenamePrefix, ao::uvector<double> values) {
+void make(const std::string& filenamePrefix, aocommon::UVector<double> values) {
   std::mt19937 mt;
   std::uniform_int_distribution<unsigned> dist =
       StochasticEncoder<double>::GetDitherDistribution();
@@ -35,9 +35,9 @@ void make(const std::string& filenamePrefix, ao::uvector<double> values) {
   StochasticEncoder<float> enc =
       StochasticEncoder<float>::TruncatedGausEncoder(1 << bits, truncVal, rms);
 
-  ao::uvector<size_t> trials{1, 3, 10, 100};
+  aocommon::UVector<size_t> trials{1, 3, 10, 100};
   for (size_t trial : trials) {
-    ao::uvector<double> sums(values.size(), 0.0);
+    aocommon::UVector<double> sums(values.size(), 0.0);
 
     for (size_t instance = 0; instance != trial; ++instance) {
       for (size_t i = 0; i != values.size(); ++i) {
@@ -59,7 +59,7 @@ void make(const std::string& filenamePrefix, ao::uvector<double> values) {
 constexpr size_t n = 100;
 
 BOOST_AUTO_TEST_CASE(sinus) {
-  ao::uvector<double> values(n);
+  aocommon::UVector<double> values(n);
   for (size_t i = 0; i != n; ++i) {
     double x = double(i) * 2 * M_PI / n;
     values[i] = sin(x);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(sinus) {
 }
 
 BOOST_AUTO_TEST_CASE(oneOver) {
-  ao::uvector<double> values(n);
+  aocommon::UVector<double> values(n);
   for (size_t i = 0; i != n; ++i) {
     double x = double(i) / n;
     values[i] = 1.0 / (12.0 * x);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(oneOver) {
 }
 
 BOOST_AUTO_TEST_CASE(sinc) {
-  ao::uvector<double> values(n);
+  aocommon::UVector<double> values(n);
   for (size_t i = 1; i != n; ++i) {
     double x = double(i) / n * 2.5 * M_PI;
     values[i] = sin(x) / x;
