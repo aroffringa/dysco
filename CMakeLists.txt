@@ -16,7 +16,7 @@ include_directories(${CASACORE_INCLUDE_DIRS})
 include_directories(${GSL_INCLUDE_DIRS})
 
 add_compile_options(-O3 -Wall -DNDEBUG)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 

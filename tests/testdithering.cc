@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(avg_deviation) {
   // dithering: "; 	for(size_t j=0; j!=N; ++j) std::cout << ' ' <<
   // encoder.Decode(encoder.EncodeWithDithering(values[j], distribution(mt)));
   // 	std::cout << '\n';
-  ao::uvector<double> previousError(N, 10.0);
+  aocommon::UVector<double> previousError(N, 10.0);
   size_t check_point = 100;
   for (size_t i = 0; i != 1000000; ++i) {
     for (size_t j = 0; j != N; ++j) {
