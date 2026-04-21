@@ -68,7 +68,7 @@ if(DOXYGEN_FOUND)
     VERBATIM)
 endif(DOXYGEN_FOUND)
 
-find_package(Boost COMPONENTS system filesystem unit_test_framework)
+find_package(Boost COMPONENTS filesystem unit_test_framework)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIR})
   add_executable(
