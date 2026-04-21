@@ -287,7 +287,7 @@ void AFTimeBlockEncoder::encode(
         row.visibilities[i] /= rms;
       }
       metaBuffer[i] = rms;
-   }
+    }
   }
 
   for (size_t p = 0; p != _nPol; ++p) {
