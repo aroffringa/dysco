@@ -15,6 +15,13 @@ std::unique_ptr<StochasticEncoder<float>> MakeEncoder() {
       StochasticEncoder<float>::StudentTEncoder(256, 1.0, 1.0)));
 }
 
+BOOST_AUTO_TEST_CASE(stochastic_encoder) {
+  StochasticEncoder<float> encoder(4, 1.0);
+  auto dictionary = encoder.EncodingDictionary();
+  BOOST_CHECK_EQUAL(dictionary.size(), 3);
+  BOOST_CHECK_EQUAL(-dictionary[0], dictionary[1]);
+}
+
 BOOST_AUTO_TEST_CASE(avg_deviation) {
   std::unique_ptr<StochasticEncoder<float>> encoder = MakeEncoder();
 

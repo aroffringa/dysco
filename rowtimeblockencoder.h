@@ -60,6 +60,8 @@ class RowTimeBlockEncoder : public TimeBlockEncoder {
     return nRow;
   }
 
+  virtual void Normalize(std::vector<DBufferRow> &data, float *meta_buffer, size_t antenna_count, double max_level) final { throw; }
+
  private:
   template <bool UseDithering>
   void encode(const dyscostman::StochasticEncoder<float> &gausEncoder,

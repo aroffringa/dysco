@@ -31,6 +31,8 @@ namespace dyscostman {
 template <typename ValueType = float>
 class StochasticEncoder {
  public:
+   class Dictionary;
+
   /**
    * Construct encoder for given dictionary size and Gaussian stddev.
    * This constructor initializes the lookup table, and is therefore
@@ -150,15 +152,9 @@ class StochasticEncoder {
 
   ValueType MinQuantity() const { return _decDictionary.smallest_value(); }
 
- private:
-  explicit StochasticEncoder(size_t quantCount)
-      : _encDictionary(quantCount - 1), _decDictionary(quantCount - 1) {}
+  const Dictionary& EncodingDictionary() const { return _encDictionary; }
 
-  void initializeStudentT(double nu, double rms);
-
-  void initializeTruncatedGaussian(double truncationValue, double rms);
-
-  class Dictionary {
+   class Dictionary {
    public:
     typedef value_t *iterator;
     typedef const value_t *const_iterator;
@@ -250,9 +246,19 @@ class StochasticEncoder {
     size_t size() const { return _values.size(); }
     size_t capacity(size_t) const { return _values.capacity(); }
 
+    value_t operator[](size_t index) const { return _values[index]; }
+
    private:
     aocommon::UVector<value_t> _values;
   };
+
+private:
+ explicit StochasticEncoder(size_t quantCount)
+      : _encDictionary(quantCount - 1), _decDictionary(quantCount - 1) {}
+
+  void initializeStudentT(double nu, double rms);
+
+  void initializeTruncatedGaussian(double truncationValue, double rms);
 
   typedef long double num_t;
 

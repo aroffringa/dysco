@@ -59,9 +59,7 @@ class AFTimeBlockEncoder : public TimeBlockEncoder {
     return nPol * (nChannels + nAntennae);
   }
 
-  void Normalize(const dyscostman::StochasticEncoder<float> &gausEncoder,
-                 TimeBlockBuffer<std::complex<float>> &buffer,
-                 size_t antennaCount);
+  void Normalize(std::vector<DBufferRow> &data, float *meta_buffer, size_t antenna_count, double max_level) final;
 
  private:
   void calculateAntennaeRMS(const std::vector<DBufferRow> &data,
@@ -77,7 +75,7 @@ class AFTimeBlockEncoder : public TimeBlockEncoder {
                            size_t polIndex, double factor);
 
   void fitToMaximum(std::vector<DBufferRow> &data, float *metaBuffer,
-                    const dyscostman::StochasticEncoder<float> &gausEncoder,
+                    double max_level,
                     size_t antennaCount);
 
   size_t _nPol, _nChannels;

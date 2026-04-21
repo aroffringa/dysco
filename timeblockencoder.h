@@ -40,7 +40,7 @@ class TimeBlockEncoder {
 
   typedef unsigned symbol_t;
 
-  virtual ~TimeBlockEncoder() {}
+  virtual ~TimeBlockEncoder() = default;
 
   virtual void EncodeWithDithering(
       const dyscostman::StochasticEncoder<float> &gausEncoder, FBuffer &buffer,
@@ -68,8 +68,10 @@ class TimeBlockEncoder {
   virtual size_t MetaDataCount(size_t nRow, size_t nPol, size_t nChannels,
                                size_t nAntennae) const = 0;
 
+  virtual void Normalize(std::vector<DBufferRow> &data, float *meta_buffer, size_t antenna_count, double max_level) = 0;
+
  protected:
-  TimeBlockEncoder() {}
+  TimeBlockEncoder() = default;
 };
 
 #endif

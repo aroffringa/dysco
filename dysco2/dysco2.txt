@@ -1,0 +1,11 @@
+Design points:
+- Must support variable channel count
+- Must support weight-dependent nr of quantization levels.
+This can be done by just using the lower half of the values and let deflate take care of it. uint16_t is then the max supported, and every symbol is stored as uint16_t.
+- Number of channels is stored external; it's inferred by reading the DATA_DESC_ID column.
+- Should we also store the weights? Probably: we always need to read the weights, so having them "near" each other is advantageous. Could still be in different files though.
+- How do we index the file? We could store different quantization levels in different files.
+- Should we quantize non-linearly? If it gives lower error! So must be an option. But how to quantize different averaging levels?? Trim the distribution according to its weight? Or start without it?
+- No heuristics based on nr of channels: won't work for averaging over time.
+
+- Perform an extra per-row scaling factor optimization to minimize squared distance?

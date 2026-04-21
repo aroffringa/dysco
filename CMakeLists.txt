@@ -75,6 +75,7 @@ if(Boost_FOUND)
     runtests EXCLUDE_FROM_ALL
     $<TARGET_OBJECTS:dyscostman-object>
     tests/runtests.cc
+#    tests/distributionexample.cc
     tests/encodeexample.cc
     tests/testbytepacking.cc
     tests/testdithering.cc
