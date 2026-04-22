@@ -14,11 +14,10 @@ RFTimeBlockEncoder::RFTimeBlockEncoder(size_t nPol, size_t nChannels)
 RFTimeBlockEncoder::~RFTimeBlockEncoder() = default;
 
 void RFTimeBlockEncoder::maximizeRows(std::vector<DBufferRow> &data, float *metaBuffer,
-    const dyscostman::StochasticEncoder<float> &gausEncoder) {
+    double maxLevel) const {
   // Scale rows: Scale every row maximum to the max level.
   // Polarizations are processed separately: every polarization
   // has its own row-scaling factor.
-  const double maxLevel = gausEncoder.MaxQuantity();
   const size_t visPerRow = _nPol * _nChannels;
   for (size_t rowIndex = 0; rowIndex != data.size(); ++rowIndex) {
     DBufferRow &row = data[rowIndex];
@@ -44,7 +43,7 @@ void RFTimeBlockEncoder::maximizeRows(std::vector<DBufferRow> &data, float *meta
 }
 
 void RFTimeBlockEncoder::maximizeChannels(std::vector<DBufferRow> &data, float *metaBuffer,
-    const dyscostman::StochasticEncoder<float> &gausEncoder) {
+    double maxLevel) const {
   const size_t visPerRow = _nPol * _nChannels;
   // Scale channels: channels are scaled such that the maximum
   // value equals the maximum encodable value
@@ -57,9 +56,9 @@ void RFTimeBlockEncoder::maximizeChannels(std::vector<DBufferRow> &data, float *
         largest_component = local_max;
     }
     const double factor =
-        (gausEncoder.MaxQuantity() == 0.0 || largest_component == 0.0)
+        (maxLevel == 0.0 || largest_component == 0.0)
             ? 1.0
-            : gausEncoder.MaxQuantity() / largest_component;
+            : maxLevel / largest_component;
     metaBuffer[visIndex] = 1.0 / factor;
     for (RFTimeBlockEncoder::DBufferRow &row : data) {
       row.visibilities[visIndex] *= factor;
@@ -83,9 +82,9 @@ void RFTimeBlockEncoder::encode(
   // higher values compared to cross-correlations. By first
   // scaling the rows, the auto-correlations and cross-correlations
   // are brought to the same level.
-  maximizeRows(data, metaBuffer, gausEncoder);
+  maximizeRows(data, metaBuffer, gausEncoder.MaxQuantity());
 
-  maximizeChannels(data, metaBuffer, gausEncoder);
+  maximizeChannels(data, metaBuffer, gausEncoder.MaxQuantity());
 
   symbol_t *symbolBufferPtr = symbolBuffer;
   for (const DBufferRow &row : data) {
