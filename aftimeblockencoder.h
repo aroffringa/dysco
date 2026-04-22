@@ -77,8 +77,7 @@ class AFTimeBlockEncoder : public TimeBlockEncoder {
                            size_t polIndex, double factor);
 
   void fitToMaximum(std::vector<DBufferRow> &data, float *metaBuffer,
-                    const dyscostman::StochasticEncoder<float> &gausEncoder,
-                    size_t antennaCount);
+                    double max_level, size_t antennaCount);
 
   size_t _nPol, _nChannels;
   bool _fitToMaximum;

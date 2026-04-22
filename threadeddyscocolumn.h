@@ -125,7 +125,7 @@ class ThreadedDyscoColumn : public DyscoStManColumn {
  protected:
   class ThreadDataBase {
    public:
-    virtual ~ThreadDataBase(){};
+    virtual ~ThreadDataBase() = default;
   };
 
   typedef typename TimeBlockBuffer<data_t>::symbol_t symbol_t;
