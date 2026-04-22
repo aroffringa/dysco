@@ -59,6 +59,7 @@ class AFTimeBlockEncoder : public TimeBlockEncoder {
     return nPol * (nChannels + nAntennae);
   }
 
+  // (Function is currently unused)
   void Normalize(const dyscostman::StochasticEncoder<float> &gausEncoder,
                  TimeBlockBuffer<std::complex<float>> &buffer,
                  size_t antennaCount);
