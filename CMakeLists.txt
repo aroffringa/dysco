@@ -77,6 +77,7 @@ if(Boost_FOUND)
     tests/runtests.cc
     tests/encodeexample.cc
     tests/testbytepacking.cc
+    tests/testdictionary.cc
     tests/testdithering.cc
     tests/testdyscostman.cc
     tests/testtimeblockencoder.cc)
