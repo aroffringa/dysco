@@ -1,3 +1,9 @@
+#include <algorithm>
+#include <chrono>
+#include <iostream>
+#include <random>
+#include <vector>
+
 #include <boost/test/unit_test.hpp>
 
 #include "../dictionary.h"
@@ -71,6 +77,34 @@ void TestLowerBound(Function lower_bound) {
   BOOST_CHECK(iter == dict.end());
 }
 
+// Prevent optimization
+volatile float sink;
+
+template <typename Func>
+double RunBenchmark(const Dictionary& dict,
+                     const std::vector<float>& queries,
+                     Func f,
+                     const std::string& name) {
+  auto start = std::chrono::high_resolution_clock::now();
+
+  float local = 0.0f;
+  for (float q : queries) {
+    auto it = f(dict, q);
+    local += *it;
+  }
+
+  auto end = std::chrono::high_resolution_clock::now();
+  sink = local;
+
+  std::chrono::duration<double> elapsed = end - start;
+  double seconds = elapsed.count();
+
+  std::cout << name << ": "
+            << (queries.size() / seconds / 1e6) << " M queries/s\n";
+
+  return seconds;
+}
+
 } // namespace
 
 BOOST_AUTO_TEST_SUITE(dictionary)
@@ -126,6 +160,51 @@ BOOST_AUTO_TEST_CASE(lower_bound_slow) {
   TestLowerBound([](const Dictionary& d, float value) {
     return d.lower_bound_slow(value);
   });
+}
+
+BOOST_AUTO_TEST_CASE(lower_bound_benchmark, *boost::unit_test::disabled()) {
+  std::mt19937 rng(42);
+  std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+  constexpr size_t N = 1 << 12;      // dictionary size
+
+  // Build sorted dictionary
+  Dictionary dict(N);
+  for (size_t i = 0; i < N; ++i) {
+    dict.begin()[i] = static_cast<float>(i) / N;
+  }
+
+  // Generate random queries
+  static constexpr size_t kNQueries = 1 << 22; // number of lookups
+  std::vector<float> queries(kNQueries);
+  for (auto& q : queries)
+    q = dist(rng);
+
+  // Warm-up (important for fair timing)
+  RunBenchmark(dict, queries,
+    [](const Dictionary& d, float v) {
+      return d.lower_bound_branchless(v);
+    },
+    "warmup");
+
+  std::cout << "---- Benchmark ----\n";
+
+  RunBenchmark(dict, queries,
+    [](const Dictionary& d, float v) {
+      return d.lower_bound_branchless(v);
+    },
+    "branchless");
+
+  RunBenchmark(dict, queries,
+    [](const Dictionary& d, float v) {
+      return d.lower_bound_two_minimum(v);
+    },
+    "two_minimum");
+
+  RunBenchmark(dict, queries,
+    [](const Dictionary& d, float v) {
+      return std::lower_bound(d.begin(), d.end(), v);
+    },
+    "std::lower_bound");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
