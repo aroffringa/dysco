@@ -29,7 +29,41 @@ class Dictionary {
    * the dictionary is sorted.
    */
   inline const_iterator lower_bound(value_t val) const {
-    return lower_bound_branchless(val);
+    return lower_bound_branchless_two_minimum(val);
+  }
+
+  /**
+   * Like lower_bound_branchless, but with the loop unrolled once because
+   * we know the dictionary's size is always at least of size 2.
+   */
+  const_iterator lower_bound_branchless_two_minimum(value_t val) const {
+    assert(_values.size() >= 2);
+
+    const value_t* base = _values.data();
+    const size_t n = _values.size();
+
+    // Largest power of two <= n
+    size_t step = static_cast<size_t>(1) << (63 - __builtin_clzll(n));
+    const value_t* it = base;
+
+    // This is the loop below unrolled once
+    const size_t idx = std::min(step, n - 1);
+    const value_t* probe = it + idx;
+    if (probe < base + n && *probe < val) it = probe;
+    step >>= 1;
+
+    while (step != 0) {
+      const size_t idx = std::min(step, n - 1);
+      const value_t* probe = it + idx;
+
+      // Branchless: compiler should emit cmov
+      if (probe < base + n && *probe < val) it = probe;
+
+      step >>= 1;
+    }
+
+    // Final correction: ensure we return first >= val
+    return (it < base + n && *it < val) ? it + 1 : it;
   }
 
   /**
@@ -38,6 +72,8 @@ class Dictionary {
    * about two times faster than lower_bound_two_minimum.
    */
   const_iterator lower_bound_branchless(value_t val) const {
+    assert(!empty());
+
     const value_t* base = _values.data();
     const size_t n = _values.size();
 
@@ -96,7 +132,7 @@ class Dictionary {
    * does not check for empty vector).
    */
   const_iterator lower_bound_one_minimum(value_t val) const {
-    assert(_values.size() >= 1);
+    assert(!empty());
     size_t p = 0, q = _values.size();
     while (p + 1 != q) {
       size_t m = (p + q) / 2;
@@ -115,7 +151,7 @@ class Dictionary {
    * above. It performs 7.9 MB/s. 26% compared to the 'fastest' lower_bound.
    */
   const_iterator lower_bound_slow(value_t val) const {
-    assert(_values.size() >= 1);
+    assert(!empty());
     const value_t *p = _values.data(), *q = p + _values.size();
     while (p + 1 != q) {
       // This is a bit inefficient, but (p + q)/2 was not allowed, because
@@ -145,6 +181,7 @@ class Dictionary {
   const_iterator end() const { return _values.data() + _values.size(); }
   value_t value(const_iterator iter) const { return *iter; }
   value_t value(symbol_t sym) const { return _values[sym]; }
+  bool empty() const { return _values.empty(); }
   size_t size() const { return _values.size(); }
 
   value_t largest_value() const { return _values.back(); }

@@ -75,6 +75,36 @@ void TestLowerBound(Function lower_bound) {
 
   iter = lower_bound(dict, std::numeric_limits<float>::max());
   BOOST_CHECK(iter == dict.end());
+
+  // Some algorithms unroll loops because it is known the dictionary is not empty.
+  // Make sure that these still work with the smallest allowed dictionary (size 2).
+  // Not that Dysco will never create a dictionary smaller than 3 elements, because
+  // the lowest bit-rate is two (4 quantization levels that includes NaN).
+  Dictionary small(2);
+  small.begin()[0] = -1.0f;
+  small.begin()[1] = 1.0f;
+
+  iter = lower_bound(small, std::numeric_limits<float>::lowest());
+  BOOST_REQUIRE(iter != small.end());
+  BOOST_CHECK_EQUAL(small.symbol(iter), 0u);
+
+  iter = lower_bound(small, -1.0f);
+  BOOST_REQUIRE(iter != small.end());
+  BOOST_CHECK_EQUAL(small.symbol(iter), 0u);
+
+  iter = lower_bound(small, 0.0f);
+  BOOST_REQUIRE(iter != small.end());
+  BOOST_CHECK_EQUAL(small.symbol(iter), 1u);
+
+  iter = lower_bound(small, 1.0f);
+  BOOST_REQUIRE(iter != small.end());
+  BOOST_CHECK_EQUAL(small.symbol(iter), 1u);
+
+  iter = lower_bound(small, 2.0f);
+  BOOST_REQUIRE(iter == small.end());
+
+  iter = lower_bound(small, std::numeric_limits<float>::max());
+  BOOST_REQUIRE(iter == small.end());
 }
 
 // Prevent optimization
@@ -187,6 +217,12 @@ BOOST_AUTO_TEST_CASE(lower_bound_benchmark, *boost::unit_test::disabled()) {
     "warmup");
 
   std::cout << "---- Benchmark ----\n";
+
+  RunBenchmark(dict, queries,
+    [](const Dictionary& d, float v) {
+      return d.lower_bound_branchless_two_minimum(v);
+    },
+    "branchless with assumption of 2 elements");
 
   RunBenchmark(dict, queries,
     [](const Dictionary& d, float v) {
