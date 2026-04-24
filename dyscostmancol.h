@@ -4,9 +4,8 @@
 #include "dyscodistribution.h"
 #include "dysconormalization.h"
 
+#include <casacore/casa/Arrays/IPosition.h>
 #include <casacore/tables/DataMan/StManColumn.h>
-
-#include <casa/Arrays/IPosition.h>
 
 #include <cstdint>
 #include <map>
