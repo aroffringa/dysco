@@ -42,8 +42,16 @@ class Dictionary {
     const value_t* base = _values.data();
     const size_t n = _values.size();
 
-    // Largest power of two <= n
+    // Calculate largest power of two <= n
+    // Because the stand-alone version of Dysco is to add Dysco to old
+    // versions of Casacore, and that version is not C++20 compatible,
+    // C++20 is not enabled when building stand-alone but will be when
+    // building it as part of Casacore.
+#if __cplusplus >= 202002L // Do we have C++20 ?
+    size_t step = std::bit_floor(n);
+#else
     size_t step = static_cast<size_t>(1) << (63 - __builtin_clzll(n));
+#endif
     const value_t* it = base;
 
     // This is the loop below unrolled once
