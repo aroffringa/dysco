@@ -42,16 +42,8 @@ class Dictionary {
     const value_t* base = _values.data();
     const size_t n = _values.size();
 
-    // Calculate largest power of two <= n
-    // Because the stand-alone version of Dysco is to add Dysco to old
-    // versions of Casacore, and that version is not C++20 compatible,
-    // C++20 is not enabled when building stand-alone but will be when
-    // building it as part of Casacore.
-#if __cplusplus >= 202002L // Do we have C++20 ?
-    size_t step = std::bit_floor(n);
-#else
-    size_t step = static_cast<size_t>(1) << (63 - __builtin_clzll(n));
-#endif
+    // Largest power of two <= n
+    size_t step = BitFloor(n);
     const value_t* it = base;
 
     // This is the loop below unrolled once
@@ -86,7 +78,7 @@ class Dictionary {
     const size_t n = _values.size();
 
     // Largest power of two <= n
-    size_t step = static_cast<size_t>(1) << (63 - __builtin_clzll(n));
+    size_t step = BitFloor(n);
     const value_t* it = base;
 
     while (step != 0) {
@@ -196,6 +188,19 @@ class Dictionary {
   value_t smallest_value() const { return _values.front(); }
 
  private:
+  static size_t BitFloor(size_t n) {
+    // Calculate largest power of two <= n
+    // Because the stand-alone version of Dysco is to add Dysco to old
+    // versions of Casacore, and that version is not C++20 compatible,
+    // C++20 is not enabled when building stand-alone but will be when
+    // building it as part of Casacore.
+#if __cplusplus >= 202002L // Do we have C++20 ?
+    return std::bit_floor(n);
+#else
+    return static_cast<size_t>(1) << (63 - __builtin_clzll(n));
+#endif
+  }
+  
   aocommon::UVector<value_t> _values;
 };
 
